@@ -1,149 +1,134 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Sidebar } from '@/components/Sidebar';
 import { ChatMessages } from '@/components/ChatMessages';
 import { ChatInput } from '@/components/ChatInput';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useChat } from '@/hooks/useChat';
-import { useSessions } from '@/hooks/useSessions';
-import { motion } from 'framer-motion';
+import { apiService } from '@/services/api.service';
+
+// Generate a stable session ID for the browser session
+const generateSessionId = () => {
+  return `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+};
 
 export default function HomePage() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [selectedSessionId, setSelectedSessionId] = useState<
-    string | undefined
-  >();
+  // Initialize session ID once and keep it stable
+  const [sessionId, setSessionId] = useState<string>(() => {
+    // Try to get from sessionStorage first
+    if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('currentSessionId');
+      if (stored) return stored;
+    }
+    const newId = generateSessionId();
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('currentSessionId', newId);
+    }
+    return newId;
+  });
 
-  const { sessions, isLoading: sessionsLoading, deleteSession } = useSessions();
+  const [showNewChatDialog, setShowNewChatDialog] = useState(false);
+
   const { messages, isLoading, error, sendMessage, clearMessages, retry } =
     useChat({
-      sessionId: selectedSessionId,
+      sessionId,
       onError: (err) => console.error('Chat error:', err),
     });
 
-  // Keep sidebar open on desktop
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setIsSidebarOpen(true);
-      }
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   const handleNewSession = async () => {
-    clearMessages();
-    setSelectedSessionId(undefined);
-    setIsSidebarOpen(false);
+    // Show confirmation dialog if there are current messages
+    if (messages.length > 0) {
+      setShowNewChatDialog(true);
+      return;
+    }
+
+    // If no messages, proceed directly
+    await createNewSession();
   };
 
-  const handleSessionSelect = (sessionId: string) => {
-    setSelectedSessionId(sessionId);
-    setIsSidebarOpen(false);
-  };
-
-  const handleDeleteSession = async (sessionId: string) => {
+  const createNewSession = async () => {
     try {
-      await deleteSession(sessionId);
-      if (selectedSessionId === sessionId) {
-        clearMessages();
-        setSelectedSessionId(undefined);
+      // Delete the old session
+      try {
+        await apiService.deleteSession(sessionId);
+      } catch (err) {
+        console.error('Failed to delete old session:', err);
+      }
+
+      // Clear current messages
+      clearMessages();
+
+      // Generate new session ID
+      const newId = generateSessionId();
+      setSessionId(newId);
+
+      // Store in sessionStorage
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('currentSessionId', newId);
       }
     } catch (err) {
-      console.error('Failed to delete session:', err);
+      console.error('Failed to create new session:', err);
+      alert('Failed to start new conversation. Please try again.');
     }
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
-      <Sidebar
-        sessions={sessions}
-        currentSessionId={selectedSessionId}
-        onSessionSelect={handleSessionSelect}
-        onNewSession={handleNewSession}
-        onDeleteSession={handleDeleteSession}
-        isLoading={sessionsLoading}
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
+    <div className="flex h-screen flex-col bg-white">
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showNewChatDialog}
+        onClose={() => setShowNewChatDialog(false)}
+        onConfirm={createNewSession}
+        title="Start New Conversation?"
+        message="Starting a new conversation will delete your current chat history. This action cannot be undone. Are you sure you want to continue?"
+        confirmText="Start New Chat"
+        cancelText="Keep Current Chat"
+        type="warning"
       />
 
-      <div className="flex flex-1 flex-col">
-        {/* Enhanced Header */}
-        <header className="glass border-secondary-200/60 border-b px-4 py-3 shadow-sm backdrop-blur-md">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsSidebarOpen(true)}
-                className="bg-secondary-100 text-secondary-600 hover:bg-secondary-200 focus-ring flex h-9 w-9 items-center justify-center rounded-lg transition-all hover:shadow-sm lg:hidden"
-                aria-label="Open sidebar"
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              </motion.button>
+      {/* Header */}
+      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
+          <h1 className="text-lg font-semibold text-gray-900">
+            Air Quality AI
+          </h1>
+          <button
+            onClick={handleNewSession}
+            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            New Chat
+          </button>
+        </div>
+      </header>
 
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg">
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <h1 className="bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-lg font-semibold text-transparent">
-                    Air Quality AI
-                  </h1>
-                  <p className="text-secondary-500 text-xs">
-                    Real-time insights
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Status indicator */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
-                <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500"></div>
-                Live
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Chat Area */}
+      {/* Chat Area */}
+      <div className="flex-1 overflow-hidden">
         <ChatMessages
           messages={messages}
           isLoading={isLoading}
           error={error}
           onRetry={retry}
-          onSendMessage={sendMessage}
         />
+      </div>
 
-        {/* Input */}
-        <ChatInput onSend={sendMessage} isLoading={isLoading} />
+      {/* Input */}
+      <div className="border-t border-gray-200 bg-white">
+        <div className="mx-auto max-w-4xl">
+          <ChatInput onSend={sendMessage} isLoading={isLoading} />
+        </div>
       </div>
     </div>
   );

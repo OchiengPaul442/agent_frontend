@@ -31,7 +31,23 @@ class ApiService {
       const error = await response.json().catch(() => ({
         detail: response.statusText,
       }));
-      throw new Error(error.detail || 'An error occurred');
+
+      // Handle different error formats
+      let errorMessage = 'An error occurred';
+      if (typeof error.detail === 'string') {
+        errorMessage = error.detail;
+      } else if (Array.isArray(error.detail)) {
+        errorMessage = error.detail
+          .map((e: any) => e.msg || e.message || JSON.stringify(e))
+          .join(', ');
+      } else if (error.detail && typeof error.detail === 'object') {
+        errorMessage =
+          error.detail.message ||
+          error.detail.msg ||
+          JSON.stringify(error.detail);
+      }
+
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -42,26 +58,19 @@ class ApiService {
     data: ChatRequest,
     options?: { signal?: AbortSignal }
   ): Promise<ChatResponse> {
+    // Always use FormData as required by the API
+    const formData = new FormData();
+    formData.append('message', data.message);
+    if (data.session_id) {
+      formData.append('session_id', data.session_id);
+    } // No else clause - require session_id to be provided
     if (data.file) {
-      // Use FormData for file uploads
-      const formData = new FormData();
-      formData.append('message', data.message);
-      if (data.session_id) {
-        formData.append('session_id', data.session_id);
-      }
       formData.append('file', data.file);
-
-      return this.fetchWithError<ChatResponse>(`${API_BASE}/agent/chat`, {
-        method: 'POST',
-        body: formData,
-        signal: options?.signal,
-      });
     }
 
-    // JSON for text-only messages
     return this.fetchWithError<ChatResponse>(`${API_BASE}/agent/chat`, {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: formData,
       signal: options?.signal,
     });
   }

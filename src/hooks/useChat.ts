@@ -11,59 +11,12 @@ export function useChat(options: UseChatOptions = {}) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(
-    options.sessionId
-  );
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const isLoadingRef = useRef(false);
-  const prevSessionIdRef = useRef<string | undefined>(options.sessionId);
 
-  useEffect(() => {
-    const loadMessages = async () => {
-      // Prevent loading if already loading or if sessionId hasn't changed
-      if (
-        isLoadingRef.current ||
-        options.sessionId === prevSessionIdRef.current
-      ) {
-        return;
-      }
-
-      if (options.sessionId && options.sessionId !== prevSessionIdRef.current) {
-        prevSessionIdRef.current = options.sessionId;
-
-        try {
-          isLoadingRef.current = true;
-          setIsLoading(true);
-          setError(null);
-
-          const sessionMessages = await apiService.getSessionMessages(
-            options.sessionId
-          );
-          setMessages(sessionMessages);
-          setCurrentSessionId(options.sessionId);
-        } catch (err) {
-          const error =
-            err instanceof Error ? err : new Error('Failed to load messages');
-          setError(error);
-          options.onError?.(error);
-        } finally {
-          setIsLoading(false);
-          isLoadingRef.current = false;
-        }
-      }
-    };
-
-    loadMessages();
-
-    // Cleanup function to cancel any ongoing requests
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-        abortControllerRef.current = null;
-      }
-    };
-  }, [options]);
+  // Don't load messages from API - keep them in local state only
+  // This prevents loops and keeps the session stable
 
   const sendMessage = useCallback(
     async (content: string, file?: File): Promise<ChatResponse | null> => {
@@ -93,7 +46,7 @@ export function useChat(options: UseChatOptions = {}) {
         const response = await apiService.sendMessage(
           {
             message: content,
-            session_id: currentSessionId,
+            session_id: options.sessionId,
             history: messages,
             save_to_db: false,
             file,
@@ -109,7 +62,6 @@ export function useChat(options: UseChatOptions = {}) {
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
-        setCurrentSessionId(response.session_id);
 
         return response;
       } catch (err) {
@@ -132,12 +84,11 @@ export function useChat(options: UseChatOptions = {}) {
         abortControllerRef.current = null;
       }
     },
-    [messages, currentSessionId, options]
+    [messages, options.sessionId, options]
   );
 
   const clearMessages = useCallback(() => {
     setMessages([]);
-    setCurrentSessionId(undefined);
     setError(null);
     // Cancel any ongoing request
     if (abortControllerRef.current) {
@@ -162,7 +113,7 @@ export function useChat(options: UseChatOptions = {}) {
     messages,
     isLoading,
     error,
-    sessionId: currentSessionId,
+    sessionId: options.sessionId,
     sendMessage,
     clearMessages,
     retry,

@@ -1,6 +1,6 @@
 'use client';
 
-import { Session } from '@/types';
+import { SessionDetails } from '@/types';
 import { cn, formatDate } from '@/utils/helpers';
 import { motion } from 'framer-motion';
 import {
@@ -11,7 +11,7 @@ import {
 } from '@airqo/icons-react';
 
 interface SidebarProps {
-  sessions: Session[];
+  sessions: SessionDetails[];
   currentSessionId?: string;
   onSessionSelect: (sessionId: string) => void;
   onNewSession: () => void;
@@ -44,30 +44,30 @@ export function Sidebar({
         />
       )}
 
-      {/* Sidebar */}
       <motion.aside
         initial={false}
         animate={{
           x: isOpen ? 0 : '-100%',
+          width: isOpen ? 320 : 0,
         }}
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-80 flex-col border-r border-slate-200/50 bg-white/95 shadow-2xl backdrop-blur-sm',
+          'flex flex-col border-r border-slate-200 bg-white shadow-2xl',
           // Desktop: always visible with relative positioning
-          'lg:static lg:z-0 lg:shadow-none',
+          'lg:static lg:z-0 lg:shadow-lg',
           // Mobile: overlay behavior
           !isOpen && 'pointer-events-none lg:pointer-events-auto'
         )}
       >
         {/* Header */}
-        <div className="border-b border-slate-200/50 p-6">
+        <div className="border-b border-slate-200 bg-slate-50/50 p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-xl font-bold text-transparent">
+            <h2 className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-xl font-bold text-transparent">
               Chat History
             </h2>
             <button
               onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:outline-none lg:hidden"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none lg:hidden"
               aria-label="Close sidebar"
             >
               <AqX className="h-5 w-5" />
@@ -77,7 +77,7 @@ export function Sidebar({
           <motion.button
             onClick={onNewSession}
             whileTap={{ scale: 0.98 }}
-            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-4 text-sm font-semibold text-white shadow-lg transition-all hover:from-amber-600 hover:to-amber-700 hover:shadow-xl focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:outline-none"
+            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-4 text-sm font-semibold text-white shadow-lg transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-xl focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
           >
             <svg
               className="h-5 w-5"
@@ -100,7 +100,7 @@ export function Sidebar({
         <div className="flex-1 overflow-y-auto p-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-3 border-amber-500 border-t-transparent"></div>
+              <div className="h-8 w-8 animate-spin rounded-full border-3 border-blue-500 border-t-transparent"></div>
             </div>
           ) : sessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -116,9 +116,12 @@ export function Sidebar({
             </div>
           ) : (
             <div className="space-y-2">
-              {sessions.map((session) => (
+              {sessions.map((session, index) => (
                 <motion.div
-                  key={session.session_id}
+                  key={
+                    session.session_id ||
+                    `session-${index}-${session.updated_at}`
+                  }
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   className="group relative"
@@ -126,9 +129,9 @@ export function Sidebar({
                   <button
                     onClick={() => onSessionSelect(session.session_id)}
                     className={cn(
-                      'flex w-full items-start gap-3 rounded-2xl px-4 py-4 text-left transition-all hover:shadow-md focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:outline-none',
+                      'flex w-full items-start gap-3 rounded-2xl px-4 py-4 text-left transition-all hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none',
                       currentSessionId === session.session_id
-                        ? 'border border-amber-200 bg-amber-50 text-amber-900 shadow-md'
+                        ? 'border border-blue-200 bg-blue-50 text-blue-900 shadow-md'
                         : 'text-slate-700 hover:bg-slate-50'
                     )}
                   >
@@ -136,7 +139,7 @@ export function Sidebar({
                       className={cn(
                         'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors',
                         currentSessionId === session.session_id
-                          ? 'bg-amber-500 text-white'
+                          ? 'bg-blue-500 text-white'
                           : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
                       )}
                     >
@@ -144,10 +147,11 @@ export function Sidebar({
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="mb-1 truncate text-sm font-semibold text-slate-900">
-                        {session.title || 'Untitled Conversation'}
+                        {session.messages.find((m) => m.role === 'user')
+                          ?.content || 'Untitled Conversation'}
                       </p>
                       <div className="flex items-center gap-3 text-xs text-slate-500">
-                        <span>{formatDate(session.updated_at)}</span>
+                        <span>{formatDate(session.created_at)}</span>
                         <span>•</span>
                         <span>{session.message_count} messages</span>
                       </div>
@@ -174,7 +178,7 @@ export function Sidebar({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-slate-200/50 bg-slate-50/50 p-6">
+        <div className="border-t border-slate-200 bg-slate-50/80 p-6">
           <div className="text-sm text-slate-600">
             <p className="mb-1 font-semibold text-slate-900">
               Air Quality AI Agent

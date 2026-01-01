@@ -3,7 +3,6 @@
 import { Message } from '@/types';
 import { cn, formatDate } from '@/utils/helpers';
 import { motion } from 'framer-motion';
-import { AqUser01 } from '@airqo/icons-react';
 import ReactMarkdown from 'react-markdown';
 
 interface MessageBubbleProps {
@@ -17,119 +16,112 @@ export function MessageBubble({ message }: MessageBubbleProps) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
-      className={cn(
-        'flex w-full gap-4',
-        isUser ? 'justify-end' : 'justify-start'
-      )}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+      className={cn('w-full py-6', isUser ? 'bg-white' : 'bg-gray-50')}
     >
-      {!isUser && (
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg">
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-            />
-          </svg>
-        </div>
-      )}
-
-      <div
-        className={cn(
-          'group relative max-w-[85%] rounded-3xl px-6 py-4 shadow-lg transition-all hover:shadow-xl',
-          isUser
-            ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-amber-500/25'
-            : 'border border-slate-200/50 bg-white/80 text-slate-900 backdrop-blur-sm'
-        )}
-      >
-        {/* Message content with improved typography */}
-        <div
-          className={cn(
-            'prose prose-sm max-w-none break-words',
-            isUser
-              ? 'prose-invert prose-p:my-2 prose-headings:text-white prose-headings:font-semibold'
-              : 'prose prose-p:my-2 prose-headings:text-slate-900 prose-headings:font-semibold'
+      <div className="mx-auto flex max-w-4xl gap-6 px-4">
+        {/* Avatar */}
+        <div className="flex-shrink-0">
+          {isUser ? (
+            <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-gray-800 text-white">
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+            </div>
+          ) : (
+            <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-blue-600 text-white">
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
           )}
-        >
-          <ReactMarkdown
-            components={{
-              p: ({ children }) => (
-                <p className="leading-relaxed">{children}</p>
-              ),
-              code: (
-                props: React.ComponentProps<'code'> & { inline?: boolean }
-              ) => {
-                const { inline, children, ...rest } = props;
-                return (
-                  <code
-                    {...rest}
-                    className={cn(
-                      'rounded-md px-1.5 py-0.5 font-mono text-sm',
-                      inline
-                        ? isUser
-                          ? 'bg-white/20 text-white'
-                          : 'bg-slate-100 text-slate-800'
-                        : 'block overflow-x-auto bg-slate-900 p-4 text-slate-100'
-                    )}
-                  >
-                    {children}
-                  </code>
-                );
-              },
-              ul: ({ children }) => <ul className="space-y-1">{children}</ul>,
-              ol: ({ children }) => <ol className="space-y-1">{children}</ol>,
-              li: ({ children }) => <li className="text-sm">{children}</li>,
-            }}
-          >
-            {message.content}
-          </ReactMarkdown>
         </div>
 
-        {/* Timestamp with better styling */}
-        {message.timestamp && (
+        {/* Content */}
+        <div className="flex-1 space-y-2 overflow-hidden">
           <div
             className={cn(
-              'mt-3 text-xs opacity-70',
-              isUser ? 'text-amber-100' : 'text-slate-500'
+              'prose prose-sm max-w-none break-words text-gray-900',
+              'prose-p:my-1 prose-p:leading-7',
+              'prose-pre:bg-gray-900 prose-pre:text-gray-100',
+              'prose-code:text-gray-900',
+              'prose-headings:text-gray-900'
             )}
           >
-            {formatDate(message.timestamp)}
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => (
+                  <p className="my-1 leading-7 text-gray-900">{children}</p>
+                ),
+                code: (
+                  props: React.ComponentProps<'code'> & { inline?: boolean }
+                ) => {
+                  const { inline, children, ...rest } = props;
+                  return (
+                    <code
+                      {...rest}
+                      className={cn(
+                        'font-mono text-sm',
+                        inline
+                          ? 'rounded bg-gray-200 px-1 py-0.5 text-gray-900'
+                          : 'block overflow-x-auto rounded-md bg-gray-900 p-4 text-gray-100'
+                      )}
+                    >
+                      {children}
+                    </code>
+                  );
+                },
+                ul: ({ children }) => (
+                  <ul className="my-2 space-y-1">{children}</ul>
+                ),
+                ol: ({ children }) => (
+                  <ol className="my-2 space-y-1">{children}</ol>
+                ),
+                li: ({ children }) => (
+                  <li className="leading-7 text-gray-900">{children}</li>
+                ),
+              }}
+            >
+              {message.content}
+            </ReactMarkdown>
           </div>
-        )}
 
-        {/* Tools used indicator */}
-        {message.tools_used && message.tools_used.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {message.tools_used.map((tool, index) => (
-              <span
-                key={index}
-                className={cn(
-                  'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium',
-                  isUser
-                    ? 'bg-white/20 text-white'
-                    : 'bg-amber-100 text-amber-700'
-                )}
-              >
-                <div className="h-1.5 w-1.5 rounded-full bg-current opacity-60"></div>
-                {tool}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {isUser && (
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-200 text-slate-700 shadow-md">
-          <AqUser01 className="h-5 w-5" />
+          {/* Tools used indicator */}
+          {message.tools_used && message.tools_used.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {message.tools_used.map((tool, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600"
+                >
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-600"></div>
+                  {tool}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </motion.div>
   );
 }
