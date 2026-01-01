@@ -1,0 +1,113 @@
+@import 'tailwindcss';
+
+@layer base {
+  :root {
+    --primary-50: 254 242 242;
+    --primary-100: 254 226 226;
+    --primary-200: 254 202 202;
+    --primary-300: 252 165 165;
+    --primary-400: 248 113 113;
+    --primary-500: 239 68 68;
+    --primary-600: 220 38 38;
+    --primary-700: 185 28 28;
+    --primary-800: 153 27 27;
+    --primary-900: 127 29 29;
+    --primary-950: 69 10 10;
+  }
+
+  body {
+    @apply bg-white text-slate-900 antialiased dark:bg-slate-900 dark:text-slate-100;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-100 dark:bg-slate-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-slate-300 hover:bg-slate-400 dark:bg-slate-600 dark:hover:bg-slate-500;
+}
+
+/* Markdown prose styling */
+.prose {
+  @apply max-w-none;
+}
+
+.prose p {
+  @apply my-2;
+}
+
+.prose ul,
+.prose ol {
+  @apply my-2 pl-6;
+}
+
+.prose li {
+  @apply my-1;
+}
+
+.prose code {
+  @apply rounded bg-slate-100 px-1.5 py-0.5 text-sm dark:bg-slate-800;
+}
+
+.prose pre {
+  @apply my-4 overflow-x-auto rounded-lg bg-slate-100 p-4 dark:bg-slate-800;
+}
+
+.prose pre code {
+  @apply bg-transparent p-0;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  @apply mt-6 mb-3 font-bold;
+}
+
+.prose h1 {
+  @apply text-2xl;
+}
+
+.prose h2 {
+  @apply text-xl;
+}
+
+.prose h3 {
+  @apply text-lg;
+}
+
+.prose a {
+  @apply text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300;
+}
+
+.prose blockquote {
+  @apply my-4 border-l-4 border-slate-300 pl-4 text-slate-600 italic dark:border-slate-600 dark:text-slate-400;
+}
+
+.prose table {
+  @apply my-4 w-full border-collapse;
+}
+
+.prose th,
+.prose td {
+  @apply border border-slate-200 px-4 py-2 dark:border-slate-700;
+}
+
+.prose th {
+  @apply bg-slate-100 font-semibold dark:bg-slate-800;
+}
