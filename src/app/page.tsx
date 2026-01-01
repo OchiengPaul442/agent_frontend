@@ -1,16 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ChatMessages } from '@/components/ChatMessages';
 import { ChatInput } from '@/components/ChatInput';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useChat } from '@/hooks/useChat';
 import { apiService } from '@/services/api.service';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/utils/helpers';
 
 // Generate a stable session ID for the browser session
 const generateSessionId = () => {
   return `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 };
+
+// Starter questions for air quality
+const STARTER_QUESTIONS = [
+  "What's the air quality in my area today?",
+  'How do I improve indoor air quality?',
+  'What are the health effects of poor air quality?',
+  'Explain PM2.5 and why it matters',
+];
 
 export default function HomePage() {
   // Initialize session ID once and keep it stable
@@ -34,6 +44,12 @@ export default function HomePage() {
       sessionId,
       onError: (err) => console.error('Chat error:', err),
     });
+
+  const hasMessages = messages.length > 0 || isLoading;
+
+  const handleStarterQuestion = (question: string) => {
+    sendMessage(question);
+  };
 
   const handleNewSession = async () => {
     // Show confirmation dialog if there are current messages
@@ -73,7 +89,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-white">
+    <div className="relative flex h-screen flex-col bg-white">
       {/* Confirmation Dialog */}
       <ConfirmDialog
         isOpen={showNewChatDialog}
@@ -89,9 +105,7 @@ export default function HomePage() {
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-          <h1 className="text-lg font-semibold text-gray-900">
-            Air Quality AI
-          </h1>
+          <h1 className="text-lg font-medium text-gray-900">Aeris</h1>
           <button
             onClick={handleNewSession}
             className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:outline-none"
@@ -114,22 +128,114 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Chat Area */}
-      <div className="flex-1 overflow-hidden">
-        <ChatMessages
-          messages={messages}
-          isLoading={isLoading}
-          error={error}
-          onRetry={retry}
-        />
+      {/* Main Content Area */}
+      <div className="relative flex flex-1 flex-col overflow-hidden">
+        {/* Welcome Screen (Centered) */}
+        <AnimatePresence>
+          {!hasMessages && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+              className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white px-4 pb-32"
+            >
+              <div className="w-full max-w-3xl space-y-8">
+                <div className="text-center">
+                  <h2 className="mb-2 text-3xl font-semibold text-gray-900 sm:text-4xl">
+                    Ready when you are.
+                  </h2>
+                  <p className="text-sm text-gray-600 sm:text-base">
+                    Ask me anything about air quality
+                  </p>
+                </div>
+
+                {/* Starter Questions */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {STARTER_QUESTIONS.map((question, index) => (
+                    <motion.button
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.1 + index * 0.1 }}
+                      onClick={() => handleStarterQuestion(question)}
+                      className="group rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:ring-2 focus:ring-gray-400 focus:outline-none"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                          <svg
+                            className="h-3.5 w-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2.5}
+                              d="M13 10V3L4 14h7v7l9-11h-7z"
+                            />
+                          </svg>
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                          {question}
+                        </span>
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Chat Messages (Shown when there are messages) */}
+        <AnimatePresence>
+          {hasMessages && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="flex-1 overflow-hidden"
+            >
+              <ChatMessages
+                messages={messages}
+                isLoading={isLoading}
+                error={error}
+                onRetry={retry}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Input */}
-      <div className="border-t border-gray-200 bg-white">
-        <div className="mx-auto max-w-4xl">
-          <ChatInput onSend={sendMessage} isLoading={isLoading} />
+      {/* Input Area - Moves from center to bottom */}
+      <motion.div
+        initial={false}
+        animate={{
+          position: hasMessages ? 'relative' : 'absolute',
+          bottom: hasMessages ? 0 : '5%',
+          left: 0,
+          right: 0,
+        }}
+        transition={{
+          duration: 0.5,
+          ease: [0.32, 0.72, 0, 1],
+        }}
+        className={cn(
+          'z-20 w-full bg-white',
+          hasMessages ? 'border-t border-gray-200' : ''
+        )}
+      >
+        <div className="mx-auto max-w-3xl px-4">
+          <ChatInput
+            onSend={sendMessage}
+            isLoading={isLoading}
+            placeholder="Ask Aeris..."
+            hasMessages={hasMessages}
+          />
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

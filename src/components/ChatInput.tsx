@@ -16,6 +16,7 @@ interface ChatInputProps {
   isLoading?: boolean;
   placeholder?: string;
   disabled?: boolean;
+  hasMessages?: boolean;
 }
 
 export function ChatInput({
@@ -23,6 +24,7 @@ export function ChatInput({
   isLoading = false,
   placeholder = 'Ask about air quality...',
   disabled = false,
+  hasMessages = false,
 }: ChatInputProps) {
   const [input, setInput] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -99,7 +101,7 @@ export function ChatInput({
   };
 
   return (
-    <div className="bg-white p-4">
+    <div className="p-4">
       {/* File Upload Preview */}
       <AnimatePresence>
         {uploadedFile && (
@@ -109,7 +111,7 @@ export function ChatInput({
             exit={{ opacity: 0, y: -10 }}
             className="mb-3"
           >
-            <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
                 <AqFile02 className="h-5 w-5 text-blue-600" />
               </div>
@@ -136,9 +138,11 @@ export function ChatInput({
       {/* Input Area */}
       <div
         className={cn(
-          'relative flex items-end gap-2 rounded-3xl border bg-white shadow-sm transition-all',
-          isDragging ? 'border-blue-400 bg-blue-50/50' : 'border-gray-300',
-          'focus-within:border-gray-400'
+          'relative flex items-center gap-2 rounded-3xl bg-white transition-all',
+          isDragging ? 'border-blue-400 bg-blue-50/50' : '',
+          hasMessages
+            ? 'border border-gray-300 shadow-sm focus-within:border-gray-400 focus-within:shadow-md'
+            : 'border border-gray-200 shadow-lg focus-within:border-gray-300'
         )}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -200,7 +204,7 @@ export function ChatInput({
           onClick={handleSend}
           disabled={(!input.trim() && !uploadedFile) || isLoading || disabled}
           className={cn(
-            'mr-2 mb-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-gray-500 focus:outline-none',
+            'mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-gray-500 focus:outline-none',
             (!input.trim() && !uploadedFile) || isLoading || disabled
               ? 'cursor-not-allowed bg-gray-200 text-gray-400'
               : 'bg-gray-900 text-white hover:bg-gray-800',
@@ -218,9 +222,13 @@ export function ChatInput({
 
       {/* Helper Text */}
       {isDragging && (
-        <div className="mt-2 text-center text-sm font-medium text-blue-600">
+        <motion.div
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-2 text-center text-sm font-medium text-blue-600"
+        >
           Drop file to upload
-        </div>
+        </motion.div>
       )}
     </div>
   );

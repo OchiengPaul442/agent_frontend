@@ -1,9 +1,10 @@
 'use client';
 
 import { Message } from '@/types';
-import { cn, formatDate } from '@/utils/helpers';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { cn } from '@/utils/helpers';
 
 interface MessageBubbleProps {
   message: Message;
@@ -17,89 +18,84 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className={cn('w-full py-6', isUser ? 'bg-white' : 'bg-gray-50')}
+      className="group w-full border-b border-gray-100 py-8"
     >
-      <div className="mx-auto flex max-w-4xl gap-6 px-4">
-        {/* Avatar */}
-        <div className="flex-shrink-0">
-          {isUser ? (
-            <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-gray-800 text-white">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-            </div>
-          ) : (
-            <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-blue-600 text-white">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-          )}
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 space-y-2 overflow-hidden">
+      <div className="mx-auto flex max-w-3xl gap-6 px-4 sm:px-6">
+        {/* Message Content */}
+        <div
+          className={cn('flex-1 space-y-2', isUser ? 'flex justify-end' : '')}
+        >
           <div
             className={cn(
-              'prose prose-sm max-w-none break-words text-gray-900',
-              'prose-p:my-1 prose-p:leading-7',
-              'prose-pre:bg-gray-900 prose-pre:text-gray-100',
-              'prose-code:text-gray-900',
-              'prose-headings:text-gray-900'
+              'prose prose-sm prose-slate max-w-none',
+              'prose-p:my-2 prose-p:leading-7',
+              'prose-headings:mb-4 prose-headings:mt-6 prose-headings:font-semibold',
+              'prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg',
+              'prose-a:font-medium prose-a:text-blue-600 prose-a:no-underline',
+              'hover:prose-a:text-blue-700 hover:prose-a:underline',
+              'prose-strong:font-semibold prose-strong:text-gray-900',
+              'prose-code:rounded prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5',
+              'prose-code:font-mono prose-code:text-sm prose-code:text-gray-900',
+              'prose-code:before:content-none prose-code:after:content-none',
+              'prose-pre:overflow-x-auto prose-pre:rounded-lg prose-pre:bg-gray-900 prose-pre:p-4',
+              'prose-pre:text-gray-100 prose-pre:shadow-lg',
+              'prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6',
+              'prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6',
+              'prose-li:my-1 prose-li:leading-7',
+              'prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-blockquote:pl-4',
+              'prose-blockquote:italic prose-blockquote:text-gray-700',
+              'prose-img:rounded-lg prose-img:shadow-md',
+              'prose-table:border-collapse prose-table:w-full',
+              'prose-th:border prose-th:border-gray-300 prose-th:bg-gray-50 prose-th:px-4 prose-th:py-2 prose-th:text-left prose-th:font-semibold prose-th:text-gray-900',
+              'prose-td:border prose-td:border-gray-300 prose-td:px-4 prose-td:py-2',
+              isUser
+                ? 'inline-block max-w-[85%] rounded-3xl bg-gray-200 px-5 py-3.5 text-gray-900'
+                : 'w-full text-gray-900'
             )}
           >
             <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
               components={{
-                p: ({ children }) => (
-                  <p className="my-1 leading-7 text-gray-900">{children}</p>
+                a: ({ href, children }) => (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-blue-600 no-underline transition-colors hover:text-blue-700 hover:underline"
+                  >
+                    {children}
+                  </a>
                 ),
-                code: (
-                  props: React.ComponentProps<'code'> & { inline?: boolean }
-                ) => {
-                  const { inline, children, ...rest } = props;
+                code: ({
+                  inline,
+                  className,
+                  children,
+                  ...props
+                }: React.ComponentPropsWithoutRef<'code'> & {
+                  inline?: boolean;
+                }) => {
+                  if (inline) {
+                    return (
+                      <code
+                        className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm text-gray-900"
+                        {...props}
+                      >
+                        {children}
+                      </code>
+                    );
+                  }
                   return (
                     <code
-                      {...rest}
                       className={cn(
-                        'font-mono text-sm',
-                        inline
-                          ? 'rounded bg-gray-200 px-1 py-0.5 text-gray-900'
-                          : 'block overflow-x-auto rounded-md bg-gray-900 p-4 text-gray-100'
+                        'block overflow-x-auto rounded-lg bg-gray-900 p-4 font-mono text-sm text-gray-100',
+                        className
                       )}
+                      {...props}
                     >
                       {children}
                     </code>
                   );
                 },
-                ul: ({ children }) => (
-                  <ul className="my-2 space-y-1">{children}</ul>
-                ),
-                ol: ({ children }) => (
-                  <ol className="my-2 space-y-1">{children}</ol>
-                ),
-                li: ({ children }) => (
-                  <li className="leading-7 text-gray-900">{children}</li>
-                ),
               }}
             >
               {message.content}
@@ -108,13 +104,13 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 
           {/* Tools used indicator */}
           {message.tools_used && message.tools_used.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               {message.tools_used.map((tool, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-600"
                 >
-                  <div className="h-1.5 w-1.5 rounded-full bg-blue-600"></div>
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
                   {tool}
                 </span>
               ))}
