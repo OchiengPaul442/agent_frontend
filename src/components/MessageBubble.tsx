@@ -3,8 +3,8 @@
 import { Message } from '@/types';
 import { cn, formatDate } from '@/utils/helpers';
 import { motion } from 'framer-motion';
+import { AqUser01 } from '@airqo/icons-react';
 import ReactMarkdown from 'react-markdown';
-import { AqUser01, AqStar01 } from '@airqo/icons-react';
 
 interface MessageBubbleProps {
   message: Message;
@@ -24,8 +24,20 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       )}
     >
       {!isUser && (
-        <div className="from-primary-400 to-primary-600 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg">
-          <AqStar01 className="h-5 w-5" />
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg">
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+            />
+          </svg>
         </div>
       )}
 
@@ -33,8 +45,8 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         className={cn(
           'group relative max-w-[85%] rounded-3xl px-6 py-4 shadow-lg transition-all hover:shadow-xl',
           isUser
-            ? 'from-primary-500 to-primary-600 shadow-primary-500/25 bg-gradient-to-br text-white'
-            : 'glass border-secondary-200/50 text-secondary-900 border bg-white/80 backdrop-blur-sm'
+            ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-amber-500/25'
+            : 'border border-slate-200/50 bg-white/80 text-slate-900 backdrop-blur-sm'
         )}
       >
         {/* Message content with improved typography */}
@@ -43,7 +55,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             'prose prose-sm max-w-none break-words',
             isUser
               ? 'prose-invert prose-p:my-2 prose-headings:text-white prose-headings:font-semibold'
-              : 'prose-secondary prose-p:my-2 prose-headings:text-secondary-900 prose-headings:font-semibold'
+              : 'prose prose-p:my-2 prose-headings:text-slate-900 prose-headings:font-semibold'
           )}
         >
           <ReactMarkdown
@@ -51,20 +63,26 @@ export function MessageBubble({ message }: MessageBubbleProps) {
               p: ({ children }) => (
                 <p className="leading-relaxed">{children}</p>
               ),
-              code: ({ inline, children }) => (
-                <code
-                  className={cn(
-                    'rounded-md px-1.5 py-0.5 font-mono text-sm',
-                    inline
-                      ? isUser
-                        ? 'bg-white/20 text-white'
-                        : 'bg-secondary-100 text-secondary-800'
-                      : 'bg-secondary-900 text-secondary-100 block overflow-x-auto p-4'
-                  )}
-                >
-                  {children}
-                </code>
-              ),
+              code: (
+                props: React.ComponentProps<'code'> & { inline?: boolean }
+              ) => {
+                const { inline, children, ...rest } = props;
+                return (
+                  <code
+                    {...rest}
+                    className={cn(
+                      'rounded-md px-1.5 py-0.5 font-mono text-sm',
+                      inline
+                        ? isUser
+                          ? 'bg-white/20 text-white'
+                          : 'bg-slate-100 text-slate-800'
+                        : 'block overflow-x-auto bg-slate-900 p-4 text-slate-100'
+                    )}
+                  >
+                    {children}
+                  </code>
+                );
+              },
               ul: ({ children }) => <ul className="space-y-1">{children}</ul>,
               ol: ({ children }) => <ol className="space-y-1">{children}</ol>,
               li: ({ children }) => <li className="text-sm">{children}</li>,
@@ -79,7 +97,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           <div
             className={cn(
               'mt-3 text-xs opacity-70',
-              isUser ? 'text-primary-100' : 'text-secondary-500'
+              isUser ? 'text-amber-100' : 'text-slate-500'
             )}
           >
             {formatDate(message.timestamp)}
@@ -96,7 +114,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                   'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium',
                   isUser
                     ? 'bg-white/20 text-white'
-                    : 'bg-primary-100 text-primary-700'
+                    : 'bg-amber-100 text-amber-700'
                 )}
               >
                 <div className="h-1.5 w-1.5 rounded-full bg-current opacity-60"></div>
@@ -108,7 +126,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       </div>
 
       {isUser && (
-        <div className="bg-secondary-200 text-secondary-700 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl shadow-md">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-200 text-slate-700 shadow-md">
           <AqUser01 className="h-5 w-5" />
         </div>
       )}

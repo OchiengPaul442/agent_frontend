@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { apiService } from '@/services/api.service';
 import type { Message, ChatResponse } from '@/types';
 
@@ -18,12 +18,6 @@ export function useChat(options: UseChatOptions = {}) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const isLoadingRef = useRef(false);
   const prevSessionIdRef = useRef<string | undefined>(options.sessionId);
-
-  // Memoize options to prevent unnecessary re-renders
-  const memoizedOptions = useMemo(
-    () => options,
-    [options.sessionId, options.onError]
-  );
 
   useEffect(() => {
     const loadMessages = async () => {
@@ -69,7 +63,7 @@ export function useChat(options: UseChatOptions = {}) {
         abortControllerRef.current = null;
       }
     };
-  }, [options.sessionId, memoizedOptions]);
+  }, [options]);
 
   const sendMessage = useCallback(
     async (content: string, file?: File): Promise<ChatResponse | null> => {
@@ -138,7 +132,7 @@ export function useChat(options: UseChatOptions = {}) {
         abortControllerRef.current = null;
       }
     },
-    [messages, currentSessionId, memoizedOptions]
+    [messages, currentSessionId, options]
   );
 
   const clearMessages = useCallback(() => {

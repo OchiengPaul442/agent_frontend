@@ -6,7 +6,6 @@ import { ChatMessages } from '@/components/ChatMessages';
 import { ChatInput } from '@/components/ChatInput';
 import { useChat } from '@/hooks/useChat';
 import { useSessions } from '@/hooks/useSessions';
-import { AqMenu01 } from '@airqo/icons-react';
 import { motion } from 'framer-motion';
 
 export default function HomePage() {
@@ -59,7 +58,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="from-secondary-50 to-primary-50/30 flex h-screen bg-gradient-to-br via-white">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
       <Sidebar
         sessions={sessions}
         currentSessionId={selectedSessionId}
@@ -73,22 +72,34 @@ export default function HomePage() {
 
       <div className="flex flex-1 flex-col">
         {/* Enhanced Header */}
-        <header className="glass border-secondary-200/50 border-b px-6 py-4 shadow-sm">
+        <header className="glass border-secondary-200/60 border-b px-4 py-3 shadow-sm backdrop-blur-md">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsSidebarOpen(true)}
-                className="bg-secondary-100 text-secondary-600 hover:bg-secondary-200 focus-ring flex h-10 w-10 items-center justify-center rounded-xl transition-all hover:shadow-md lg:hidden"
+                className="bg-secondary-100 text-secondary-600 hover:bg-secondary-200 focus-ring flex h-9 w-9 items-center justify-center rounded-lg transition-all hover:shadow-sm lg:hidden"
                 aria-label="Open sidebar"
               >
-                <AqMenu01 className="h-5 w-5" />
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
               </motion.button>
 
-              <div className="flex items-center gap-4">
-                <div className="from-primary-400 to-primary-600 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg">
                   <svg
-                    className="h-7 w-7"
+                    className="h-5 w-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -102,11 +113,11 @@ export default function HomePage() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="gradient-text text-xl font-bold">
+                  <h1 className="bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-lg font-semibold text-transparent">
                     Air Quality AI
                   </h1>
-                  <p className="text-secondary-600 text-sm">
-                    Real-time insights & analysis
+                  <p className="text-secondary-500 text-xs">
+                    Real-time insights
                   </p>
                 </div>
               </div>
@@ -114,9 +125,9 @@ export default function HomePage() {
 
             {/* Status indicator */}
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 rounded-full bg-green-100 px-3 py-1.5 text-xs font-medium text-green-700">
-                <div className="animate-pulse-subtle h-2 w-2 rounded-full bg-green-500"></div>
-                Live Data
+              <div className="flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+                <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500"></div>
+                Live
               </div>
             </div>
           </div>

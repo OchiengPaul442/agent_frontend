@@ -2,14 +2,14 @@
 
 import { useState, KeyboardEvent, useRef, DragEvent } from 'react';
 import { cn } from '@/utils/helpers';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  AqSend01,
-  AqLoading01,
+  AqFile02,
   AqPaperclip,
   AqX,
-  AqFile02,
+  AqSend01,
+  AqLoading01,
 } from '@airqo/icons-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface ChatInputProps {
   onSend: (message: string, file?: File) => void;
@@ -99,7 +99,7 @@ export function ChatInput({
   };
 
   return (
-    <div className="glass border-secondary-200/50 border-t p-6">
+    <div className="border-t border-slate-200/50 bg-white/50 p-6 backdrop-blur-sm">
       <div className="mx-auto max-w-4xl">
         {/* File Upload Preview */}
         <AnimatePresence>
@@ -110,15 +110,15 @@ export function ChatInput({
               exit={{ opacity: 0, y: -10 }}
               className="mb-6"
             >
-              <div className="border-secondary-200 flex items-center gap-4 rounded-2xl border bg-white/80 p-4 shadow-sm backdrop-blur-sm">
-                <div className="bg-primary-100 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl">
-                  <AqFile02 className="text-primary-600 h-6 w-6" />
+              <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur-sm">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+                  <AqFile02 className="h-6 w-6 text-amber-600" />
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  <p className="text-secondary-900 truncate text-sm font-semibold">
+                  <p className="truncate text-sm font-semibold text-slate-900">
                     {uploadedFile.name}
                   </p>
-                  <p className="text-secondary-500 text-sm">
+                  <p className="text-sm text-slate-500">
                     {formatFileSize(uploadedFile.size)}
                   </p>
                 </div>
@@ -126,7 +126,7 @@ export function ChatInput({
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={removeFile}
-                  className="text-secondary-400 focus-ring flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-red-50 hover:text-red-600"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none"
                   aria-label="Remove file"
                 >
                   <AqX className="h-5 w-5" />
@@ -141,9 +141,9 @@ export function ChatInput({
           className={cn(
             'relative flex items-center gap-4 rounded-3xl border-2 bg-white/80 shadow-lg backdrop-blur-sm transition-all focus-within:shadow-xl',
             isDragging
-              ? 'border-primary-400 bg-primary-50/50'
-              : 'border-secondary-200 hover:border-secondary-300',
-            'focus-within:border-primary-500 focus-within:ring-primary-500/10 focus-within:ring-4'
+              ? 'border-amber-400 bg-amber-50/50'
+              : 'border-slate-200 hover:border-slate-300',
+            'focus-within:border-amber-500 focus-within:ring-4 focus-within:ring-amber-500/10'
           )}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
@@ -166,10 +166,10 @@ export function ChatInput({
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled || isLoading || !!uploadedFile}
             className={cn(
-              'focus-ring ml-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all',
+              'ml-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:outline-none',
               uploadedFile
-                ? 'bg-secondary-100 text-secondary-400 cursor-not-allowed'
-                : 'bg-secondary-100 text-secondary-600 hover:bg-secondary-200 hover:shadow-md',
+                ? 'cursor-not-allowed bg-slate-100 text-slate-400'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:shadow-md',
               'disabled:cursor-not-allowed disabled:opacity-50'
             )}
             aria-label="Upload file"
@@ -188,7 +188,7 @@ export function ChatInput({
             disabled={disabled || isLoading}
             rows={1}
             className={cn(
-              'text-secondary-900 placeholder:text-secondary-500 flex-1 resize-none border-0 bg-transparent px-2 py-4 text-base focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+              'flex-1 resize-none border-0 bg-transparent px-2 py-4 text-base text-slate-900 placeholder:text-slate-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
               'transition-all duration-200'
             )}
             style={{
@@ -210,10 +210,10 @@ export function ChatInput({
             whileTap={{ scale: 0.95 }}
             whileHover={{ scale: 1.05 }}
             className={cn(
-              'focus-ring mr-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all',
+              'mr-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:outline-none',
               (!input.trim() && !uploadedFile) || isLoading || disabled
-                ? 'bg-secondary-200 text-secondary-400 cursor-not-allowed'
-                : 'from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 bg-gradient-to-br text-white shadow-lg hover:shadow-xl',
+                ? 'cursor-not-allowed bg-slate-200 text-slate-400'
+                : 'bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-lg hover:from-amber-600 hover:to-amber-700 hover:shadow-xl',
               'disabled:cursor-not-allowed disabled:opacity-50'
             )}
             aria-label="Send message"
@@ -230,23 +230,23 @@ export function ChatInput({
         <div className="mt-4 flex items-center justify-between text-sm">
           <div className="flex items-center gap-2">
             {isDragging ? (
-              <span className="text-primary-600 font-medium">
+              <span className="font-medium text-amber-600">
                 Drop file to upload
               </span>
             ) : (
-              <span className="text-secondary-500">
+              <span className="text-slate-500">
                 <span className="font-medium">Upload:</span> PDF, CSV, Excel •
                 Max 8MB
               </span>
             )}
           </div>
-          <div className="text-secondary-500 flex items-center gap-3">
-            <kbd className="bg-secondary-100 rounded-lg px-2 py-1 font-mono text-xs">
+          <div className="flex items-center gap-3 text-slate-500">
+            <kbd className="rounded-lg bg-slate-100 px-2 py-1 font-mono text-xs">
               Enter
             </kbd>
             <span>to send</span>
-            <span className="text-secondary-400">•</span>
-            <kbd className="bg-secondary-100 rounded-lg px-2 py-1 font-mono text-xs">
+            <span className="text-slate-400">•</span>
+            <kbd className="rounded-lg bg-slate-100 px-2 py-1 font-mono text-xs">
               Shift + Enter
             </kbd>
             <span>for new line</span>
