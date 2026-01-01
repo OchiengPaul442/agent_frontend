@@ -17,53 +17,89 @@ export function MessageBubble({ message }: MessageBubbleProps) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
       className={cn(
-        'flex w-full gap-3',
+        'flex w-full gap-4',
         isUser ? 'justify-end' : 'justify-start'
       )}
     >
       {!isUser && (
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 text-white shadow-md">
-          <AqStar01 className="h-4 w-4" />
+        <div className="from-primary-400 to-primary-600 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg">
+          <AqStar01 className="h-5 w-5" />
         </div>
       )}
 
       <div
         className={cn(
-          'group relative max-w-[80%] rounded-2xl px-4 py-3 shadow-sm transition-all hover:shadow-md',
+          'group relative max-w-[85%] rounded-3xl px-6 py-4 shadow-lg transition-all hover:shadow-xl',
           isUser
-            ? 'bg-red-500 text-white'
-            : 'border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100'
+            ? 'from-primary-500 to-primary-600 shadow-primary-500/25 bg-gradient-to-br text-white'
+            : 'glass border-secondary-200/50 text-secondary-900 border bg-white/80 backdrop-blur-sm'
         )}
       >
+        {/* Message content with improved typography */}
         <div
           className={cn(
-            'prose prose-sm max-w-none',
-            isUser ? 'prose-invert' : 'prose-slate dark:prose-invert'
+            'prose prose-sm max-w-none break-words',
+            isUser
+              ? 'prose-invert prose-p:my-2 prose-headings:text-white prose-headings:font-semibold'
+              : 'prose-secondary prose-p:my-2 prose-headings:text-secondary-900 prose-headings:font-semibold'
           )}
         >
-          <ReactMarkdown>{message.content}</ReactMarkdown>
+          <ReactMarkdown
+            components={{
+              p: ({ children }) => (
+                <p className="leading-relaxed">{children}</p>
+              ),
+              code: ({ inline, children }) => (
+                <code
+                  className={cn(
+                    'rounded-md px-1.5 py-0.5 font-mono text-sm',
+                    inline
+                      ? isUser
+                        ? 'bg-white/20 text-white'
+                        : 'bg-secondary-100 text-secondary-800'
+                      : 'bg-secondary-900 text-secondary-100 block overflow-x-auto p-4'
+                  )}
+                >
+                  {children}
+                </code>
+              ),
+              ul: ({ children }) => <ul className="space-y-1">{children}</ul>,
+              ol: ({ children }) => <ol className="space-y-1">{children}</ol>,
+              li: ({ children }) => <li className="text-sm">{children}</li>,
+            }}
+          >
+            {message.content}
+          </ReactMarkdown>
         </div>
 
+        {/* Timestamp with better styling */}
         {message.timestamp && (
           <div
             className={cn(
-              'mt-2 text-xs',
-              isUser ? 'text-red-100' : 'text-slate-500 dark:text-slate-400'
+              'mt-3 text-xs opacity-70',
+              isUser ? 'text-primary-100' : 'text-secondary-500'
             )}
           >
             {formatDate(message.timestamp)}
           </div>
         )}
 
+        {/* Tools used indicator */}
         {message.tools_used && message.tools_used.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
+          <div className="mt-3 flex flex-wrap gap-1.5">
             {message.tools_used.map((tool, index) => (
               <span
                 key={index}
-                className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium',
+                  isUser
+                    ? 'bg-white/20 text-white'
+                    : 'bg-primary-100 text-primary-700'
+                )}
               >
+                <div className="h-1.5 w-1.5 rounded-full bg-current opacity-60"></div>
                 {tool}
               </span>
             ))}
@@ -72,8 +108,8 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       </div>
 
       {isUser && (
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-700 shadow-sm dark:bg-slate-700 dark:text-slate-300">
-          <AqUser01 className="h-4 w-4" />
+        <div className="bg-secondary-200 text-secondary-700 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl shadow-md">
+          <AqUser01 className="h-5 w-5" />
         </div>
       )}
     </motion.div>

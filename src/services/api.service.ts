@@ -38,7 +38,10 @@ class ApiService {
   }
 
   // Chat endpoints
-  async sendMessage(data: ChatRequest): Promise<ChatResponse> {
+  async sendMessage(
+    data: ChatRequest,
+    options?: { signal?: AbortSignal }
+  ): Promise<ChatResponse> {
     if (data.file) {
       // Use FormData for file uploads
       const formData = new FormData();
@@ -51,6 +54,7 @@ class ApiService {
       return this.fetchWithError<ChatResponse>(`${API_BASE}/agent/chat`, {
         method: 'POST',
         body: formData,
+        signal: options?.signal,
       });
     }
 
@@ -58,6 +62,7 @@ class ApiService {
     return this.fetchWithError<ChatResponse>(`${API_BASE}/agent/chat`, {
       method: 'POST',
       body: JSON.stringify(data),
+      signal: options?.signal,
     });
   }
 

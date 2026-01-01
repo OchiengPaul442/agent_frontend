@@ -52,7 +52,7 @@ export function Sidebar({
         }}
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-80 flex-col border-r border-slate-200 bg-white shadow-xl',
+          'glass border-secondary-200/50 fixed inset-y-0 left-0 z-50 flex w-80 flex-col border-r shadow-2xl',
           // Desktop: always visible with relative positioning
           'lg:static lg:z-0 lg:shadow-none',
           // Mobile: overlay behavior
@@ -60,12 +60,13 @@ export function Sidebar({
         )}
       >
         {/* Header */}
-        <div className="border-b border-slate-200 p-4">
+        <div className="border-secondary-200/50 border-b p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-900">Chat History</h2>
+            <h2 className="gradient-text text-xl font-bold">Chat History</h2>
             <button
               onClick={onClose}
-              className="rounded-lg p-1 hover:bg-slate-100 lg:hidden"
+              className="bg-secondary-100 text-secondary-600 hover:bg-secondary-200 focus-ring flex h-8 w-8 items-center justify-center rounded-lg transition-colors lg:hidden"
+              aria-label="Close sidebar"
             >
               <svg
                 className="h-5 w-5"
@@ -86,29 +87,33 @@ export function Sidebar({
           <motion.button
             onClick={onNewSession}
             whileTap={{ scale: 0.98 }}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 text-sm font-medium text-white shadow-lg transition-all hover:from-red-600 hover:to-red-700 hover:shadow-xl"
+            className="from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 focus-ring flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r px-5 py-4 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl"
           >
-            <AqPlus className="h-4 w-4" />
-            New Chat
+            <AqPlus className="h-5 w-5" />
+            New Conversation
           </motion.button>
         </div>
 
         {/* Sessions List */}
-        <div className="flex-1 overflow-y-auto p-2">
+        <div className="flex-1 overflow-y-auto p-4">
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
+            <div className="flex items-center justify-center py-12">
+              <div className="border-primary-500 h-8 w-8 animate-spin rounded-full border-3 border-t-transparent"></div>
             </div>
           ) : sessions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <AqClock className="mb-3 h-12 w-12 text-slate-300" />
-              <p className="text-sm text-slate-500">No chat history yet</p>
-              <p className="mt-1 text-xs text-slate-400">
-                Start a new conversation
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="bg-secondary-100 text-secondary-400 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl">
+                <AqClock className="h-8 w-8" />
+              </div>
+              <p className="text-secondary-700 mb-2 text-base font-medium">
+                No conversations yet
+              </p>
+              <p className="text-secondary-500 max-w-xs text-sm">
+                Start your first conversation to see chat history here
               </p>
             </div>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-2">
               {sessions.map((session) => (
                 <motion.div
                   key={session.session_id}
@@ -119,18 +124,27 @@ export function Sidebar({
                   <button
                     onClick={() => onSessionSelect(session.session_id)}
                     className={cn(
-                      'flex w-full items-start gap-3 rounded-lg px-3 py-3 text-left transition-all',
+                      'focus-ring flex w-full items-start gap-3 rounded-2xl px-4 py-4 text-left transition-all hover:shadow-md',
                       currentSessionId === session.session_id
-                        ? 'bg-red-50 text-red-900'
-                        : 'text-slate-700 hover:bg-slate-50'
+                        ? 'bg-primary-50 text-primary-900 border-primary-200 border shadow-md'
+                        : 'text-secondary-700 hover:bg-secondary-50'
                     )}
                   >
-                    <AqMessageChatSquare className="mt-0.5 h-4 w-4 shrink-0" />
+                    <div
+                      className={cn(
+                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors',
+                        currentSessionId === session.session_id
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-secondary-100 text-secondary-600 group-hover:bg-secondary-200'
+                      )}
+                    >
+                      <AqMessageChatSquare className="h-4 w-4" />
+                    </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">
-                        {session.title || 'Untitled Chat'}
+                      <p className="text-secondary-900 mb-1 truncate text-sm font-semibold">
+                        {session.title || 'Untitled Conversation'}
                       </p>
-                      <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
+                      <div className="text-secondary-500 flex items-center gap-3 text-xs">
                         <span>{formatDate(session.updated_at)}</span>
                         <span>•</span>
                         <span>{session.message_count} messages</span>
@@ -146,9 +160,8 @@ export function Sidebar({
                       e.stopPropagation();
                       onDeleteSession(session.session_id);
                     }}
-                    className={cn(
-                      'absolute top-3 right-2 rounded-md p-1.5 text-slate-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-50 hover:text-red-600'
-                    )}
+                    className="text-secondary-400 focus-ring absolute top-4 right-3 rounded-lg p-2 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-50 hover:text-red-600"
+                    aria-label="Delete conversation"
                   >
                     <AqTrash01 className="h-4 w-4" />
                   </motion.button>
@@ -159,10 +172,15 @@ export function Sidebar({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-slate-200 bg-slate-50 p-4">
-          <div className="text-xs text-slate-600">
-            <p className="font-medium">Air Quality AI Agent</p>
-            <p className="mt-1">Powered by real-time global data</p>
+        <div className="border-secondary-200/50 bg-secondary-50/50 border-t p-6">
+          <div className="text-secondary-600 text-sm">
+            <p className="text-secondary-900 mb-1 font-semibold">
+              Air Quality AI Agent
+            </p>
+            <p className="leading-relaxed">
+              Real-time global air quality monitoring and intelligent analysis
+              powered by advanced AI
+            </p>
           </div>
         </div>
       </motion.aside>

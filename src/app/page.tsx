@@ -59,7 +59,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="from-secondary-50 to-primary-50/30 flex h-screen bg-gradient-to-br via-white">
       <Sidebar
         sessions={sessions}
         currentSessionId={selectedSessionId}
@@ -72,38 +72,51 @@ export default function HomePage() {
       />
 
       <div className="flex flex-1 flex-col">
-        {/* Header */}
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white/80 px-6 py-4 shadow-sm backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsSidebarOpen(true)}
-              className="rounded-lg p-2 transition-colors hover:bg-slate-100 lg:hidden"
-            >
-              <AqMenu01 className="h-5 w-5 text-slate-700" />
-            </motion.button>
+        {/* Enhanced Header */}
+        <header className="glass border-secondary-200/50 border-b px-6 py-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsSidebarOpen(true)}
+                className="bg-secondary-100 text-secondary-600 hover:bg-secondary-200 focus-ring flex h-10 w-10 items-center justify-center rounded-xl transition-all hover:shadow-md lg:hidden"
+                aria-label="Open sidebar"
+              >
+                <AqMenu01 className="h-5 w-5" />
+              </motion.button>
 
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg">
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
-                  />
-                </svg>
+              <div className="flex items-center gap-4">
+                <div className="from-primary-400 to-primary-600 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg">
+                  <svg
+                    className="h-7 w-7"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="gradient-text text-xl font-bold">
+                    Air Quality AI
+                  </h1>
+                  <p className="text-secondary-600 text-sm">
+                    Real-time insights & analysis
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-slate-900">
-                  Air Quality AI
-                </h1>
-                <p className="text-sm text-slate-600">Real-time insights</p>
+            </div>
+
+            {/* Status indicator */}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 rounded-full bg-green-100 px-3 py-1.5 text-xs font-medium text-green-700">
+                <div className="animate-pulse-subtle h-2 w-2 rounded-full bg-green-500"></div>
+                Live Data
               </div>
             </div>
           </div>
