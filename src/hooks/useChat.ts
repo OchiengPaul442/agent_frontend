@@ -33,8 +33,15 @@ export function useChat(options: UseChatOptions = {}) {
 
       const userMessage: Message = {
         role: 'user',
-        content: file ? `${content} [File: ${file.name}]` : content,
+        content: file ? content : content,
         timestamp: new Date().toISOString(),
+        ...(file && {
+          file: {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+          },
+        }),
       };
 
       setMessages((prev) => [...prev, userMessage]);

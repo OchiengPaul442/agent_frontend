@@ -29,14 +29,37 @@ export function ChatInput({
   const [input, setInput] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
-    if ((!input.trim() && !uploadedFile) || isLoading || disabled) return;
+    if (
+      (!input.trim() && !uploadedFile) ||
+      isLoading ||
+      disabled ||
+      isUploading
+    )
+      return;
 
-    onSend(input.trim() || 'Analyze this document', uploadedFile || undefined);
-    setInput('');
-    setUploadedFile(null);
+    if (uploadedFile) {
+      setIsUploading(true);
+      // Simulate upload start
+      setTimeout(() => {
+        onSend(
+          input.trim() || 'Analyze this document',
+          uploadedFile || undefined
+        );
+        setInput('');
+        setUploadedFile(null);
+        setIsUploading(false);
+      }, 100);
+    } else {
+      onSend(
+        input.trim() || 'Analyze this document',
+        uploadedFile || undefined
+      );
+      setInput('');
+    }
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -113,23 +136,31 @@ export function ChatInput({
           >
             <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
-                <AqFile02 className="h-5 w-5 text-blue-600" />
+                {isUploading ? (
+                  <AqLoading01 className="h-5 w-5 animate-spin text-blue-600" />
+                ) : (
+                  <AqFile02 className="h-5 w-5 text-blue-600" />
+                )}
               </div>
               <div className="flex-1 overflow-hidden">
                 <p className="truncate text-sm font-medium text-gray-900">
                   {uploadedFile.name}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {formatFileSize(uploadedFile.size)}
+                  {isUploading
+                    ? 'Uploading...'
+                    : formatFileSize(uploadedFile.size)}
                 </p>
               </div>
-              <button
-                onClick={removeFile}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 focus:ring-2 focus:ring-red-500 focus:outline-none"
-                aria-label="Remove file"
-              >
-                <AqX className="h-4 w-4" />
-              </button>
+              {!isUploading && (
+                <button
+                  onClick={removeFile}
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 focus:ring-2 focus:ring-red-500 focus:outline-none"
+                  aria-label="Remove file"
+                >
+                  <AqX className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </motion.div>
         )}
@@ -202,17 +233,25 @@ export function ChatInput({
         {/* Send Button */}
         <button
           onClick={handleSend}
-          disabled={(!input.trim() && !uploadedFile) || isLoading || disabled}
+          disabled={
+            (!input.trim() && !uploadedFile) ||
+            isLoading ||
+            disabled ||
+            isUploading
+          }
           className={cn(
             'mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-gray-500 focus:outline-none',
-            (!input.trim() && !uploadedFile) || isLoading || disabled
+            (!input.trim() && !uploadedFile) ||
+              isLoading ||
+              disabled ||
+              isUploading
               ? 'cursor-not-allowed bg-gray-200 text-gray-400'
               : 'bg-gray-900 text-white hover:bg-gray-800',
             'disabled:cursor-not-allowed disabled:opacity-50'
           )}
           aria-label="Send message"
         >
-          {isLoading ? (
+          {isLoading || isUploading ? (
             <AqLoading01 className="h-4 w-4 animate-spin" />
           ) : (
             <AqSend01 className="h-4 w-4" />

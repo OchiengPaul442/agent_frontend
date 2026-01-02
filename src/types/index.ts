@@ -3,6 +3,11 @@ export interface Message {
   content: string;
   timestamp?: string;
   tools_used?: string[];
+  file?: {
+    name: string;
+    size: number;
+    type: string;
+  };
 }
 
 export interface Session {

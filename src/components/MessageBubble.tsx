@@ -5,10 +5,28 @@ import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/utils/helpers';
+import { AqFile02 } from '@airqo/icons-react';
 
 interface MessageBubbleProps {
   message: Message;
 }
+
+const formatFileSize = (bytes: number) => {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+};
+
+const getFileIcon = (type: string) => {
+  if (type.includes('pdf')) return '📄';
+  if (
+    type.includes('csv') ||
+    type.includes('excel') ||
+    type.includes('spreadsheet')
+  )
+    return '📊';
+  return '📎';
+};
 
 export function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.role === 'user';
@@ -23,8 +41,36 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       <div className="mx-auto flex max-w-3xl gap-6 px-4 sm:px-6">
         {/* Message Content */}
         <div
-          className={cn('flex-1 space-y-2', isUser ? 'flex justify-end' : '')}
+          className={cn(
+            'flex-1 space-y-3',
+            isUser ? 'flex flex-col items-end' : ''
+          )}
         >
+          {/* File Attachment - Show above text for user messages */}
+          {isUser && message.file && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-[320px]"
+            >
+              <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3.5 shadow-sm">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-blue-100">
+                  <AqFile02 className="h-6 w-6 text-blue-600" />
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <p className="truncate text-sm font-semibold text-gray-900">
+                    {message.file.name}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {formatFileSize(message.file.size)}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Text Content */}
           <div
             className={cn(
               'prose prose-sm prose-slate max-w-none',
@@ -101,21 +147,6 @@ export function MessageBubble({ message }: MessageBubbleProps) {
               {message.content}
             </ReactMarkdown>
           </div>
-
-          {/* Tools used indicator */}
-          {message.tools_used && message.tools_used.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {message.tools_used.map((tool, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-600"
-                >
-                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
-                  {tool}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </motion.div>
