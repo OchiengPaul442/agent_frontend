@@ -2,8 +2,7 @@
 
 import { Message } from '@/types';
 import { motion } from 'framer-motion';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { Streamdown } from 'streamdown';
 import { cn } from '@/utils/helpers';
 import { AqFile02 } from '@airqo/icons-react';
 
@@ -59,10 +58,10 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                   <AqFile02 className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  <p className="truncate text-sm font-semibold text-gray-900">
+                  <p className="m-0 truncate p-0 text-sm font-semibold text-gray-900">
                     {message.file.name}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="m-0 p-0 text-xs text-gray-500">
                     {formatFileSize(message.file.size)}
                   </p>
                 </div>
@@ -74,7 +73,6 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           <div
             className={cn(
               'prose prose-sm prose-slate max-w-none',
-              'prose-p:my-2 prose-p:leading-7',
               'prose-headings:mb-4 prose-headings:mt-6 prose-headings:font-semibold',
               'prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg',
               'prose-a:font-medium prose-a:text-blue-600 prose-a:no-underline',
@@ -95,12 +93,11 @@ export function MessageBubble({ message }: MessageBubbleProps) {
               'prose-th:border prose-th:border-gray-300 prose-th:bg-gray-50 prose-th:px-4 prose-th:py-2 prose-th:text-left prose-th:font-semibold prose-th:text-gray-900',
               'prose-td:border prose-td:border-gray-300 prose-td:px-4 prose-td:py-2',
               isUser
-                ? 'inline-block max-w-[85%] rounded-3xl bg-gray-200 px-5 py-3.5 text-gray-900'
+                ? 'inline-block max-w-[85%] rounded-3xl bg-gray-200 px-5 py-3 text-gray-900'
                 : 'w-full text-gray-900'
             )}
           >
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
+            <Streamdown
               components={{
                 a: ({ href, children }) => (
                   <a
@@ -145,7 +142,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
               }}
             >
               {message.content}
-            </ReactMarkdown>
+            </Streamdown>
           </div>
         </div>
       </div>
