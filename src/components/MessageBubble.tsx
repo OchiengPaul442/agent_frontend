@@ -4,7 +4,8 @@ import { Message } from '@/types';
 import { motion } from 'framer-motion';
 import { Streamdown } from 'streamdown';
 import { cn } from '@/utils/helpers';
-import { AqFile02 } from '@airqo/icons-react';
+import { AqCopy01, AqCheckCircle } from '@airqo/icons-react';
+import { useState } from 'react';
 
 interface MessageBubbleProps {
   message: Message;
@@ -29,13 +30,24 @@ const getFileIcon = (type: string) => {
 
 export function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.role === 'user';
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(message.content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="group w-full border-b border-gray-100 py-8"
+      className="group relative w-full border-b border-gray-100 py-8"
     >
       <div className="mx-auto flex max-w-3xl gap-6 px-4 sm:px-6">
         {/* Message Content */}
@@ -45,6 +57,20 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             isUser ? 'flex flex-col items-end' : ''
           )}
         >
+          {/* Copy Button for Assistant Messages */}
+          {!isUser && (
+            <button
+              onClick={handleCopy}
+              className="absolute right-8 bottom-8 rounded-lg p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 hover:bg-gray-100"
+              title={copied ? 'Copied!' : 'Copy message'}
+            >
+              {copied ? (
+                <AqCheckCircle className="h-4 w-4 text-green-600" />
+              ) : (
+                <AqCopy01 className="h-4 w-4 text-gray-600" />
+              )}
+            </button>
+          )}
           {/* File Attachment - Show above text for user messages */}
           {isUser && message.file && (
             <motion.div
@@ -54,8 +80,10 @@ export function MessageBubble({ message }: MessageBubbleProps) {
               className="w-full max-w-[320px]"
             >
               <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3.5 shadow-sm">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-blue-100">
-                  <AqFile02 className="h-6 w-6 text-blue-600" />
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-50 to-blue-100">
+                  <span className="text-2xl">
+                    {getFileIcon(message.file.type)}
+                  </span>
                 </div>
                 <div className="flex-1 overflow-hidden">
                   <p className="m-0 truncate p-0 text-sm font-semibold text-gray-900">
@@ -73,6 +101,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           <div
             className={cn(
               'prose prose-sm prose-slate max-w-none',
+              'prose-p:m-0 prose-p:leading-normal',
               'prose-headings:mb-4 prose-headings:mt-6 prose-headings:font-semibold',
               'prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg',
               'prose-a:font-medium prose-a:text-blue-600 prose-a:no-underline',

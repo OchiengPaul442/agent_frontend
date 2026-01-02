@@ -137,7 +137,7 @@
 
   /* Button styles */
   .btn-primary {
-    @apply rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 font-medium text-white shadow-lg transition-all duration-300 hover:from-amber-600 hover:to-amber-700 hover:shadow-xl;
+    @apply rounded-xl bg-linear-to-r from-amber-500 to-amber-600 px-6 py-3 font-medium text-white shadow-lg transition-all duration-300 hover:from-amber-600 hover:to-amber-700 hover:shadow-xl;
   }
 
   .btn-secondary {
@@ -251,6 +251,12 @@
   background: none;
   padding: 0;
   color: inherit;
+}
+
+.prose p {
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
 }
 
 .prose blockquote {

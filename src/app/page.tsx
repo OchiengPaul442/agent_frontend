@@ -162,7 +162,7 @@ export default function HomePage() {
                       className="group rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:ring-2 focus:ring-gray-400 focus:outline-none"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                        <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-blue-500 to-blue-600 text-white">
                           <svg
                             className="h-3.5 w-3.5"
                             fill="none"

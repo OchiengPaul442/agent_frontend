@@ -62,7 +62,7 @@ export function Sidebar({
         {/* Header */}
         <div className="border-b border-slate-200 bg-slate-50/50 p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-xl font-bold text-transparent">
+            <h2 className="bg-linear-to-r from-blue-600 to-blue-800 bg-clip-text text-xl font-bold text-transparent">
               Chat History
             </h2>
             <button
@@ -77,7 +77,7 @@ export function Sidebar({
           <motion.button
             onClick={onNewSession}
             whileTap={{ scale: 0.98 }}
-            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-4 text-sm font-semibold text-white shadow-lg transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-xl focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-linear-to-r from-blue-500 to-blue-600 px-5 py-4 text-sm font-semibold text-white shadow-lg transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-xl focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
           >
             <svg
               className="h-5 w-5"

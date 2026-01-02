@@ -76,7 +76,7 @@ export function ChatMessages({
             <div className="rounded-xl border border-red-200 bg-red-50 p-4">
               <div className="flex items-start gap-3">
                 <svg
-                  className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600"
+                  className="mt-0.5 h-5 w-5 shrink-0 text-red-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"

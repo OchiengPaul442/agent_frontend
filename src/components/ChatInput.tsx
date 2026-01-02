@@ -217,7 +217,7 @@ export function ChatInput({
           rows={1}
           className={cn(
             'flex-1 resize-none border-0 bg-transparent px-1 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
-            'max-h-[200px]'
+            'max-h-50'
           )}
           style={{
             minHeight: '24px',
