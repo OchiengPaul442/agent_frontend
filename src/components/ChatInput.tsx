@@ -172,8 +172,8 @@ export function ChatInput({
           'relative flex items-center gap-2 rounded-3xl bg-white transition-all',
           isDragging ? 'border-blue-400 bg-blue-50/50' : '',
           hasMessages
-            ? 'border border-gray-300 shadow-sm focus-within:border-gray-400 focus-within:shadow-md'
-            : 'border border-gray-200 shadow-lg focus-within:border-gray-300'
+            ? 'border border-slate-300 shadow-sm focus-within:border-blue-400 focus-within:shadow-md focus-within:ring-1 focus-within:ring-blue-200'
+            : 'border border-slate-200 shadow-lg focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-200'
         )}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
