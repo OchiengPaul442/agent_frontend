@@ -5,11 +5,66 @@ import { motion } from 'framer-motion';
 import { Streamdown } from 'streamdown';
 import { cn } from '@/utils/helpers';
 import { AqCopy01, AqCheckCircle } from '@airqo/icons-react';
-import { useState } from 'react';
+import React, {
+  useState,
+  useRef,
+  ComponentProps,
+  ComponentPropsWithoutRef,
+} from 'react';
 
 interface MessageBubbleProps {
   message: Message;
 }
+
+type TableData = {
+  headers: string[];
+  rows: string[][];
+};
+
+const extractTableDataFromElement = (tableElement: HTMLElement): TableData => {
+  const headers: string[] = [];
+  const rows: string[][] = [];
+
+  const headerCells = tableElement.querySelectorAll('thead th');
+  for (const cell of headerCells) {
+    headers.push(cell.textContent?.trim() || '');
+  }
+
+  const bodyRows = tableElement.querySelectorAll('tbody tr');
+  for (const row of bodyRows) {
+    const rowData: string[] = [];
+    const cells = row.querySelectorAll('td');
+    for (const cell of cells) {
+      rowData.push(cell.textContent?.trim() || '');
+    }
+    rows.push(rowData);
+  }
+
+  return { headers, rows };
+};
+
+const tableDataToCSV = (data: TableData): string => {
+  const { headers, rows } = data;
+  const csvRows = [headers.join(','), ...rows.map((row) => row.join(','))];
+  return csvRows.join('\n');
+};
+
+const tableDataToMarkdown = (data: TableData): string => {
+  const { headers, rows } = data;
+  const mdRows = [
+    `| ${headers.join(' | ')} |`,
+    `| ${headers.map(() => '---').join(' | ')} |`,
+    ...rows.map((row) => `| ${row.join(' | ')} |`),
+  ];
+  return mdRows.join('\n');
+};
+
+const cleanContent = (content: string) => {
+  return content
+    .split('\n')
+    .map((line) => line.trimStart())
+    .join('\n');
+};
 
 const formatFileSize = (bytes: number) => {
   if (bytes < 1024) return bytes + ' B';
@@ -40,6 +95,67 @@ export function MessageBubble({ message }: MessageBubbleProps) {
     } catch (err) {
       console.error('Failed to copy:', err);
     }
+  };
+
+  const CustomTable = ({ children, ...props }: ComponentProps<'table'>) => {
+    const tableRef = useRef<HTMLTableElement>(null);
+
+    const handleTableCopy = async () => {
+      if (!tableRef.current) return;
+      const data = extractTableDataFromElement(tableRef.current);
+      const md = tableDataToMarkdown(data);
+      try {
+        await navigator.clipboard.writeText(md);
+      } catch (err) {
+        console.error('Failed to copy table:', err);
+      }
+    };
+
+    const handleTableDownload = () => {
+      if (!tableRef.current) return;
+      const data = extractTableDataFromElement(tableRef.current);
+      const md = tableDataToMarkdown(data);
+      const blob = new Blob([md], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'table.md';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    return (
+      <div
+        className="my-4 flex flex-col space-y-2"
+        data-streamdown="table-wrapper"
+      >
+        <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={handleTableCopy}
+            className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+            title="Copy table as Markdown"
+          >
+            <AqCopy01 className="h-4 w-4" />
+          </button>
+          <button
+            onClick={handleTableDownload}
+            className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+            title="Download table as Markdown"
+          >
+            Download
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table
+            ref={tableRef}
+            className="border-border w-full border-collapse border"
+            {...props}
+          >
+            {children}
+          </table>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -113,6 +229,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             )}
           >
             <Streamdown
+              controls={false}
               components={{
                 a: ({ href, children }) => (
                   <a
@@ -129,7 +246,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                   className,
                   children,
                   ...props
-                }: React.ComponentPropsWithoutRef<'code'> & {
+                }: ComponentPropsWithoutRef<'code'> & {
                   inline?: boolean;
                 }) => {
                   if (inline) {
@@ -154,9 +271,10 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                     </code>
                   );
                 },
+                table: CustomTable,
               }}
             >
-              {message.content}
+              {cleanContent(message.content)}
             </Streamdown>
             {!isUser && (
               <div className="mt-4 flex justify-end">
