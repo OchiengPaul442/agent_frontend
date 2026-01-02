@@ -89,7 +89,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="relative flex h-screen flex-col bg-white">
+    <div className="bg-background relative flex h-screen flex-col">
       {/* Confirmation Dialog */}
       <ConfirmDialog
         isOpen={showNewChatDialog}
@@ -103,12 +103,12 @@ export default function HomePage() {
       />
 
       {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+      <header className="border-border bg-background/80 sticky top-0 z-10 border-b backdrop-blur-sm">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-          <h1 className="text-lg font-medium text-gray-900">Aeris</h1>
+          <h1 className="text-foreground text-lg font-medium">Aeris</h1>
           <button
             onClick={handleNewSession}
-            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:outline-none"
+            className="border-border bg-background text-foreground hover:bg-muted focus:ring-ring flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors focus:ring-2 focus:outline-none"
           >
             <svg
               className="h-4 w-4"
@@ -138,14 +138,14 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.4, ease: 'easeOut' }}
-              className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white px-4 pb-32"
+              className="bg-background absolute inset-0 z-10 flex flex-col items-center justify-center px-4 pb-32"
             >
               <div className="w-full max-w-3xl space-y-8">
                 <div className="text-center">
-                  <h2 className="mb-2 text-3xl font-semibold text-gray-900 sm:text-4xl">
+                  <h2 className="text-foreground mb-2 text-3xl font-semibold sm:text-4xl">
                     Ready when you are.
                   </h2>
-                  <p className="text-sm text-gray-600 sm:text-base">
+                  <p className="text-muted-foreground text-sm sm:text-base">
                     Ask me anything about air quality
                   </p>
                 </div>
@@ -159,7 +159,7 @@ export default function HomePage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: 0.1 + index * 0.1 }}
                       onClick={() => handleStarterQuestion(question)}
-                      className="group rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm transition-all hover:border-gray-300 hover:shadow-md focus:ring-2 focus:ring-gray-400 focus:outline-none"
+                      className="group border-border bg-card hover:border-border focus:ring-ring rounded-xl border p-4 text-left shadow-sm transition-all hover:shadow-md focus:ring-2 focus:outline-none"
                     >
                       <div className="flex items-start gap-3">
                         <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-blue-500 to-blue-600 text-white">
@@ -177,7 +177,7 @@ export default function HomePage() {
                             />
                           </svg>
                         </div>
-                        <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                        <span className="text-card-foreground group-hover:text-foreground text-sm font-medium">
                           {question}
                         </span>
                       </div>
@@ -223,8 +223,8 @@ export default function HomePage() {
           ease: [0.32, 0.72, 0, 1],
         }}
         className={cn(
-          'z-20 w-full bg-white',
-          hasMessages ? 'border-t border-gray-200' : ''
+          'bg-background z-20 w-full',
+          hasMessages ? 'border-border border-t' : ''
         )}
       >
         <div className="mx-auto max-w-3xl px-4">

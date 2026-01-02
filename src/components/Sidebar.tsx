@@ -52,7 +52,7 @@ export function Sidebar({
         }}
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
         className={cn(
-          'flex flex-col border-r border-slate-200 bg-white shadow-2xl',
+          'border-border bg-background flex flex-col border-r shadow-2xl',
           // Desktop: always visible with relative positioning
           'lg:static lg:z-0 lg:shadow-lg',
           // Mobile: overlay behavior
@@ -60,14 +60,14 @@ export function Sidebar({
         )}
       >
         {/* Header */}
-        <div className="border-b border-slate-200 bg-slate-50/50 p-6">
+        <div className="border-border bg-muted/50 border-b p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="bg-linear-to-r from-blue-600 to-blue-800 bg-clip-text text-xl font-bold text-transparent">
               Chat History
             </h2>
             <button
               onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none lg:hidden"
+              className="bg-muted text-muted-foreground hover:bg-muted/80 focus:ring-ring flex h-8 w-8 items-center justify-center rounded-lg transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none lg:hidden"
               aria-label="Close sidebar"
             >
               <AqX className="h-5 w-5" />
@@ -104,13 +104,13 @@ export function Sidebar({
             </div>
           ) : sessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+              <div className="bg-muted text-muted-foreground mb-4 flex h-16 w-16 items-center justify-center rounded-2xl">
                 <AqClock className="h-8 w-8" />
               </div>
-              <p className="mb-2 text-base font-medium text-slate-700">
+              <p className="text-foreground mb-2 text-base font-medium">
                 No conversations yet
               </p>
-              <p className="max-w-xs text-sm text-slate-500">
+              <p className="text-muted-foreground max-w-xs text-sm">
                 Start your first conversation to see chat history here
               </p>
             </div>
@@ -129,28 +129,28 @@ export function Sidebar({
                   <button
                     onClick={() => onSessionSelect(session.session_id)}
                     className={cn(
-                      'flex w-full items-start gap-3 rounded-2xl px-4 py-4 text-left transition-all hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none',
+                      'focus:ring-ring flex w-full items-start gap-3 rounded-2xl px-4 py-4 text-left transition-all hover:shadow-md focus:ring-2 focus:ring-offset-2 focus:outline-none',
                       currentSessionId === session.session_id
-                        ? 'border border-blue-200 bg-blue-50 text-blue-900 shadow-md'
-                        : 'text-slate-700 hover:bg-slate-50'
+                        ? 'border-primary bg-primary/10 text-primary-foreground border shadow-md'
+                        : 'text-muted-foreground hover:bg-muted'
                     )}
                   >
                     <div
                       className={cn(
                         'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors',
                         currentSessionId === session.session_id
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground group-hover:bg-muted/80'
                       )}
                     >
                       <AqMessageChatSquare className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="mb-1 truncate text-sm font-semibold text-slate-900">
+                      <p className="text-foreground mb-1 truncate text-sm font-semibold">
                         {session.messages.find((m) => m.role === 'user')
                           ?.content || 'Untitled Conversation'}
                       </p>
-                      <div className="flex items-center gap-3 text-xs text-slate-500">
+                      <div className="text-muted-foreground flex items-center gap-3 text-xs">
                         <span>{formatDate(session.created_at)}</span>
                         <span>•</span>
                         <span>{session.message_count} messages</span>
@@ -166,7 +166,7 @@ export function Sidebar({
                       e.stopPropagation();
                       onDeleteSession(session.session_id);
                     }}
-                    className="absolute top-4 right-3 rounded-lg p-2 text-slate-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none"
+                    className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus:ring-destructive absolute top-4 right-3 rounded-lg p-2 opacity-0 transition-all group-hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none"
                     aria-label="Delete conversation"
                   >
                     <AqTrash01 className="h-4 w-4" />
@@ -178,9 +178,9 @@ export function Sidebar({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-slate-200 bg-slate-50/80 p-6">
-          <div className="text-sm text-slate-600">
-            <p className="mb-1 font-semibold text-slate-900">
+        <div className="border-border bg-muted/80 border-t p-6">
+          <div className="text-muted-foreground text-sm">
+            <p className="text-foreground mb-1 font-semibold">
               Air Quality AI Agent
             </p>
             <p className="leading-relaxed">

@@ -134,19 +134,19 @@ export function ChatInput({
             exit={{ opacity: 0, y: -10 }}
             className="mb-3"
           >
-            <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
+            <div className="border-border bg-muted flex items-center gap-3 rounded-xl border p-3">
+              <div className="bg-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
                 {isUploading ? (
-                  <AqLoading01 className="h-5 w-5 animate-spin text-blue-600" />
+                  <AqLoading01 className="text-primary h-5 w-5 animate-spin" />
                 ) : (
-                  <AqFile02 className="h-5 w-5 text-blue-600" />
+                  <AqFile02 className="text-primary h-5 w-5" />
                 )}
               </div>
               <div className="flex-1 overflow-hidden">
-                <p className="truncate text-sm font-medium text-gray-900">
+                <p className="text-foreground truncate text-sm font-medium">
                   {uploadedFile.name}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-muted-foreground text-xs">
                   {isUploading
                     ? 'Uploading...'
                     : formatFileSize(uploadedFile.size)}
@@ -155,7 +155,7 @@ export function ChatInput({
               {!isUploading && (
                 <button
                   onClick={removeFile}
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 focus:ring-2 focus:ring-red-500 focus:outline-none"
+                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus:ring-destructive flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors focus:ring-2 focus:outline-none"
                   aria-label="Remove file"
                 >
                   <AqX className="h-4 w-4" />
@@ -169,11 +169,11 @@ export function ChatInput({
       {/* Input Area */}
       <div
         className={cn(
-          'relative flex items-center gap-2 rounded-3xl bg-white transition-all',
-          isDragging ? 'border-blue-400 bg-blue-50/50' : '',
+          'bg-background relative flex items-center gap-2 rounded-3xl transition-all',
+          isDragging ? 'border-primary bg-primary/5' : '',
           hasMessages
-            ? 'border border-slate-300 shadow-sm focus-within:border-blue-400 focus-within:shadow-md focus-within:ring-1 focus-within:ring-blue-200'
-            : 'border border-slate-200 shadow-lg focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-200'
+            ? 'border-border focus-within:border-primary focus-within:ring-primary/20 border shadow-sm focus-within:shadow-md focus-within:ring-1'
+            : 'border-border focus-within:border-primary focus-within:ring-primary/20 border shadow-lg focus-within:ring-1'
         )}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -194,10 +194,10 @@ export function ChatInput({
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled || isLoading || !!uploadedFile}
           className={cn(
-            'ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-gray-500 focus:outline-none',
+            'focus:ring-ring ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:outline-none',
             uploadedFile
-              ? 'cursor-not-allowed text-gray-300'
-              : 'text-gray-500 hover:bg-gray-100',
+              ? 'text-muted-foreground cursor-not-allowed'
+              : 'text-muted-foreground hover:bg-muted',
             'disabled:cursor-not-allowed disabled:opacity-50'
           )}
           aria-label="Upload file"
@@ -216,7 +216,7 @@ export function ChatInput({
           disabled={disabled || isLoading}
           rows={1}
           className={cn(
-            'flex-1 resize-none border-0 bg-transparent px-1 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+            'text-foreground placeholder:text-muted-foreground flex-1 resize-none border-0 bg-transparent px-1 py-3 text-base focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
             'max-h-50'
           )}
           style={{
@@ -240,13 +240,13 @@ export function ChatInput({
             isUploading
           }
           className={cn(
-            'mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-gray-500 focus:outline-none',
+            'focus:ring-ring mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:outline-none',
             (!input.trim() && !uploadedFile) ||
               isLoading ||
               disabled ||
               isUploading
-              ? 'cursor-not-allowed bg-gray-200 text-gray-400'
-              : 'bg-gray-900 text-white hover:bg-gray-800',
+              ? 'bg-muted text-muted-foreground cursor-not-allowed'
+              : 'bg-primary text-primary-foreground hover:bg-primary/90',
             'disabled:cursor-not-allowed disabled:opacity-50'
           )}
           aria-label="Send message"
@@ -264,7 +264,7 @@ export function ChatInput({
         <motion.div
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-2 text-center text-sm font-medium text-blue-600"
+          className="text-primary mt-2 text-center text-sm font-medium"
         >
           Drop file to upload
         </motion.div>

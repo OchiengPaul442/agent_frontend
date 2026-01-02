@@ -41,14 +41,14 @@ export function ChatMessages({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="w-full border-b border-gray-100 py-8"
+          className="w-full py-8"
         >
           <div className="mx-auto max-w-3xl px-4 sm:px-6">
             <div className="flex items-center gap-2">
               {[0, 1, 2].map((i) => (
                 <motion.div
                   key={i}
-                  className="h-2 w-2 rounded-full bg-gray-400"
+                  className="bg-foreground h-2 w-2 rounded-full"
                   animate={{
                     scale: [1, 1.3, 1],
                     opacity: [0.4, 1, 0.4],
@@ -70,13 +70,13 @@ export function ChatMessages({
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full border-b border-gray-100 py-8"
+          className="w-full py-8"
         >
           <div className="mx-auto max-w-3xl px-4 sm:px-6">
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+            <div className="border-destructive bg-destructive/10 rounded-xl border p-4">
               <div className="flex items-start gap-3">
                 <svg
-                  className="mt-0.5 h-5 w-5 shrink-0 text-red-600"
+                  className="text-destructive mt-0.5 h-5 w-5 shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -89,14 +89,16 @@ export function ChatMessages({
                   />
                 </svg>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-red-900">
+                  <p className="text-destructive text-sm font-semibold">
                     Unable to process your request
                   </p>
-                  <p className="mt-1 text-sm text-red-700">{error.message}</p>
+                  <p className="text-destructive/80 mt-1 text-sm">
+                    {error.message}
+                  </p>
                   {onRetry && (
                     <button
                       onClick={onRetry}
-                      className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none"
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90 focus:ring-destructive mt-3 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none"
                     >
                       Try Again
                     </button>

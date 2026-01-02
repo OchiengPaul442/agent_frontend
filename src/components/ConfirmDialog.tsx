@@ -31,16 +31,16 @@ export function ConfirmDialog({
 
   const colorClasses = {
     warning: {
-      icon: 'bg-amber-100 text-amber-600',
-      button: 'bg-amber-600 hover:bg-amber-700 focus:ring-amber-500',
+      icon: 'bg-amber-500/10 text-amber-500',
+      button: 'bg-amber-500 hover:bg-amber-600 focus:ring-amber-500',
     },
     danger: {
-      icon: 'bg-red-100 text-red-600',
-      button: 'bg-red-600 hover:bg-red-700 focus:ring-red-500',
+      icon: 'bg-destructive/10 text-destructive',
+      button: 'bg-destructive hover:bg-destructive/90 focus:ring-destructive',
     },
     info: {
-      icon: 'bg-blue-100 text-blue-600',
-      button: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',
+      icon: 'bg-primary/10 text-primary',
+      button: 'bg-primary hover:bg-primary/90 focus:ring-primary',
     },
   };
 
@@ -66,13 +66,13 @@ export function ConfirmDialog({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+              className="bg-background relative w-full max-w-md rounded-2xl p-6 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close button */}
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:outline-none"
+                className="text-muted-foreground hover:bg-muted hover:text-foreground focus:ring-ring absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-lg transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none"
                 aria-label="Close dialog"
               >
                 <AqX className="h-5 w-5" />
@@ -85,13 +85,13 @@ export function ConfirmDialog({
                 >
                   <AqAlertTriangle className="h-6 w-6" />
                 </div>
-                <h2 className="text-xl font-semibold text-slate-900">
+                <h2 className="text-foreground text-xl font-semibold">
                   {title}
                 </h2>
               </div>
 
               {/* Message */}
-              <p className="mb-6 text-sm leading-relaxed text-slate-600">
+              <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
                 {message}
               </p>
 
@@ -99,13 +99,13 @@ export function ConfirmDialog({
               <div className="flex gap-3">
                 <button
                   onClick={onClose}
-                  className="flex-1 rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:outline-none"
+                  className="border-border bg-background text-foreground hover:bg-muted focus:ring-ring flex-1 rounded-xl border-2 px-4 py-2.5 text-sm font-semibold transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none"
                 >
                   {cancelText}
                 </button>
                 <button
                   onClick={handleConfirm}
-                  className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-all focus:ring-2 focus:ring-offset-2 focus:outline-none ${colors.button}`}
+                  className={`text-primary-foreground flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-lg transition-all focus:ring-2 focus:ring-offset-2 focus:outline-none ${colors.button}`}
                 >
                   {confirmText}
                 </button>

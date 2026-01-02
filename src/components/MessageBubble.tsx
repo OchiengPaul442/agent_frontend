@@ -128,7 +128,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         <div className="flex items-center justify-end gap-2">
           <button
             onClick={handleTableCopy}
-            className="p-1 text-gray-400 transition-colors hover:text-gray-200"
+            className="text-muted-foreground hover:text-foreground p-1 transition-colors"
             title={tableCopied ? 'Copied!' : 'Copy table as Markdown'}
           >
             {tableCopied ? (
@@ -139,7 +139,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           </button>
           <button
             onClick={handleTableDownload}
-            className="p-1 text-gray-400 transition-colors hover:text-gray-200"
+            className="text-muted-foreground hover:text-foreground p-1 transition-colors"
             title="Download table as Markdown"
           >
             <AqDownload01 className="h-4 w-4" />
@@ -148,7 +148,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         <div className="overflow-x-auto">
           <table
             ref={tableRef}
-            className="w-full border-collapse border border-gray-700"
+            className="border-border w-full border-collapse border"
             {...props}
           >
             {children}
@@ -163,7 +163,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="group relative w-full border-b border-gray-800 py-8"
+      className="group relative w-full py-8"
     >
       <div className="mx-auto flex max-w-3xl gap-6 px-4 sm:px-6">
         {/* Message Content */}
@@ -181,17 +181,17 @@ export function MessageBubble({ message }: MessageBubbleProps) {
               transition={{ duration: 0.2 }}
               className="w-full max-w-[320px]"
             >
-              <div className="flex items-center gap-3 rounded-2xl border border-gray-700 bg-gray-800 p-3.5 shadow-sm">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-900 to-blue-800">
+              <div className="border-border bg-card flex items-center gap-3 rounded-2xl border p-3.5 shadow-sm">
+                <div className="bg-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-xl">
                   <span className="text-2xl">
                     {getFileIcon(message.file.type)}
                   </span>
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  <p className="m-0 truncate p-0 text-sm font-semibold text-gray-100">
+                  <p className="text-card-foreground m-0 truncate p-0 text-sm font-semibold">
                     {message.file.name}
                   </p>
-                  <p className="m-0 p-0 text-xs text-gray-400">
+                  <p className="text-muted-foreground m-0 p-0 text-xs">
                     {formatFileSize(message.file.size)}
                   </p>
                 </div>
@@ -202,30 +202,30 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           {/* Text Content */}
           <div
             className={cn(
-              'prose prose-sm prose-invert max-w-none',
-              'prose-p:m-0 prose-p:leading-normal prose-p:text-gray-300',
-              'prose-headings:mb-4 prose-headings:mt-6 prose-headings:font-semibold prose-headings:text-gray-100',
+              'prose prose-sm max-w-none',
+              'prose-p:m-0 prose-p:leading-normal prose-p:text-foreground',
+              'prose-headings:mb-4 prose-headings:mt-6 prose-headings:font-semibold prose-headings:text-foreground',
               'prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg',
-              'prose-a:font-medium prose-a:text-blue-400 prose-a:no-underline',
-              'hover:prose-a:text-blue-300 hover:prose-a:underline',
-              'prose-strong:font-semibold prose-strong:text-gray-100',
-              'prose-code:rounded prose-code:bg-gray-800 prose-code:px-1.5 prose-code:py-0.5',
-              'prose-code:font-mono prose-code:text-sm prose-code:text-gray-200',
+              'prose-a:font-medium prose-a:text-primary prose-a:no-underline',
+              'hover:prose-a:text-primary/80 hover:prose-a:underline',
+              'prose-strong:font-semibold prose-strong:text-foreground',
+              'prose-code:rounded prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5',
+              'prose-code:font-mono prose-code:text-sm prose-code:text-foreground',
               'prose-code:before:content-none prose-code:after:content-none',
-              'prose-pre:overflow-x-auto prose-pre:rounded-lg prose-pre:bg-gray-900 prose-pre:p-4',
-              'prose-pre:text-gray-100 prose-pre:shadow-lg',
-              'prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6 prose-ul:text-gray-300',
-              'prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6 prose-ol:text-gray-300',
-              'prose-li:my-1 prose-li:leading-7 prose-li:text-gray-300',
-              'prose-blockquote:border-l-4 prose-blockquote:border-gray-600 prose-blockquote:pl-4',
-              'prose-blockquote:italic prose-blockquote:text-gray-400',
+              'prose-pre:overflow-x-auto prose-pre:rounded-lg prose-pre:bg-muted prose-pre:p-4',
+              'prose-pre:text-foreground prose-pre:shadow-lg',
+              'prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6 prose-ul:text-foreground',
+              'prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6 prose-ol:text-foreground',
+              'prose-li:my-1 prose-li:leading-7 prose-li:text-foreground',
+              'prose-blockquote:border-l-4 prose-blockquote:border-border prose-blockquote:pl-4',
+              'prose-blockquote:italic prose-blockquote:text-muted-foreground',
               'prose-img:rounded-lg prose-img:shadow-md',
               'prose-table:border-collapse prose-table:w-full',
-              'prose-th:border prose-th:border-gray-700 prose-th:bg-gray-800 prose-th:px-4 prose-th:py-2 prose-th:text-left prose-th:font-semibold prose-th:text-gray-200',
-              'prose-td:border prose-td:border-gray-700 prose-td:px-4 prose-td:py-2 prose-td:text-gray-300',
+              'prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-4 prose-th:py-2 prose-th:text-left prose-th:font-semibold prose-th:text-foreground',
+              'prose-td:border prose-td:border-border prose-td:px-4 prose-td:py-2 prose-td:text-foreground',
               isUser
-                ? 'inline-block max-w-[85%] rounded-3xl bg-gray-700 px-5 py-3 text-gray-100'
-                : 'w-full text-gray-300'
+                ? 'bg-primary text-primary-foreground inline-block max-w-[85%] rounded-3xl px-5 py-3'
+                : 'bg-card text-card-foreground w-full rounded-3xl px-5 py-3'
             )}
           >
             <Streamdown
@@ -236,7 +236,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-medium text-blue-400 no-underline transition-colors hover:text-blue-300 hover:underline"
+                    className="text-primary hover:text-primary/80 font-medium no-underline transition-colors hover:underline"
                   >
                     {children}
                   </a>
