@@ -214,9 +214,10 @@ export function MessageBubble({ message }: MessageBubbleProps) {
               'prose-code:before:content-none prose-code:after:content-none',
               'prose-pre:overflow-x-auto prose-pre:rounded-lg prose-pre:bg-muted prose-pre:p-4',
               'prose-pre:text-foreground prose-pre:shadow-lg',
-              'prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6 prose-ul:text-foreground',
-              'prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6 prose-ol:text-foreground',
-              'prose-li:my-1 prose-li:leading-7 prose-li:text-foreground',
+              '[&_ul]:text-foreground [&_ul]:my-4 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-6',
+              '[&_ol]:text-foreground [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-6',
+              '[&_li]:text-foreground [&_li]:marker:text-foreground [&_li]:my-1 [&_li]:leading-7',
+              '[&_ol_li]:list-decimal [&_ul_li]:list-disc',
               'prose-blockquote:border-l-4 prose-blockquote:border-border prose-blockquote:pl-4',
               'prose-blockquote:italic prose-blockquote:text-muted-foreground',
               'prose-img:rounded-lg prose-img:shadow-md',
@@ -252,7 +253,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                   if (inline) {
                     return (
                       <code
-                        className="rounded bg-gray-800 px-1.5 py-0.5 font-mono text-sm text-gray-200"
+                        className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-sm"
                         {...props}
                       >
                         {children}
@@ -262,7 +263,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                   return (
                     <code
                       className={cn(
-                        'block overflow-x-auto rounded-lg bg-black p-4 font-mono text-sm text-gray-100',
+                        'bg-muted text-foreground block overflow-x-auto rounded-lg p-4 font-mono text-sm',
                         className
                       )}
                       {...props}
@@ -280,7 +281,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
               <div className="mt-4 flex justify-end">
                 <button
                   onClick={handleCopy}
-                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-800 hover:text-gray-200"
+                  className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2 transition-colors"
                   title={copied ? 'Copied!' : 'Copy message'}
                 >
                   {copied ? (

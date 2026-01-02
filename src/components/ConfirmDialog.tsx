@@ -56,7 +56,7 @@ export function ConfirmDialog({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md"
           />
 
           {/* Dialog */}

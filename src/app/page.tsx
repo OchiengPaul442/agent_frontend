@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChatMessages } from '@/components/ChatMessages';
 import { ChatInput } from '@/components/ChatInput';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -38,6 +38,7 @@ export default function HomePage() {
   });
 
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
+  const [showRefreshDialog, setShowRefreshDialog] = useState(false);
 
   const { messages, isLoading, error, sendMessage, clearMessages, retry } =
     useChat({
@@ -46,6 +47,38 @@ export default function HomePage() {
     });
 
   const hasMessages = messages.length > 0 || isLoading;
+
+  // Handle page refresh and tab close
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasMessages) {
+        e.preventDefault();
+        e.returnValue = ''; // Chrome requires returnValue to be set
+        return '';
+      }
+    };
+
+    const handleUnload = async () => {
+      if (sessionId) {
+        // Use sendBeacon for reliable request on page unload
+        const blob = new Blob([JSON.stringify({ session_id: sessionId })], {
+          type: 'application/json',
+        });
+        navigator.sendBeacon(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/v1/sessions/${sessionId}`,
+          blob
+        );
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('unload', handleUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('unload', handleUnload);
+    };
+  }, [hasMessages, sessionId]);
 
   const handleStarterQuestion = (question: string) => {
     sendMessage(question);
@@ -106,25 +139,27 @@ export default function HomePage() {
       <header className="border-border bg-background/80 sticky top-0 z-10 border-b backdrop-blur-sm">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
           <h1 className="text-foreground text-lg font-medium">Aeris</h1>
-          <button
-            onClick={handleNewSession}
-            className="border-border bg-background text-foreground hover:bg-muted focus:ring-ring flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors focus:ring-2 focus:outline-none"
-          >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          {hasMessages && (
+            <button
+              onClick={handleNewSession}
+              className="border-border bg-background text-foreground hover:bg-muted focus:ring-ring flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors focus:ring-2 focus:outline-none"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            New Chat
-          </button>
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              New Chat
+            </button>
+          )}
         </div>
       </header>
 

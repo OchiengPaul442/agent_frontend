@@ -169,11 +169,13 @@ export function ChatInput({
       {/* Input Area */}
       <div
         className={cn(
-          'bg-background relative flex items-center gap-2 rounded-3xl transition-all',
-          isDragging ? 'border-primary bg-primary/5' : '',
+          'bg-background relative flex items-center gap-2 rounded-3xl border-2 transition-all',
+          isDragging
+            ? 'border-primary bg-primary/5'
+            : 'border-muted-foreground/30',
           hasMessages
-            ? 'border-border focus-within:border-primary focus-within:ring-primary/20 border shadow-sm focus-within:shadow-md focus-within:ring-1'
-            : 'border-border focus-within:border-primary focus-within:ring-primary/20 border shadow-lg focus-within:ring-1'
+            ? 'focus-within:border-primary focus-within:ring-primary/20 shadow-sm focus-within:shadow-md focus-within:ring-1'
+            : 'focus-within:border-primary focus-within:ring-primary/20 shadow-lg focus-within:ring-1'
         )}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
