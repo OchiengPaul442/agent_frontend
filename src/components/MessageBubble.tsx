@@ -57,20 +57,6 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             isUser ? 'flex flex-col items-end' : ''
           )}
         >
-          {/* Copy Button for Assistant Messages */}
-          {!isUser && (
-            <button
-              onClick={handleCopy}
-              className="absolute right-8 bottom-8 rounded-lg p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 hover:bg-gray-100"
-              title={copied ? 'Copied!' : 'Copy message'}
-            >
-              {copied ? (
-                <AqCheckCircle className="h-4 w-4 text-green-600" />
-              ) : (
-                <AqCopy01 className="h-4 w-4 text-gray-600" />
-              )}
-            </button>
-          )}
           {/* File Attachment - Show above text for user messages */}
           {isUser && message.file && (
             <motion.div
@@ -172,6 +158,21 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             >
               {message.content}
             </Streamdown>
+            {!isUser && (
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={handleCopy}
+                  className="rounded-lg p-2 hover:bg-gray-100"
+                  title={copied ? 'Copied!' : 'Copy message'}
+                >
+                  {copied ? (
+                    <AqCheckCircle className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <AqCopy01 className="h-4 w-4 text-gray-600" />
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
