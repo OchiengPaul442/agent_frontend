@@ -16,7 +16,7 @@ const generateSessionId = () => {
 
 // Starter questions for air quality (professional / policy oriented)
 const STARTER_QUESTIONS = [
-  'Assess current ambient air quality in my city (PM2.5, O3, NO2) and highlight key concerns.',
+  'How can I monitor air quality in real-time for my location?',
   'Recommend evidence-based strategies to improve indoor air quality in offices and schools.',
   'Summarize the health impacts of chronic PM2.5 exposure and relevant threshold values.',
   'Outline practical policy measures to reduce urban air pollution and improve compliance.',
