@@ -9,7 +9,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface ChatMessagesProps {
   messages: Message[];
   isLoading?: boolean;
-  error?: Error | null;
   onRetry?: () => void;
   onEditMessage?: (messageIndex: number, newContent: string) => void;
 }
@@ -17,14 +16,12 @@ interface ChatMessagesProps {
 export function ChatMessages({
   messages,
   isLoading = false,
-  error = null,
   onRetry,
   onEditMessage,
 }: ChatMessagesProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const [showErrorDialog, setShowErrorDialog] = useState(false);
 
   useEffect(() => {
     // Scroll to bottom when new messages are added or loading state changes
@@ -42,11 +39,6 @@ export function ChatMessages({
 
     return () => clearTimeout(timeoutId);
   }, [messages, isLoading]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setShowErrorDialog(!!error);
-  }, [error]);
 
   return (
     <div ref={containerRef} className="h-full overflow-y-auto">
@@ -96,19 +88,6 @@ export function ChatMessages({
             </div>
           </div>
         </motion.div>
-      )}
-
-      {error && (
-        <ConfirmDialog
-          isOpen={showErrorDialog}
-          onClose={() => setShowErrorDialog(false)}
-          onConfirm={onRetry || (() => setShowErrorDialog(false))}
-          title="Unable to process your request"
-          message={error.message}
-          confirmText={onRetry ? 'Try Again' : 'OK'}
-          cancelText="Close"
-          type="danger"
-        />
       )}
 
       <div ref={bottomRef} />

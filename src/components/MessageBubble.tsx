@@ -434,6 +434,7 @@ export function MessageBubble({
               'prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-4 prose-th:py-2 prose-th:text-left prose-th:font-semibold prose-th:text-foreground',
               'prose-td:border prose-td:border-border prose-td:px-4 prose-td:py-2 prose-td:text-foreground',
               '[&_.not-prose]:max-w-full [&_.not-prose]:overflow-x-auto',
+              message.isError && 'text-red-600 dark:text-red-400',
               isUser
                 ? isEditing
                   ? 'w-full rounded-3xl bg-[var(--bg-tertiary)] px-5 py-3 text-[var(--text-primary)]'

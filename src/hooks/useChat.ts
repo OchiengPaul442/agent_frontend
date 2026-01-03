@@ -176,11 +176,17 @@ export function useChat(options: UseChatOptions = {}) {
 
         const error =
           err instanceof Error ? err : new Error('Failed to send message');
-        setError(error);
+        // setError(error); // Remove this to avoid showing error dialog
         options.onError?.(error);
 
-        // Remove the user message on error
-        setMessages((prev) => prev.slice(0, -1));
+        // Add error message instead of removing user message
+        const errorMessage: Message = {
+          role: 'assistant',
+          content: `Error: ${error.message}`,
+          timestamp: new Date().toISOString(),
+          isError: true,
+        };
+        setMessages((prev) => [...prev, errorMessage]);
         return null;
       } finally {
         setIsLoading(false);
@@ -282,11 +288,17 @@ export function useChat(options: UseChatOptions = {}) {
 
         const error =
           err instanceof Error ? err : new Error('Failed to send message');
-        setError(error);
+        // setError(error); // Remove this to avoid showing error dialog
         options.onError?.(error);
 
-        // Remove the edited message on error and restore original
-        setMessages((prev) => prev.slice(0, messageIndex));
+        // Add error message instead of removing messages
+        const errorMessage: Message = {
+          role: 'assistant',
+          content: `Error: ${error.message}`,
+          timestamp: new Date().toISOString(),
+          isError: true,
+        };
+        setMessages((prev) => [...prev, errorMessage]);
         return null;
       } finally {
         setIsLoading(false);
@@ -303,6 +315,11 @@ export function useChat(options: UseChatOptions = {}) {
         .reverse()
         .find((m) => m.role === 'user');
       if (lastUserMessage) {
+        // Remove any error messages after the last user message
+        setMessages((prev) => {
+          const lastUserIndex = prev.lastIndexOf(lastUserMessage);
+          return prev.slice(0, lastUserIndex + 1);
+        });
         sendMessage(lastUserMessage.content);
       }
     }

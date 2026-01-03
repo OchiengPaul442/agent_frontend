@@ -4,6 +4,7 @@ export interface Message {
   timestamp?: string;
   tools_used?: string[];
   isStreaming?: boolean; // For typewriter effect
+  isError?: boolean; // For error messages
   file?: {
     name: string;
     size: number;

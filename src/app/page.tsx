@@ -449,7 +449,6 @@ export default function HomePage() {
                 <ChatMessages
                   messages={messages}
                   isLoading={isLoading}
-                  error={error}
                   onRetry={retry}
                   onEditMessage={editMessage}
                 />
