@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { ChatMessages } from '@/components/ChatMessages';
 import { ChatInput } from '@/components/ChatInput';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -145,7 +146,16 @@ export default function HomePage() {
       {/* Header */}
       <header className="border-border bg-background/80 sticky top-0 z-10 border-b backdrop-blur-sm">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-          <h1 className="text-foreground text-lg font-medium">Aeris</h1>
+          <div className="flex items-center gap-3">
+            <Image
+              src="/logo.png"
+              alt="Aeris Logo"
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-lg"
+            />
+            <h1 className="text-foreground text-lg font-medium">Aeris</h1>
+          </div>
           {hasMessages && (
             <button
               onClick={handleNewSession}
