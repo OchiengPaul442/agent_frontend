@@ -462,7 +462,7 @@
   background: var(--prose-code-bg);
   border: 1px solid hsl(var(--border));
   border-radius: 0.5rem;
-  overflow: hidden;
+  overflow: visible; /* allow sticky header to escape when necessary */
 }
 
 .code-block-header {
@@ -471,6 +471,15 @@
   align-items: center;
   padding: 0.5rem 0.75rem;
   border-bottom: 1px solid hsl(var(--border));
+  position: sticky;
+  top: 0.75rem; /* stick to viewport after scrolling */
+  z-index: 40;
+  backdrop-filter: blur(4px);
+}
+
+/* subtle elevation when header becomes sticky */
+.code-block-header:where(:not(:root)) {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .code-block-label {

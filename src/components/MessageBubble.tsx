@@ -30,6 +30,11 @@ interface MessageBubbleProps {
   onRetry?: () => void;
 }
 
+type TableData = {
+  headers: string[];
+  rows: string[][];
+};
+
 const CodeBlock = React.memo(function CodeBlock({
   inline,
   className,
@@ -62,6 +67,34 @@ const CodeBlock = React.memo(function CodeBlock({
     }
   }, [codeContent]);
 
+  const [isDark, setIsDark] = React.useState<boolean>(() =>
+    typeof window !== 'undefined'
+      ? window.matchMedia &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches
+      : false
+  );
+
+  React.useEffect(() => {
+    if (!window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
+    try {
+      mq.addEventListener('change', handler);
+    } catch {
+      // @ts-expect-error: Safari older APIs
+      mq.addListener(handler);
+    }
+    setIsDark(mq.matches);
+    return () => {
+      try {
+        mq.removeEventListener('change', handler);
+      } catch {
+        // @ts-expect-error: Safari older APIs
+        mq.removeListener(handler);
+      }
+    };
+  }, []);
+
   if (inline) {
     return (
       <code
@@ -76,38 +109,9 @@ const CodeBlock = React.memo(function CodeBlock({
   const match = /language-(\w+)/.exec(className || '');
   const language = match ? match[1] : 'text';
 
-  const [isDark, setIsDark] = React.useState<boolean>(() =>
-    typeof window !== 'undefined'
-      ? window.matchMedia &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches
-      : false
-  );
-
-  React.useEffect(() => {
-    if (!window.matchMedia) return;
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
-    try {
-      mq.addEventListener('change', handler);
-    } catch (e) {
-      // Safari older APIs
-      // @ts-ignore
-      mq.addListener(handler);
-    }
-    setIsDark(mq.matches);
-    return () => {
-      try {
-        mq.removeEventListener('change', handler);
-      } catch (e) {
-        // @ts-ignore
-        mq.removeListener(handler);
-      }
-    };
-  }, []);
-
   return (
     <div className="not-prose my-4">
-      <div className="code-block-wrapper">
+      <div className="code-block-wrapper" style={{ paddingTop: '0.25rem' }}>
         <div className="code-block-header">
           <div className="code-block-label">{language}</div>
           <div>
@@ -126,7 +130,7 @@ const CodeBlock = React.memo(function CodeBlock({
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" style={{ maxHeight: '60vh' }}>
           <SyntaxHighlighter
             style={isDark ? oneDark : oneLight}
             language={language}
@@ -223,7 +227,7 @@ export function MessageBubble({
 
   const outerRef = useRef<HTMLDivElement | null>(null);
   const editTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const copyTimeoutRef = useRef<NodeJS.Timeout>();
+  const copyTimeoutRef = useRef<number | null>(null);
 
   // Cleanup timeout on unmount
   React.useEffect(() => {
@@ -248,7 +252,7 @@ export function MessageBubble({
       if (copyTimeoutRef.current) {
         clearTimeout(copyTimeoutRef.current);
       }
-      copyTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
+      copyTimeoutRef.current = window.setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
     }
