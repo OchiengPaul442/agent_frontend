@@ -68,14 +68,20 @@ export default function HomePage() {
 
     const handleUnload = async () => {
       if (sessionId) {
-        // Use sendBeacon for reliable request on page unload
-        const blob = new Blob([JSON.stringify({ session_id: sessionId })], {
-          type: 'application/json',
-        });
-        navigator.sendBeacon(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/v1/sessions/${sessionId}`,
-          blob
-        );
+        try {
+          // Use fetch with keepalive to send DELETE request reliably on page unload
+          await fetch(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/v1/sessions/${sessionId}`,
+            {
+              method: 'DELETE',
+              keepalive: true,
+            }
+          );
+        } catch (error) {
+          console.error('Failed to delete session on unload:', error);
+        }
+        // Clear the session ID from storage so a new session starts on reload
+        sessionStorage.removeItem('currentSessionId');
       }
     };
 
