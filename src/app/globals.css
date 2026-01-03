@@ -11,8 +11,9 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 220 89% 56%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 25 95% 70%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222.2 84% 4.9%;
     --muted: 210 40% 96%;
@@ -23,30 +24,83 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 220 89% 56%;
+    --ring: 25 95% 53%;
     --radius: 0.5rem;
   }
 
   .dark {
     --background: 0 0% 12.9%;
     --foreground: 0 0% 100%;
-    --card: 0 0% 18.8%;
+    --card: 0 0% 25.5%;
     --card-foreground: 0 0% 100%;
-    --popover: 0 0% 18.8%;
+    --popover: 0 0% 25.5%;
     --popover-foreground: 0 0% 100%;
-    --primary: 207 100% 50%;
+    --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 25.5%;
+    --primary-light: 25 95% 70%;
+    --secondary: 0 0% 30%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 25.5%;
-    --muted-foreground: 0 0% 68.6%;
-    --accent: 207 100% 50%;
+    --muted: 0 0% 30%;
+    --muted-foreground: 0 0% 69%;
+    --accent: 25 95% 53%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 75% 18%;
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 100% / 0.15;
-    --input: 0 0% 25.5%;
-    --ring: 207 100% 50%;
+    --input: 0 0% 30%;
+    --ring: 25 95% 53%;
+
+    /* Custom dark mode palette */
+    --bg-primary: #212121;
+    --bg-primary-inverted: #fff;
+    --bg-secondary: #303030;
+    --bg-tertiary: #414141;
+    --bg-scrim: #0d0d0d80;
+    --bg-elevated-primary: #303030;
+    --bg-elevated-secondary: #181818;
+    --bg-accent-static: #0285ff;
+    --bg-status-warning: #4a2206;
+    --bg-status-error: #4d100e;
+    --border-default: #ffffff26;
+    --border-heavy: #fff3;
+    --border-light: #ffffff0d;
+    --border-status-warning: #4a2206;
+    --border-status-error: #4d100e;
+    --text-primary: #fff;
+    --text-secondary: #f3f3f3;
+    --text-tertiary: #afafaf;
+    --text-inverted: #0d0d0d;
+    --text-inverted-static: #fff;
+    --text-accent: #66b5ff;
+    --text-status-warning: #ff9e6c;
+    --text-status-error: #ff8583;
+    --icon-primary: #e8e8e8;
+    --icon-secondary: #cdcdcd;
+    --icon-tertiary: #afafaf;
+    --icon-inverted: #0d0d0d;
+    --icon-inverted-static: #fff;
+    --icon-accent: #66b5ff;
+    --icon-status-warning: #ff9e6c;
+    --icon-status-error: #ff8583;
+    --interactive-bg-primary-default: #fff;
+    --interactive-bg-primary-hover: #fffc;
+    --interactive-bg-primary-press: #ffffffe5;
+    --interactive-bg-primary-inactive: #fff;
+    --interactive-bg-primary-selected: #fff;
+    --interactive-bg-secondary-default: #fff0;
+    --interactive-bg-secondary-hover: #ffffff1a;
+    --interactive-bg-secondary-press: #ffffff0d;
+    --interactive-bg-secondary-inactive: #fff0;
+    --interactive-bg-secondary-selected: #ffffff1a;
+    --interactive-bg-tertiary-default: #212121;
+    --interactive-bg-tertiary-hover: #181818;
+    --interactive-bg-tertiary-press: #0d0d0d;
+    --interactive-bg-tertiary-inactive: #212121;
+    --interactive-bg-tertiary-selected: #212121;
+    --interactive-bg-accent-default: #013566;
+    --interactive-bg-accent-hover: #003f7a;
+    --interactive-bg-accent-muted-hover: #394a5b;
+    --interactive-bg-accent-muted-context: #394a5b80;
   }
 
   * {
@@ -177,6 +231,44 @@
 
   .btn-ghost {
     @apply rounded-xl bg-transparent px-6 py-3 font-medium text-slate-600 transition-all duration-300 hover:bg-slate-100 hover:text-slate-700;
+  }
+
+  /* Runtime fallback utilities for the CSS variable driven primary color.
+     These ensure components render the primary color even if Tailwind wasn't
+     regenerated yet or production classes are missing. They respect Tailwind
+     opacity helpers (e.g. bg-opacity, border-opacity, text-opacity).
+  */
+  .bg-primary {
+    --tw-bg-opacity: 1;
+    background-color: hsl(var(--primary) / var(--tw-bg-opacity));
+  }
+
+  .text-primary {
+    --tw-text-opacity: 1;
+    color: hsl(var(--primary) / var(--tw-text-opacity));
+  }
+
+  .border-primary {
+    --tw-border-opacity: 1;
+    border-color: hsl(var(--primary) / var(--tw-border-opacity));
+  }
+
+  /* helper classes to match Tailwind's opacity suffix usage when not precompiled */
+  .bg-primary\/5 {
+    --tw-bg-opacity: 0.05;
+    background-color: hsl(var(--primary) / var(--tw-bg-opacity));
+  }
+  .bg-primary\/10 {
+    --tw-bg-opacity: 0.1;
+    background-color: hsl(var(--primary) / var(--tw-bg-opacity));
+  }
+  .border-primary\/30 {
+    --tw-border-opacity: 0.3;
+    border-color: hsl(var(--primary) / var(--tw-border-opacity));
+  }
+  .border-primary\/20 {
+    --tw-border-opacity: 0.2;
+    border-color: hsl(var(--primary) / var(--tw-border-opacity));
   }
 }
 

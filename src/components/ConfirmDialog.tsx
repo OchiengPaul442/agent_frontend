@@ -56,7 +56,7 @@ export function ConfirmDialog({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md"
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
           />
 
           {/* Dialog */}
@@ -66,7 +66,7 @@ export function ConfirmDialog({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-background relative w-full max-w-md rounded-2xl p-6 shadow-2xl"
+              className="bg-background glass-dark relative w-full max-w-md rounded-2xl p-6 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close button */}

@@ -171,11 +171,9 @@ export function ChatInput({
         className={cn(
           'bg-background relative flex items-center gap-2 rounded-3xl border-2 transition-all',
           isDragging
-            ? 'border-primary bg-primary/5'
+            ? 'border-primary bg-primary'
             : 'border-muted-foreground/30',
-          hasMessages
-            ? 'focus-within:border-primary focus-within:ring-primary/20 shadow-sm focus-within:shadow-md focus-within:ring-1'
-            : 'focus-within:border-primary focus-within:ring-primary/20 shadow-lg focus-within:ring-1'
+          'shadow-sm'
         )}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -196,7 +194,7 @@ export function ChatInput({
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled || isLoading || !!uploadedFile}
           className={cn(
-            'focus:ring-ring ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:outline-none',
+            'ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none',
             uploadedFile
               ? 'text-muted-foreground cursor-not-allowed'
               : 'text-muted-foreground hover:bg-muted',
@@ -242,19 +240,19 @@ export function ChatInput({
             isUploading
           }
           className={cn(
-            'focus:ring-ring mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:outline-none',
+            'mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none',
             (!input.trim() && !uploadedFile) ||
               isLoading ||
               disabled ||
               isUploading
               ? 'bg-muted text-muted-foreground cursor-not-allowed'
-              : 'bg-primary text-primary-foreground hover:bg-primary/90',
+              : 'bg-primary text-primary-foreground hover:opacity-95',
             'disabled:cursor-not-allowed disabled:opacity-50'
           )}
           aria-label="Send message"
         >
           {isLoading || isUploading ? (
-            <AqLoading01 className="h-4 w-4 animate-spin" />
+            <AqLoading01 className="text-primary h-4 w-4 animate-spin" />
           ) : (
             <AqSend01 className="h-4 w-4" />
           )}

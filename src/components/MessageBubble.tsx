@@ -203,12 +203,12 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           <div
             className={cn(
               'prose prose-sm max-w-none',
-              'prose-p:m-0 prose-p:leading-normal prose-p:text-foreground',
-              'prose-headings:mb-4 prose-headings:mt-6 prose-headings:font-semibold prose-headings:text-foreground',
+              'prose-p:my-4 prose-p:leading-relaxed prose-p:text-foreground',
+              'prose-headings:my-6 prose-headings:font-bold prose-headings:text-[var(--text-accent)]',
               'prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg',
               'prose-a:font-medium prose-a:text-primary prose-a:no-underline',
               'hover:prose-a:text-primary/80 hover:prose-a:underline',
-              'prose-strong:font-semibold prose-strong:text-foreground',
+              'prose-strong:font-bold prose-strong:text-[var(--text-accent)]',
               'prose-code:rounded prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5',
               'prose-code:font-mono prose-code:text-sm prose-code:text-foreground',
               'prose-code:before:content-none prose-code:after:content-none',
@@ -216,7 +216,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
               'prose-pre:text-foreground prose-pre:shadow-lg',
               '[&_ul]:text-foreground [&_ul]:my-4 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-6',
               '[&_ol]:text-foreground [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-6',
-              '[&_li]:text-foreground [&_li]:marker:text-foreground [&_li]:my-1 [&_li]:leading-7',
+              '[&_li]:text-foreground [&_li]:marker:text-foreground [&_li]:my-2 [&_li]:leading-7',
               '[&_ol_li]:list-decimal [&_ul_li]:list-disc',
               'prose-blockquote:border-l-4 prose-blockquote:border-border prose-blockquote:pl-4',
               'prose-blockquote:italic prose-blockquote:text-muted-foreground',
@@ -225,8 +225,8 @@ export function MessageBubble({ message }: MessageBubbleProps) {
               'prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-4 prose-th:py-2 prose-th:text-left prose-th:font-semibold prose-th:text-foreground',
               'prose-td:border prose-td:border-border prose-td:px-4 prose-td:py-2 prose-td:text-foreground',
               isUser
-                ? 'bg-primary text-primary-foreground inline-block max-w-[85%] rounded-3xl px-5 py-3'
-                : 'bg-card text-card-foreground w-full rounded-3xl px-5 py-3'
+                ? 'inline-block max-w-[85%] rounded-3xl bg-[var(--bg-tertiary)] px-5 py-3 text-[var(--text-primary)]'
+                : 'w-full rounded-3xl px-5 py-3 text-[var(--text-primary)]'
             )}
           >
             <Streamdown
