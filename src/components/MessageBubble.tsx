@@ -15,6 +15,8 @@ import {
   AqRefreshCw01,
 } from '@airqo/icons-react';
 import React, { useState, useRef, ComponentProps } from 'react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface MessageBubbleProps {
   message: Message;
@@ -25,10 +27,100 @@ interface MessageBubbleProps {
   onRetry?: () => void;
 }
 
-type TableData = {
-  headers: string[];
-  rows: string[][];
-};
+const CodeBlock = React.memo(function CodeBlock({
+  inline,
+  className,
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLElement> & {
+  inline?: boolean;
+  className?: string;
+}) {
+  const [codeCopied, setCodeCopied] = React.useState(false);
+  const timeoutRef = React.useRef<number | null>(null);
+  const codeContent = String(children).replace(/\n$/, '');
+
+  React.useEffect(() => {
+    return () => {
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleCodeCopy = React.useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(codeContent);
+      setCodeCopied(true);
+      if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = window.setTimeout(() => setCodeCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy code:', err);
+    }
+  }, [codeContent]);
+
+  if (inline) {
+    return (
+      <code
+        className="text-foreground rounded bg-transparent px-1.5 py-0.5 font-mono text-sm"
+        {...props}
+      >
+        {children}
+      </code>
+    );
+  }
+
+  const match = /language-(\w+)/.exec(className || '');
+  const language = match ? match[1] : 'text';
+
+  return (
+    <div className="not-prose my-4">
+      <div className="code-block-wrapper">
+        <div className="code-block-header">
+          <div className="code-block-label">{language}</div>
+          <div>
+            <button
+              onClick={handleCodeCopy}
+              className="text-muted-foreground hover:text-foreground flex items-center rounded px-2 py-1 text-xs font-medium transition-colors"
+              title={codeCopied ? 'Copied!' : 'Copy code'}
+              type="button"
+            >
+              {codeCopied ? (
+                <AqCheckCircle className="h-4 w-4 text-green-500" />
+              ) : (
+                <AqCopy01 className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <SyntaxHighlighter
+            style={oneLight}
+            language={language}
+            PreTag="div"
+            className="!mt-0 !mb-0"
+            customStyle={{
+              margin: 0,
+              padding: '1rem',
+              background: 'transparent',
+              fontSize: '0.9375rem',
+              lineHeight: 1.6,
+            }}
+            codeTagProps={{
+              style: {
+                fontFamily:
+                  'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+              },
+            }}
+          >
+            {codeContent}
+          </SyntaxHighlighter>
+        </div>
+      </div>
+    </div>
+  );
+});
 
 const extractTableDataFromElement = (tableElement: HTMLElement): TableData => {
   const headers: string[] = [];
@@ -99,6 +191,16 @@ export function MessageBubble({
 
   const outerRef = useRef<HTMLDivElement | null>(null);
   const editTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const copyTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const setOuterRef = (el: HTMLDivElement | null) => {
     outerRef.current = el;
@@ -111,7 +213,10 @@ export function MessageBubble({
     try {
       await navigator.clipboard.writeText(message.content);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+      copyTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
     }
@@ -234,7 +339,7 @@ export function MessageBubble({
       <div className="mx-auto flex max-w-3xl gap-3 px-2 sm:gap-6 sm:px-4 lg:px-6">
         <div
           className={cn(
-            'flex-1 space-y-3',
+            'min-w-0 flex-1 space-y-3', // min-w-0 allows flex item to shrink
             isUser ? 'flex flex-col items-end' : ''
           )}
         >
@@ -275,28 +380,26 @@ export function MessageBubble({
 
           <div
             className={cn(
-              'prose prose-sm max-w-none',
+              'prose prose-sm max-w-none overflow-x-hidden',
               'prose-p:my-4 prose-p:leading-relaxed prose-p:text-foreground',
               'prose-headings:my-6 prose-headings:font-bold prose-headings:text-[var(--text-accent)]',
               'prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg',
               'prose-a:font-medium prose-a:text-primary prose-a:no-underline',
               'hover:prose-a:text-primary/80 hover:prose-a:underline',
               'prose-strong:font-bold prose-strong:text-[var(--text-accent)]',
-              'prose-code:rounded prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5',
-              'prose-code:font-mono prose-code:text-sm prose-code:text-foreground',
               'prose-code:before:content-none prose-code:after:content-none',
-              'prose-pre:overflow-x-auto prose-pre:rounded-lg prose-pre:bg-muted prose-pre:p-4',
-              'prose-pre:text-foreground prose-pre:shadow-lg',
+              'prose-pre:hidden', // Hide default pre tags since we use custom CodeBlock
               '[&_ul]:text-foreground [&_ul]:my-4 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-6',
               '[&_ol]:text-foreground [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-6',
               '[&_li]:text-foreground [&_li]:marker:text-foreground [&_li]:my-2 [&_li]:leading-7',
               '[&_ol_li]:list-decimal [&_ul_li]:list-disc',
               'prose-blockquote:border-l-4 prose-blockquote:border-border prose-blockquote:pl-4',
               'prose-blockquote:italic prose-blockquote:text-muted-foreground',
-              'prose-img:rounded-lg prose-img:shadow-md',
+              'prose-img:rounded-lg prose-img:shadow-md prose-img:max-w-full',
               'prose-table:border-collapse prose-table:w-full',
               'prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-4 prose-th:py-2 prose-th:text-left prose-th:font-semibold prose-th:text-foreground',
               'prose-td:border prose-td:border-border prose-td:px-4 prose-td:py-2 prose-td:text-foreground',
+              '[&_.not-prose]:max-w-full [&_.not-prose]:overflow-x-auto',
               isUser
                 ? isEditing
                   ? 'w-full rounded-3xl bg-[var(--bg-tertiary)] px-5 py-3 text-[var(--text-primary)]'
@@ -358,41 +461,7 @@ export function MessageBubble({
                         {children}
                       </a>
                     ),
-                    code: ({
-                      inline,
-                      className,
-                      children,
-                      ...props
-                    }: React.HTMLAttributes<HTMLElement> & {
-                      inline?: boolean;
-                      className?: string;
-                    }) => {
-                      if (inline) {
-                        return (
-                          <code
-                            className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-sm"
-                            {...props}
-                          >
-                            {children}
-                          </code>
-                        );
-                      }
-                      return (
-                        <div>
-                          <pre className="prose-pre">
-                            <code
-                              className={cn(
-                                'bg-muted text-foreground block overflow-x-auto rounded-lg p-4 font-mono text-sm',
-                                className as string
-                              )}
-                              {...props}
-                            >
-                              {children}
-                            </code>
-                          </pre>
-                        </div>
-                      );
-                    },
+                    code: CodeBlock,
                     table: ({
                       children,
                       ...props

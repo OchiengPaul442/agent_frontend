@@ -26,6 +26,9 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 25 95% 53%;
     --radius: 0.5rem;
+    /* subtle code block background variable (light/dark aware) */
+    --prose-code-bg: rgba(0, 0, 0, 0.04);
+    --prose-code-label-bg: rgba(0, 0, 0, 0.06);
   }
 
   .dark {
@@ -49,6 +52,8 @@
     --border: 0 0% 100% / 0.15;
     --input: 0 0% 30%;
     --ring: 25 95% 53%;
+    --prose-code-bg: rgba(255, 255, 255, 0.03);
+    --prose-code-label-bg: rgba(255, 255, 255, 0.04);
 
     /* Custom dark mode palette */
     --bg-primary: #212121;
@@ -372,8 +377,9 @@
 }
 
 .prose code {
-  background-color: hsl(var(--muted));
-  color: hsl(var(--foreground));
+  /* Inline code should not create a large gray block */
+  background-color: transparent;
+  color: inherit;
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
   font-size: 0.875rem;
@@ -381,11 +387,13 @@
 }
 
 .prose pre {
-  background-color: hsl(var(--muted));
-  color: hsl(var(--foreground));
-  padding: 1rem;
-  border-radius: 0.5rem;
-  margin-bottom: 1rem;
+  /* Remove gray panel background for code blocks; allow content to render on page background
+     Syntax highlighter own styles are respected but we force transparent here to avoid a boxed look */
+  background-color: transparent;
+  color: inherit;
+  padding: 0; /* syntax highlighter adds padding */
+  border-radius: 0; /* let syntax highlighter control rounding if any */
+  margin-bottom: 0.75rem;
   overflow-x: auto;
 }
 
@@ -435,4 +443,76 @@
 .prose th {
   background-color: hsl(var(--muted));
   font-weight: 600;
+}
+
+/* Code block improvements */
+.prose pre,
+.prose code {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.prose .not-prose {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* Code block theming helpers */
+.code-block-wrapper {
+  background: var(--prose-code-bg);
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.code-block-label {
+  background: var(--prose-code-label-bg);
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  color: hsl(var(--muted-foreground));
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Smooth scrollbar for code blocks */
+.prose pre::-webkit-scrollbar,
+.prose code::-webkit-scrollbar,
+.not-prose::-webkit-scrollbar {
+  height: 8px;
+  background: transparent;
+}
+
+.prose pre::-webkit-scrollbar-thumb,
+.prose code::-webkit-scrollbar-thumb,
+.not-prose::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.dark .prose pre::-webkit-scrollbar-thumb,
+.dark .prose code::-webkit-scrollbar-thumb,
+.dark .not-prose::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.prose pre::-webkit-scrollbar-thumb:hover,
+.prose code::-webkit-scrollbar-thumb:hover,
+.not-prose::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.dark .prose pre::-webkit-scrollbar-thumb:hover,
+.dark .prose code::-webkit-scrollbar-thumb:hover,
+.dark .not-prose::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
