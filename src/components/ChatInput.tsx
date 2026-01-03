@@ -315,6 +315,17 @@ export function ChatInput({
           Drop file to upload
         </motion.div>
       )}
+
+      {/* Supported File Formats - Modern Style */}
+      <div className="mt-3 flex items-center justify-center gap-3">
+        <div className="flex items-center gap-1.5">
+          <span className="text-muted-foreground text-xs">PDF</span>
+          <span className="text-muted-foreground/50">•</span>
+          <span className="text-muted-foreground text-xs">CSV</span>
+          <span className="text-muted-foreground/50">•</span>
+          <span className="text-muted-foreground text-xs">XLSX</span>
+        </div>
+      </div>
     </div>
   );
 }

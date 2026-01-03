@@ -295,6 +295,15 @@ export default function HomePage() {
           />
         </div>
       </motion.div>
+
+      {/* Footer */}
+      <footer className="bg-background/30 py-3">
+        <div className="mx-auto max-w-4xl px-4">
+          <p className="text-muted-foreground text-center text-xs">
+            Aeris may make mistakes. Verify important information.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
