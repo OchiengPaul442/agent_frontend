@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { apiService } from '@/services/api.service';
 import type { Message, ChatResponse } from '@/types';
+import { sanitizeMarkdown } from '@/utils/helpers';
 
 export interface UseChatOptions {
   sessionId?: string;
@@ -63,7 +64,7 @@ export function useChat(options: UseChatOptions = {}) {
 
         const assistantMessage: Message = {
           role: 'assistant',
-          content: response.response,
+          content: sanitizeMarkdown(response.response),
           timestamp: new Date().toISOString(),
           tools_used: response.tools_used,
         };
@@ -156,7 +157,7 @@ export function useChat(options: UseChatOptions = {}) {
 
         const assistantMessage: Message = {
           role: 'assistant',
-          content: response.response,
+          content: sanitizeMarkdown(response.response),
           timestamp: new Date().toISOString(),
           tools_used: response.tools_used,
         };

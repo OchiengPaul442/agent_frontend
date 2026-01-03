@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/utils/helpers';
+import { sanitizeMarkdown } from '@/utils/helpers';
 import {
   AqCopy01,
   AqCheckCircle,
@@ -389,7 +390,7 @@ export function MessageBubble({
                     ),
                   }}
                 >
-                  {message.content}
+                  {sanitizeMarkdown(message.content)}
                 </ReactMarkdown>
               </>
             )}
