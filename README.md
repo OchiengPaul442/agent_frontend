@@ -29,3 +29,7 @@ This is the frontend interface for the Air Quality AI Agent.
 ## Configuration
 
 The API URL is configured in `src/lib/api.ts`.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
