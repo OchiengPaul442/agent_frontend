@@ -197,7 +197,7 @@ export default function HomePage() {
                       className="group border-border bg-card hover:border-border focus:ring-ring rounded-xl border p-4 text-left shadow-sm transition-all hover:shadow-md focus:ring-2 focus:outline-none"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-blue-500 to-blue-600 text-white">
+                        <div className="bg-primary text-primary-foreground mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg">
                           <svg
                             className="h-3.5 w-3.5"
                             fill="none"
@@ -212,7 +212,7 @@ export default function HomePage() {
                             />
                           </svg>
                         </div>
-                        <span className="text-card-foreground group-hover:text-foreground text-sm font-medium">
+                        <span className="text-card-foreground group-hover:text-primary text-sm font-medium">
                           {question}
                         </span>
                       </div>

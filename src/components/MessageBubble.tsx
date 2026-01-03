@@ -2,18 +2,22 @@
 
 import { Message } from '@/types';
 import { motion } from 'framer-motion';
-import { Streamdown } from 'streamdown';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { cn } from '@/utils/helpers';
 import { AqCopy01, AqCheckCircle, AqDownload01 } from '@airqo/icons-react';
 import React, {
   useState,
   useRef,
+  useEffect,
   ComponentProps,
   ComponentPropsWithoutRef,
 } from 'react';
 
 interface MessageBubbleProps {
   message: Message;
+  outerRefKey?: string;
+  registerRef?: (key: string, el: HTMLDivElement | null) => void;
 }
 
 type TableData = {
@@ -81,9 +85,23 @@ const getFilePreviewSrc = (file?: { type?: string; name?: string } | null) => {
   return '/file-unknown.svg';
 };
 
-export function MessageBubble({ message }: MessageBubbleProps) {
+export function MessageBubble({
+  message,
+  outerRefKey,
+  registerRef,
+}: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
+
+  const outerRef = useRef<HTMLDivElement | null>(null);
+
+  // Callback ref to register immediately when element mounts
+  const setOuterRef = (el: HTMLDivElement | null) => {
+    outerRef.current = el;
+    if (outerRefKey && registerRef) {
+      registerRef(outerRefKey, el);
+    }
+  };
 
   const handleCopy = async () => {
     try {
@@ -168,6 +186,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
+      ref={setOuterRef}
       className="group relative w-full py-8"
     >
       <div className="mx-auto flex max-w-3xl gap-6 px-4 sm:px-6">
@@ -243,8 +262,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                 : 'w-full rounded-3xl px-5 py-3 text-[var(--text-primary)]'
             )}
           >
-            <Streamdown
-              controls={false}
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              // No rehypePlugins for now — remark-gfm handles tables and common markdown.
               components={{
                 a: ({ href, children }) => (
                   <a
@@ -256,14 +276,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                     {children}
                   </a>
                 ),
-                code: ({
-                  inline,
-                  className,
-                  children,
-                  ...props
-                }: ComponentPropsWithoutRef<'code'> & {
-                  inline?: boolean;
-                }) => {
+                code: ({ node, inline, className, children, ...props }) => {
                   if (inline) {
                     return (
                       <code
@@ -275,22 +288,26 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                     );
                   }
                   return (
-                    <code
-                      className={cn(
-                        'bg-muted text-foreground block overflow-x-auto rounded-lg p-4 font-mono text-sm',
-                        className
-                      )}
-                      {...props}
-                    >
-                      {children}
-                    </code>
+                    <pre className="prose-pre">
+                      <code
+                        className={cn(
+                          'bg-muted text-foreground block overflow-x-auto rounded-lg p-4 font-mono text-sm',
+                          className as string
+                        )}
+                        {...props}
+                      >
+                        {children}
+                      </code>
+                    </pre>
                   );
                 },
-                table: CustomTable,
+                table: ({ node, children, ...props }) => (
+                  <CustomTable {...(props as any)}>{children}</CustomTable>
+                ),
               }}
             >
               {message.content}
-            </Streamdown>
+            </ReactMarkdown>
             {!isUser && (
               <div className="mt-4 flex justify-end">
                 <button
