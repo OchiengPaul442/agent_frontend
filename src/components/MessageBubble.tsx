@@ -16,7 +16,10 @@ import {
 } from '@airqo/icons-react';
 import React, { useState, useRef, ComponentProps } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import {
+  oneLight,
+  oneDark,
+} from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface MessageBubbleProps {
   message: Message;
@@ -73,6 +76,35 @@ const CodeBlock = React.memo(function CodeBlock({
   const match = /language-(\w+)/.exec(className || '');
   const language = match ? match[1] : 'text';
 
+  const [isDark, setIsDark] = React.useState<boolean>(() =>
+    typeof window !== 'undefined'
+      ? window.matchMedia &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches
+      : false
+  );
+
+  React.useEffect(() => {
+    if (!window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
+    try {
+      mq.addEventListener('change', handler);
+    } catch (e) {
+      // Safari older APIs
+      // @ts-ignore
+      mq.addListener(handler);
+    }
+    setIsDark(mq.matches);
+    return () => {
+      try {
+        mq.removeEventListener('change', handler);
+      } catch (e) {
+        // @ts-ignore
+        mq.removeListener(handler);
+      }
+    };
+  }, []);
+
   return (
     <div className="not-prose my-4">
       <div className="code-block-wrapper">
@@ -96,7 +128,7 @@ const CodeBlock = React.memo(function CodeBlock({
 
         <div className="overflow-x-auto">
           <SyntaxHighlighter
-            style={oneLight}
+            style={isDark ? oneDark : oneLight}
             language={language}
             PreTag="div"
             className="!mt-0 !mb-0"
