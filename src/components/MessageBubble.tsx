@@ -11,6 +11,7 @@ import {
   AqCheckCircle,
   AqDownload01,
   AqEdit01,
+  AqRefreshCw01,
 } from '@airqo/icons-react';
 import React, { useState, useRef, ComponentProps } from 'react';
 
@@ -20,6 +21,7 @@ interface MessageBubbleProps {
   registerRef?: (key: string, el: HTMLDivElement | null) => void;
   onEdit?: (messageIndex: number, newContent: string) => void;
   messageIndex?: number;
+  onRetry?: () => void;
 }
 
 type TableData = {
@@ -93,6 +95,7 @@ export function MessageBubble({
   registerRef,
   onEdit,
   messageIndex,
+  onRetry,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
@@ -405,14 +408,14 @@ export function MessageBubble({
                 <>
                   <button
                     onClick={handleEdit}
-                    className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2 transition-colors"
+                    className="text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer rounded-lg p-2 transition-colors"
                     title="Edit message"
                   >
                     <AqEdit01 className="h-4 w-4" />
                   </button>
                   <button
                     onClick={handleCopy}
-                    className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2 transition-colors"
+                    className="text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer rounded-lg p-2 transition-colors"
                     title={copied ? 'Copied!' : 'Copy message'}
                   >
                     {copied ? (
@@ -424,17 +427,26 @@ export function MessageBubble({
                 </>
               )}
               {!isUser && (
-                <button
-                  onClick={handleCopy}
-                  className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2 transition-colors"
-                  title={copied ? 'Copied!' : 'Copy message'}
-                >
-                  {copied ? (
-                    <AqCheckCircle className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <AqCopy01 className="h-4 w-4" />
-                  )}
-                </button>
+                <>
+                  <button
+                    onClick={onRetry}
+                    className="text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer rounded-lg p-2 transition-colors"
+                    title="Retry response"
+                  >
+                    <AqRefreshCw01 className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={handleCopy}
+                    className="text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer rounded-lg p-2 transition-colors"
+                    title={copied ? 'Copied!' : 'Copy message'}
+                  >
+                    {copied ? (
+                      <AqCheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <AqCopy01 className="h-4 w-4" />
+                    )}
+                  </button>
+                </>
               )}
             </div>
           )}

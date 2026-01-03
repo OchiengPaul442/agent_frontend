@@ -91,6 +91,7 @@ export function ChatMessages({
                 registerRef={(k, el) => (messageRefs.current[k] = el)}
                 onEdit={onEditMessage}
                 messageIndex={index}
+                onRetry={onRetry}
               />
             );
           })}
