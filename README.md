@@ -33,3 +33,6 @@ The API URL is configured in `src/lib/api.ts`.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+
+<img width="2231" height="1470" alt="image" src="https://github.com/user-attachments/assets/f2455a6e-3e4d-417e-a567-7a4471c40a73" />
