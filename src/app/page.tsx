@@ -39,7 +39,6 @@ export default function HomePage() {
   });
 
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
-  const [showRefreshDialog, setShowRefreshDialog] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [fileErrorMessage, setFileErrorMessage] = useState<string | null>(null);
@@ -485,7 +484,6 @@ export default function HomePage() {
               }}
               isLoading={isLoading}
               placeholder="Ask Aeris..."
-              hasMessages={hasMessages}
               onFileSelect={handleFileSelect}
               uploadedFile={uploadedFile}
               onRemoveFile={handleRemoveFile}

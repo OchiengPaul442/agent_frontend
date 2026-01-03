@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, KeyboardEvent, useRef, DragEvent } from 'react';
+import { useState, KeyboardEvent, useRef } from 'react';
+import Image from 'next/image';
 import { cn } from '@/utils/helpers';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -16,7 +17,6 @@ interface ChatInputProps {
   isLoading?: boolean;
   placeholder?: string;
   disabled?: boolean;
-  hasMessages?: boolean;
   onFileSelect?: (file: File) => void;
   uploadedFile?: File | null;
   onRemoveFile?: () => void;
@@ -29,7 +29,6 @@ export function ChatInput({
   isLoading = false,
   placeholder = 'Ask about air quality...',
   disabled = false,
-  hasMessages = false,
   onFileSelect,
   uploadedFile: externalUploadedFile,
   onRemoveFile,
@@ -55,10 +54,6 @@ export function ChatInput({
     externalErrorMessage !== undefined
       ? externalErrorMessage
       : internalErrorMessage;
-  const setUploadedFile = onFileSelect || setInternalUploadedFile;
-  const setErrorMessage = onClearError
-    ? () => onClearError()
-    : setInternalErrorMessage;
 
   const handleSend = () => {
     if (
@@ -211,9 +206,11 @@ export function ChatInput({
                       uploadedFile.name.toLowerCase().endsWith('.pdf')
                     )
                       return (
-                        <img
+                        <Image
                           src="/file-pdf.svg"
                           alt="PDF"
+                          width={40}
+                          height={40}
                           className="h-10 w-10 object-cover"
                         />
                       );
@@ -224,9 +221,11 @@ export function ChatInput({
                       uploadedFile.name.toLowerCase().endsWith('.xls')
                     )
                       return (
-                        <img
+                        <Image
                           src="/file-xlsx.svg"
                           alt="Excel"
+                          width={40}
+                          height={40}
                           className="h-10 w-10 object-cover"
                         />
                       );
@@ -235,9 +234,11 @@ export function ChatInput({
                       uploadedFile.name.toLowerCase().endsWith('.csv')
                     )
                       return (
-                        <img
+                        <Image
                           src="/file-csv.svg"
                           alt="CSV"
+                          width={40}
+                          height={40}
                           className="h-10 w-10 object-cover"
                         />
                       );

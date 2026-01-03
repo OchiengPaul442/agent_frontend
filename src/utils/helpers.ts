@@ -73,6 +73,9 @@ export function sanitizeMarkdown(content: string): string {
 
   let sanitized = content;
 
+  // Fix HTML tags like <br>
+  sanitized = fixHtmlTags(sanitized);
+
   // Fix common table formatting issues
   sanitized = fixTableFormatting(sanitized);
 
@@ -86,6 +89,23 @@ export function sanitizeMarkdown(content: string): string {
   sanitized = fixLinkFormatting(sanitized);
 
   return sanitized;
+}
+
+function fixHtmlTags(content: string): string {
+  let fixed = content;
+
+  // Convert <br> and <br/> to newlines
+  fixed = fixed.replace(/<br\s*\/?>/gi, '\n');
+
+  // Convert bullet points • to markdown list items
+  // Assuming • is followed by text, convert to -
+  fixed = fixed.replace(/•\s*/g, '- ');
+
+  // Remove other HTML tags if any, but keep the content
+  // Simple regex to remove tags
+  fixed = fixed.replace(/<[^>]*>/g, '');
+
+  return fixed;
 }
 
 function fixTableFormatting(content: string): string {
@@ -152,7 +172,7 @@ function fixListFormatting(content: string): string {
   // Fix inconsistent list markers
   const listRegex = /^(\s*)([-*+])\s+/gm;
 
-  return content.replace(listRegex, (match, indent, marker) => {
+  return content.replace(listRegex, (match, indent) => {
     // Standardize to dashes
     return indent + '- ';
   });

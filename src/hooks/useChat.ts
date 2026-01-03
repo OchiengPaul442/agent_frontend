@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { apiService } from '@/services/api.service';
 import type { Message, ChatResponse } from '@/types';
 import { sanitizeMarkdown } from '@/utils/helpers';
@@ -92,7 +92,7 @@ export function useChat(options: UseChatOptions = {}) {
         abortControllerRef.current = null;
       }
     },
-    [messages, options.sessionId, options]
+    [messages, options]
   );
 
   const clearMessages = useCallback(() => {
@@ -142,7 +142,6 @@ export function useChat(options: UseChatOptions = {}) {
       try {
         // Get the conversation history up to the edited message
         const historyUpToEdit = messages.slice(0, messageIndex + 1);
-        const editedMessage = historyUpToEdit[messageIndex];
 
         const response = await apiService.sendMessage(
           {
@@ -185,7 +184,7 @@ export function useChat(options: UseChatOptions = {}) {
         abortControllerRef.current = null;
       }
     },
-    [messages, options.sessionId, options]
+    [messages, options]
   );
 
   const retry = useCallback(() => {

@@ -2,6 +2,7 @@
 
 import { Message } from '@/types';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/utils/helpers';
@@ -49,12 +50,6 @@ const extractTableDataFromElement = (tableElement: HTMLElement): TableData => {
   }
 
   return { headers, rows };
-};
-
-const tableDataToCSV = (data: TableData): string => {
-  const { headers, rows } = data;
-  const csvRows = [headers.join(','), ...rows.map((row) => row.join(','))];
-  return csvRows.join('\n');
 };
 
 const tableDataToMarkdown = (data: TableData): string => {
@@ -258,9 +253,11 @@ export function MessageBubble({
                 )}
               >
                 <div className="bg-muted flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl">
-                  <img
+                  <Image
                     src={getFilePreviewSrc(message.file)}
                     alt={message.file.name || 'file'}
+                    width={48}
+                    height={48}
                     className="h-full w-full object-cover"
                   />
                 </div>
@@ -346,7 +343,11 @@ export function MessageBubble({
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    a: ({ href, children, ...props }: any) => (
+                    a: ({
+                      href,
+                      children,
+                      ...props
+                    }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
                       <a
                         href={href}
                         target="_blank"
@@ -358,12 +359,14 @@ export function MessageBubble({
                       </a>
                     ),
                     code: ({
-                      node,
                       inline,
                       className,
                       children,
                       ...props
-                    }: any) => {
+                    }: React.HTMLAttributes<HTMLElement> & {
+                      inline?: boolean;
+                      className?: string;
+                    }) => {
                       if (inline) {
                         return (
                           <code
@@ -390,8 +393,11 @@ export function MessageBubble({
                         </div>
                       );
                     },
-                    table: ({ node, children, ...props }: any) => (
-                      <CustomTable {...(props as any)}>{children}</CustomTable>
+                    table: ({
+                      children,
+                      ...props
+                    }: React.TableHTMLAttributes<HTMLTableElement>) => (
+                      <CustomTable {...props}>{children}</CustomTable>
                     ),
                   }}
                 >

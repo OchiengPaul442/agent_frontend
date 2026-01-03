@@ -26,34 +26,6 @@ export function ChatMessages({
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [showErrorDialog, setShowErrorDialog] = useState(false);
 
-  // Smooth scroll helper that animates scroll to target over `duration` ms.
-  const smoothScrollTo = (
-    el: HTMLElement | null,
-    duration = 800,
-    offset = 20
-  ) => {
-    if (!el || !containerRef.current) return;
-    const container = containerRef.current;
-    const start = container.scrollTop;
-    const rect = el.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-    const target = start + rect.top - containerRect.top - offset;
-    const distance = target - start;
-    const startTime = performance.now();
-
-    const easeInOutCubic = (t: number) =>
-      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-
-    const step = (now: number) => {
-      const elapsed = Math.min(1, (now - startTime) / duration);
-      const progress = easeInOutCubic(elapsed);
-      container.scrollTo(0, Math.round(start + distance * progress));
-      if (elapsed < 1) requestAnimationFrame(step);
-    };
-
-    requestAnimationFrame(step);
-  };
-
   useEffect(() => {
     // Scroll to bottom when new messages are added or loading state changes
     if (!Array.isArray(messages) || messages.length === 0) return;
@@ -72,9 +44,8 @@ export function ChatMessages({
   }, [messages, isLoading]);
 
   useEffect(() => {
-    if (error) {
-      setShowErrorDialog(true);
-    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setShowErrorDialog(!!error);
   }, [error]);
 
   return (

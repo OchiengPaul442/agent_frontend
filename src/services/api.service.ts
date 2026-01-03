@@ -38,7 +38,10 @@ class ApiService {
         errorMessage = error.detail;
       } else if (Array.isArray(error.detail)) {
         errorMessage = error.detail
-          .map((e: any) => e.msg || e.message || JSON.stringify(e))
+          .map(
+            (e: { msg?: string; message?: string }) =>
+              e.msg || e.message || JSON.stringify(e)
+          )
           .join(', ');
       } else if (error.detail && typeof error.detail === 'object') {
         errorMessage =
