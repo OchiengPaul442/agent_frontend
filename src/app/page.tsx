@@ -154,14 +154,37 @@ export default function HomePage() {
         <header className="bg-background/80 sticky top-0 z-10 backdrop-blur-sm">
           <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">
-              <Image
-                src="/logo.png"
-                alt="Aeris Logo"
-                width={32}
-                height={32}
-                className="h-8 w-8 rounded-lg"
-              />
-              <h1 className="text-foreground text-lg font-medium">Aeris</h1>
+              {hasMessages && (
+                <motion.div
+                  layoutId="aeris-logo"
+                  transition={{
+                    type: 'spring',
+                    stiffness: 200,
+                    damping: 30,
+                    mass: 1,
+                  }}
+                  className="relative"
+                >
+                  <Image
+                    src="/logo.png"
+                    alt="Aeris Logo"
+                    width={32}
+                    height={32}
+                    className="h-8 w-8 rounded-lg"
+                  />
+                </motion.div>
+              )}
+              <motion.h1
+                initial={{ opacity: 0, x: -10 }}
+                animate={{
+                  opacity: hasMessages ? 1 : 0,
+                  x: hasMessages ? 0 : -10,
+                }}
+                transition={{ duration: 0.3, delay: hasMessages ? 0.4 : 0 }}
+                className="text-foreground text-lg font-medium"
+              >
+                Aeris
+              </motion.h1>
             </div>
             {hasMessages && (
               <button
@@ -200,7 +223,34 @@ export default function HomePage() {
                 className="bg-background absolute inset-0 z-10 flex flex-col items-center justify-center px-4 pb-32"
               >
                 <div className="w-full max-w-3xl space-y-8">
-                  <div className="text-center">
+                  <div className="flex flex-col items-center text-center">
+                    {/* Centered animated logo */}
+                    <motion.div
+                      layoutId="aeris-logo"
+                      transition={{
+                        type: 'spring',
+                        stiffness: 200,
+                        damping: 30,
+                        mass: 1,
+                      }}
+                      className="mb-6"
+                    >
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.5, ease: 'easeOut' }}
+                      >
+                        <Image
+                          src="/logo.png"
+                          alt="Aeris Logo"
+                          width={80}
+                          height={80}
+                          className="h-20 w-20 rounded-2xl shadow-lg"
+                          priority
+                        />
+                      </motion.div>
+                    </motion.div>
+
                     <h2 className="text-foreground mb-2 text-3xl font-semibold sm:text-4xl">
                       Ready when you are.
                     </h2>
