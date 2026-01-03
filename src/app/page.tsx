@@ -136,176 +136,175 @@ export default function HomePage() {
   };
 
   return (
-    <div className="bg-background relative flex h-screen flex-col">
-      {/* Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={showNewChatDialog}
-        onClose={() => setShowNewChatDialog(false)}
-        onConfirm={createNewSession}
-        title="Start New Conversation?"
-        message="Starting a new conversation will delete your current chat history. This action cannot be undone. Are you sure you want to continue?"
-        confirmText="Start New Chat"
-        cancelText="Keep Current Chat"
-        type="warning"
-      />
+    <div className="bg-muted/30 flex h-screen items-center justify-center p-2">
+      <div className="bg-background border-border relative flex h-full w-full flex-col overflow-hidden rounded-lg border shadow-xl">
+        {/* Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={showNewChatDialog}
+          onClose={() => setShowNewChatDialog(false)}
+          onConfirm={createNewSession}
+          title="Start New Conversation?"
+          message="Starting a new conversation will delete your current chat history. This action cannot be undone. Are you sure you want to continue?"
+          confirmText="Start New Chat"
+          cancelText="Keep Current Chat"
+          type="warning"
+        />
 
-      {/* Header */}
-      <header className="border-border bg-background/80 sticky top-0 z-10 border-b backdrop-blur-sm">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/logo.png"
-              alt="Aeris Logo"
-              width={32}
-              height={32}
-              className="h-8 w-8 rounded-lg"
-            />
-            <h1 className="text-foreground text-lg font-medium">Aeris</h1>
-          </div>
-          {hasMessages && (
-            <button
-              onClick={handleNewSession}
-              className="border-border bg-background text-foreground hover:bg-muted focus:ring-ring flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors focus:ring-2 focus:outline-none"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              New Chat
-            </button>
-          )}
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <div className="relative flex flex-1 flex-col overflow-hidden">
-        {/* Welcome Screen (Centered) */}
-        <AnimatePresence>
-          {!hasMessages && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-              className="bg-background absolute inset-0 z-10 flex flex-col items-center justify-center px-4 pb-32"
-            >
-              <div className="w-full max-w-3xl space-y-8">
-                <div className="text-center">
-                  <h2 className="text-foreground mb-2 text-3xl font-semibold sm:text-4xl">
-                    Ready when you are.
-                  </h2>
-                  <p className="text-muted-foreground text-sm sm:text-base">
-                    Ask me anything about air quality
-                  </p>
-                </div>
-
-                {/* Starter Questions */}
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {STARTER_QUESTIONS.map((question, index) => (
-                    <motion.button
-                      key={index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.1 + index * 0.1 }}
-                      onClick={() => handleStarterQuestion(question)}
-                      className="group border-border bg-card hover:border-border focus:ring-ring rounded-xl border p-4 text-left shadow-sm transition-all hover:shadow-md focus:ring-2 focus:outline-none"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="bg-primary text-primary-foreground mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg">
-                          <svg
-                            className="h-3.5 w-3.5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2.5}
-                              d="M13 10V3L4 14h7v7l9-11h-7z"
-                            />
-                          </svg>
-                        </div>
-                        <span className="text-card-foreground group-hover:text-primary text-sm font-medium">
-                          {question}
-                        </span>
-                      </div>
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Chat Messages (Shown when there are messages) */}
-        <AnimatePresence>
-          {hasMessages && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-              className="flex-1 overflow-hidden"
-            >
-              <ChatMessages
-                messages={messages}
-                isLoading={isLoading}
-                error={error}
-                onRetry={retry}
-                onEditMessage={editMessage}
+        {/* Header */}
+        <header className="bg-background/80 sticky top-0 z-10 backdrop-blur-sm">
+          <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-3">
+              <Image
+                src="/logo.png"
+                alt="Aeris Logo"
+                width={32}
+                height={32}
+                className="h-8 w-8 rounded-lg"
               />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Input Area - Moves from center to bottom */}
-      <motion.div
-        initial={false}
-        animate={{
-          position: hasMessages ? 'relative' : 'absolute',
-          bottom: hasMessages ? 0 : '5%',
-          left: 0,
-          right: 0,
-        }}
-        transition={{
-          duration: 0.5,
-          ease: [0.32, 0.72, 0, 1],
-        }}
-        className={cn(
-          'bg-background z-20 w-full',
-          hasMessages ? 'border-border border-t' : ''
-        )}
-      >
-        <div className="mx-auto max-w-3xl px-4">
-          <ChatInput
-            onSend={sendMessage}
-            isLoading={isLoading}
-            placeholder="Ask Aeris..."
-            hasMessages={hasMessages}
-          />
-        </div>
-      </motion.div>
-
-      {/* Footer - only show when user has started a chat */}
-      {hasMessages && (
-        <footer className="bg-background/30 py-1">
-          <div className="mx-auto max-w-4xl px-4">
-            <p className="text-muted-foreground text-center text-xs">
-              Aeris may be incorrect. Verify critical details.
-            </p>
+              <h1 className="text-foreground text-lg font-medium">Aeris</h1>
+            </div>
+            {hasMessages && (
+              <button
+                onClick={handleNewSession}
+                className="border-border bg-background text-foreground hover:bg-muted focus:ring-ring flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors focus:ring-2 focus:outline-none"
+              >
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                New Chat
+              </button>
+            )}
           </div>
-        </footer>
-      )}
+        </header>
+
+        {/* Main Content Area */}
+        <div className="relative flex flex-1 flex-col overflow-hidden">
+          {/* Welcome Screen (Centered) */}
+          <AnimatePresence>
+            {!hasMessages && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+                className="bg-background absolute inset-0 z-10 flex flex-col items-center justify-center px-4 pb-32"
+              >
+                <div className="w-full max-w-3xl space-y-8">
+                  <div className="text-center">
+                    <h2 className="text-foreground mb-2 text-3xl font-semibold sm:text-4xl">
+                      Ready when you are.
+                    </h2>
+                    <p className="text-muted-foreground text-sm sm:text-base">
+                      Ask me anything about air quality
+                    </p>
+                  </div>
+
+                  {/* Starter Questions */}
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {STARTER_QUESTIONS.map((question, index) => (
+                      <motion.button
+                        key={index}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.1 + index * 0.1 }}
+                        onClick={() => handleStarterQuestion(question)}
+                        className="group border-border bg-card hover:border-border focus:ring-ring rounded-xl border p-4 text-left shadow-sm transition-all hover:shadow-md focus:ring-2 focus:outline-none"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="bg-primary text-primary-foreground mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg">
+                            <svg
+                              className="h-3.5 w-3.5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2.5}
+                                d="M13 10V3L4 14h7v7l9-11h-7z"
+                              />
+                            </svg>
+                          </div>
+                          <span className="text-card-foreground group-hover:text-primary text-sm font-medium">
+                            {question}
+                          </span>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Chat Messages (Shown when there are messages) */}
+          <AnimatePresence>
+            {hasMessages && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="flex-1 overflow-hidden"
+              >
+                <ChatMessages
+                  messages={messages}
+                  isLoading={isLoading}
+                  error={error}
+                  onRetry={retry}
+                  onEditMessage={editMessage}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Input Area - Moves from center to bottom */}
+        <motion.div
+          initial={false}
+          animate={{
+            position: hasMessages ? 'relative' : 'absolute',
+            bottom: hasMessages ? 0 : '5%',
+            left: 0,
+            right: 0,
+          }}
+          transition={{
+            duration: 0.5,
+            ease: [0.32, 0.72, 0, 1],
+          }}
+          className="bg-background z-20 w-full"
+        >
+          <div className="mx-auto max-w-3xl px-4">
+            <ChatInput
+              onSend={sendMessage}
+              isLoading={isLoading}
+              placeholder="Ask Aeris..."
+              hasMessages={hasMessages}
+            />
+          </div>
+        </motion.div>
+
+        {/* Footer - only show when user has started a chat */}
+        {hasMessages && (
+          <footer className="bg-background/30 pb-1">
+            <div className="mx-auto max-w-4xl px-4">
+              <p className="text-muted-foreground text-center text-xs">
+                Aeris may be incorrect. Verify critical details.
+              </p>
+            </div>
+          </footer>
+        )}
+      </div>
     </div>
   );
 }
