@@ -30,6 +30,7 @@ export function ChatInput({
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
@@ -87,15 +88,16 @@ export function ChatInput({
       !name.endsWith('.xls') &&
       !name.endsWith('.xlsx')
     ) {
-      alert('Only PDF, CSV, and Excel files are supported');
+      setErrorMessage('Only PDF, CSV, and Excel files are supported');
       return;
     }
 
     if (file.size > maxSize) {
-      alert('File size must be less than 8MB');
+      setErrorMessage('File size must be less than 8MB');
       return;
     }
 
+    setErrorMessage(null);
     setUploadedFile(file);
   };
 
@@ -120,6 +122,7 @@ export function ChatInput({
 
   const removeFile = () => {
     setUploadedFile(null);
+    setErrorMessage(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -212,6 +215,23 @@ export function ChatInput({
         )}
       </AnimatePresence>
 
+      {/* Error Message */}
+      <AnimatePresence>
+        {errorMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="mb-3"
+          >
+            <div className="bg-destructive/10 text-destructive border-destructive/20 flex items-center gap-2 rounded-xl border p-3 text-sm">
+              <AqX className="h-4 w-4 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Input Area */}
       <div
         className={cn(
@@ -254,7 +274,10 @@ export function ChatInput({
         {/* Textarea */}
         <textarea
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => {
+            setInput(e.target.value);
+            if (errorMessage) setErrorMessage(null);
+          }}
           onKeyDown={handleKeyDown}
           placeholder={
             uploadedFile ? 'Add a message (optional)...' : placeholder
@@ -315,17 +338,6 @@ export function ChatInput({
           Drop file to upload
         </motion.div>
       )}
-
-      {/* Supported File Formats - Modern Style */}
-      <div className="mt-3 flex items-center justify-center gap-3">
-        <div className="flex items-center gap-1.5">
-          <span className="text-muted-foreground text-xs">PDF</span>
-          <span className="text-muted-foreground/50">•</span>
-          <span className="text-muted-foreground text-xs">CSV</span>
-          <span className="text-muted-foreground/50">•</span>
-          <span className="text-muted-foreground text-xs">XLSX</span>
-        </div>
-      </div>
     </div>
   );
 }
