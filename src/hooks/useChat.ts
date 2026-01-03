@@ -149,7 +149,7 @@ export function useChat(options: UseChatOptions = {}) {
             session_id: options.sessionId,
             history: historyUpToEdit.slice(0, -1), // Exclude the current message from history as it's being sent
             save_to_db: false,
-            file: editedMessage.file,
+            // Note: We don't pass the file when editing as it's already been processed
           },
           { signal: controller.signal }
         );
