@@ -506,6 +506,10 @@ export function MessageBubble({
                 >
                   {sanitizeMarkdown(message.content)}
                 </ReactMarkdown>
+                {/* Streaming cursor indicator */}
+                {message.isStreaming && (
+                  <span className="bg-foreground ml-0.5 inline-block h-5 w-0.5 animate-pulse align-middle" />
+                )}
               </>
             )}
           </div>

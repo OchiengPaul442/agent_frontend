@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { apiService } from '@/services/api.service';
 import type { Message, ChatResponse } from '@/types';
 import { sanitizeMarkdown } from '@/utils/helpers';
@@ -15,6 +15,94 @@ export function useChat(options: UseChatOptions = {}) {
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const isLoadingRef = useRef(false);
+  const typewriterRef = useRef<number | null>(null);
+  const streamingMessageRef = useRef<string>('');
+
+  // Cleanup typewriter animation on unmount
+  useEffect(() => {
+    return () => {
+      if (typewriterRef.current !== null) {
+        cancelAnimationFrame(typewriterRef.current);
+        typewriterRef.current = null;
+      }
+    };
+  }, []);
+
+  // Typewriter effect using requestAnimationFrame for smooth 60fps animation
+  const animateTypewriter = useCallback(
+    (fullText: string, timestamp?: string, tools_used?: string[]) => {
+      // Cancel any existing animation
+      if (typewriterRef.current !== null) {
+        cancelAnimationFrame(typewriterRef.current);
+        typewriterRef.current = null;
+      }
+
+      streamingMessageRef.current = '';
+      let charIndex = 0;
+      const charsPerFrame = 2; // Characters to add per frame (~120 chars/sec at 60fps)
+      let lastTime = performance.now();
+      const targetFPS = 60;
+      const frameTime = 1000 / targetFPS;
+
+      const animate = (currentTime: number) => {
+        const elapsed = currentTime - lastTime;
+
+        // Maintain consistent frame rate
+        if (elapsed >= frameTime) {
+          lastTime = currentTime - (elapsed % frameTime);
+
+          // Add characters based on charsPerFrame
+          const endIndex = Math.min(charIndex + charsPerFrame, fullText.length);
+          streamingMessageRef.current = fullText.slice(0, endIndex);
+          charIndex = endIndex;
+
+          // Update the last message with streaming content
+          setMessages((prev) => {
+            const updated = [...prev];
+            const lastIdx = updated.length - 1;
+            if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+              updated[lastIdx] = {
+                ...updated[lastIdx],
+                content: streamingMessageRef.current,
+                isStreaming: charIndex < fullText.length,
+              };
+            }
+            return updated;
+          });
+
+          // Continue animation if not complete
+          if (charIndex < fullText.length) {
+            typewriterRef.current = requestAnimationFrame(animate);
+          } else {
+            // Animation complete - finalize message
+            typewriterRef.current = null;
+            streamingMessageRef.current = '';
+            setMessages((prev) => {
+              const updated = [...prev];
+              const lastIdx = updated.length - 1;
+              if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+                updated[lastIdx] = {
+                  role: 'assistant',
+                  content: fullText,
+                  timestamp: timestamp || new Date().toISOString(),
+                  tools_used: tools_used,
+                  isStreaming: false,
+                };
+              }
+              return updated;
+            });
+          }
+        } else {
+          // Not enough time elapsed, continue to next frame
+          typewriterRef.current = requestAnimationFrame(animate);
+        }
+      };
+
+      // Start animation
+      typewriterRef.current = requestAnimationFrame(animate);
+    },
+    []
+  );
 
   // Don't load messages from API - keep them in local state only
   // This prevents loops and keeps the session stable
@@ -62,14 +150,22 @@ export function useChat(options: UseChatOptions = {}) {
           { signal: controller.signal }
         );
 
-        const assistantMessage: Message = {
+        const sanitizedContent = sanitizeMarkdown(response.response);
+        const timestamp = new Date().toISOString();
+
+        // Add placeholder message for streaming effect
+        const placeholderMessage: Message = {
           role: 'assistant',
-          content: sanitizeMarkdown(response.response),
-          timestamp: new Date().toISOString(),
+          content: '',
+          timestamp: timestamp,
           tools_used: response.tools_used,
+          isStreaming: true,
         };
 
-        setMessages((prev) => [...prev, assistantMessage]);
+        setMessages((prev) => [...prev, placeholderMessage]);
+
+        // Start typewriter animation
+        animateTypewriter(sanitizedContent, timestamp, response.tools_used);
 
         return response;
       } catch (err) {
@@ -103,6 +199,12 @@ export function useChat(options: UseChatOptions = {}) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+    // Cancel any ongoing typewriter animation
+    if (typewriterRef.current !== null) {
+      cancelAnimationFrame(typewriterRef.current);
+      typewriterRef.current = null;
+    }
+    streamingMessageRef.current = '';
     isLoadingRef.current = false;
   }, []);
 
@@ -154,14 +256,22 @@ export function useChat(options: UseChatOptions = {}) {
           { signal: controller.signal }
         );
 
-        const assistantMessage: Message = {
+        const sanitizedContent = sanitizeMarkdown(response.response);
+        const timestamp = new Date().toISOString();
+
+        // Add placeholder message for streaming effect
+        const placeholderMessage: Message = {
           role: 'assistant',
-          content: sanitizeMarkdown(response.response),
-          timestamp: new Date().toISOString(),
+          content: '',
+          timestamp: timestamp,
           tools_used: response.tools_used,
+          isStreaming: true,
         };
 
-        setMessages((prev) => [...prev, assistantMessage]);
+        setMessages((prev) => [...prev, placeholderMessage]);
+
+        // Start typewriter animation
+        animateTypewriter(sanitizedContent, timestamp, response.tools_used);
 
         return response;
       } catch (err) {

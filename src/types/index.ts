@@ -3,6 +3,7 @@ export interface Message {
   content: string;
   timestamp?: string;
   tools_used?: string[];
+  isStreaming?: boolean; // For typewriter effect
   file?: {
     name: string;
     size: number;
