@@ -17,10 +17,10 @@ const generateSessionId = () => {
 
 // Starter questions for air quality (professional / policy oriented)
 const STARTER_QUESTIONS = [
-  'How can I monitor air quality in real-time for my location?',
-  'Recommend evidence-based strategies to improve indoor air quality in offices and schools.',
-  'Summarize the health impacts of chronic PM2.5 exposure and relevant threshold values.',
-  'Outline practical policy measures to reduce urban air pollution and improve compliance.',
+  "Is it safe for my family to be outside right now—what's the 1-hour vs. 24-hour risk?",
+  'What are the most cost-effective ways to cut indoor PM2.5 by 50%?',
+  "How does air pollution affect pregnancy and children's lung development?",
+  'What policies actually work to reduce traffic pollution near schools?',
 ];
 
 export default function HomePage() {
