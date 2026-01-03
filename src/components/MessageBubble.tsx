@@ -81,7 +81,6 @@ const CodeBlock = React.memo(function CodeBlock({
     try {
       mq.addEventListener('change', handler);
     } catch {
-      // @ts-expect-error: Safari older APIs
       mq.addListener(handler);
     }
     setIsDark(mq.matches);
@@ -89,7 +88,6 @@ const CodeBlock = React.memo(function CodeBlock({
       try {
         mq.removeEventListener('change', handler);
       } catch {
-        // @ts-expect-error: Safari older APIs
         mq.removeListener(handler);
       }
     };
