@@ -11,6 +11,7 @@ interface ChatMessagesProps {
   isLoading?: boolean;
   error?: Error | null;
   onRetry?: () => void;
+  onEditMessage?: (messageIndex: number, newContent: string) => void;
 }
 
 export function ChatMessages({
@@ -18,6 +19,7 @@ export function ChatMessages({
   isLoading = false,
   error = null,
   onRetry,
+  onEditMessage,
 }: ChatMessagesProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -87,6 +89,8 @@ export function ChatMessages({
                 message={message}
                 outerRefKey={key}
                 registerRef={(k, el) => (messageRefs.current[k] = el)}
+                onEdit={onEditMessage}
+                messageIndex={index}
               />
             );
           })}

@@ -5,19 +5,20 @@ import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/utils/helpers';
-import { AqCopy01, AqCheckCircle, AqDownload01 } from '@airqo/icons-react';
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  ComponentProps,
-  ComponentPropsWithoutRef,
-} from 'react';
+import {
+  AqCopy01,
+  AqCheckCircle,
+  AqDownload01,
+  AqEdit01,
+} from '@airqo/icons-react';
+import React, { useState, useRef, ComponentProps } from 'react';
 
 interface MessageBubbleProps {
   message: Message;
   outerRefKey?: string;
   registerRef?: (key: string, el: HTMLDivElement | null) => void;
+  onEdit?: (messageIndex: number, newContent: string) => void;
+  messageIndex?: number;
 }
 
 type TableData = {
@@ -89,13 +90,17 @@ export function MessageBubble({
   message,
   outerRefKey,
   registerRef,
+  onEdit,
+  messageIndex,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(message.content);
 
   const outerRef = useRef<HTMLDivElement | null>(null);
+  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Callback ref to register immediately when element mounts
   const setOuterRef = (el: HTMLDivElement | null) => {
     outerRef.current = el;
     if (outerRefKey && registerRef) {
@@ -110,6 +115,44 @@ export function MessageBubble({
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+    setEditContent(message.content);
+    setTimeout(() => {
+      editTextareaRef.current?.focus();
+      editTextareaRef.current?.setSelectionRange(
+        editTextareaRef.current.value.length,
+        editTextareaRef.current.value.length
+      );
+    }, 0);
+  };
+
+  const handleSaveEdit = () => {
+    if (
+      editContent.trim() &&
+      editContent !== message.content &&
+      onEdit &&
+      messageIndex !== undefined
+    ) {
+      onEdit(messageIndex, editContent.trim());
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditContent(message.content);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSaveEdit();
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
     }
   };
 
@@ -190,15 +233,12 @@ export function MessageBubble({
       className="group relative w-full py-8"
     >
       <div className="mx-auto flex max-w-3xl gap-6 px-4 sm:px-6">
-        {/* Message Content */}
         <div
           className={cn(
             'flex-1 space-y-3',
             isUser ? 'flex flex-col items-end' : ''
           )}
         >
-          {/* File Attachment - Show above text for user messages */}
-          {/* File Attachment - show preview for both user and assistant */}
           {message.file && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -232,7 +272,6 @@ export function MessageBubble({
             </motion.div>
           )}
 
-          {/* Text Content */}
           <div
             className={cn(
               'prose prose-sm max-w-none',
@@ -258,58 +297,130 @@ export function MessageBubble({
               'prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-4 prose-th:py-2 prose-th:text-left prose-th:font-semibold prose-th:text-foreground',
               'prose-td:border prose-td:border-border prose-td:px-4 prose-td:py-2 prose-td:text-foreground',
               isUser
-                ? 'inline-block max-w-[85%] rounded-3xl bg-[var(--bg-tertiary)] px-5 py-3 text-[var(--text-primary)]'
+                ? isEditing
+                  ? 'w-full rounded-3xl bg-[var(--bg-tertiary)] px-5 py-3 text-[var(--text-primary)]'
+                  : 'inline-block max-w-[85%] rounded-3xl bg-[var(--bg-tertiary)] px-5 py-3 text-[var(--text-primary)]'
                 : 'w-full rounded-3xl px-5 py-3 text-[var(--text-primary)]'
             )}
           >
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              // No rehypePlugins for now — remark-gfm handles tables and common markdown.
-              components={{
-                a: ({ href, children }) => (
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:text-primary/80 font-medium no-underline transition-colors hover:underline"
+            {isEditing ? (
+              <div className="space-y-2">
+                <textarea
+                  ref={editTextareaRef}
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="w-full resize-none border-0 bg-transparent p-0 text-base break-words whitespace-pre-wrap focus:outline-none"
+                  rows={Math.max(1, editContent.split('\n').length)}
+                  style={{ minHeight: '24px', height: 'auto', width: '100%' }}
+                  onInput={(e) => {
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = 'auto';
+                    target.style.height = `${target.scrollHeight}px`;
+                  }}
+                />
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={handleCancelEdit}
+                    className="text-muted-foreground hover:text-foreground text-sm underline"
                   >
-                    {children}
-                  </a>
-                ),
-                code: ({ node, inline, className, children, ...props }) => {
-                  if (inline) {
-                    return (
-                      <code
-                        className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-sm"
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={
+                      !editContent.trim() || editContent === message.content
+                    }
+                    className="bg-primary text-primary-foreground disabled:bg-muted disabled:text-muted-foreground rounded px-3 py-1 text-sm font-medium transition-colors"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    a: ({ href, children, ...props }: any) => (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:text-primary/80 font-medium no-underline transition-colors hover:underline"
                         {...props}
                       >
                         {children}
-                      </code>
-                    );
-                  }
-                  return (
-                    <pre className="prose-pre">
-                      <code
-                        className={cn(
-                          'bg-muted text-foreground block overflow-x-auto rounded-lg p-4 font-mono text-sm',
-                          className as string
-                        )}
-                        {...props}
-                      >
-                        {children}
-                      </code>
-                    </pre>
-                  );
-                },
-                table: ({ node, children, ...props }) => (
-                  <CustomTable {...(props as any)}>{children}</CustomTable>
-                ),
-              }}
-            >
-              {message.content}
-            </ReactMarkdown>
-            {!isUser && (
-              <div className="mt-4 flex justify-end">
+                      </a>
+                    ),
+                    code: ({
+                      node,
+                      inline,
+                      className,
+                      children,
+                      ...props
+                    }: any) => {
+                      if (inline) {
+                        return (
+                          <code
+                            className="bg-muted text-foreground rounded px-1.5 py-0.5 font-mono text-sm"
+                            {...props}
+                          >
+                            {children}
+                          </code>
+                        );
+                      }
+                      return (
+                        <pre className="prose-pre">
+                          <code
+                            className={cn(
+                              'bg-muted text-foreground block overflow-x-auto rounded-lg p-4 font-mono text-sm',
+                              className as string
+                            )}
+                            {...props}
+                          >
+                            {children}
+                          </code>
+                        </pre>
+                      );
+                    },
+                    table: ({ node, children, ...props }: any) => (
+                      <CustomTable {...(props as any)}>{children}</CustomTable>
+                    ),
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
+              </>
+            )}
+          </div>
+
+          {/* Action buttons outside the message bubble, on the right */}
+          {!isEditing && (
+            <div className="mt-2 flex items-center justify-end gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+              {isUser && (
+                <>
+                  <button
+                    onClick={handleEdit}
+                    className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2 transition-colors"
+                    title="Edit message"
+                  >
+                    <AqEdit01 className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={handleCopy}
+                    className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2 transition-colors"
+                    title={copied ? 'Copied!' : 'Copy message'}
+                  >
+                    {copied ? (
+                      <AqCheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <AqCopy01 className="h-4 w-4" />
+                    )}
+                  </button>
+                </>
+              )}
+              {!isUser && (
                 <button
                   onClick={handleCopy}
                   className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2 transition-colors"
@@ -321,9 +432,9 @@ export function MessageBubble({
                     <AqCopy01 className="h-4 w-4" />
                   )}
                 </button>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

@@ -40,11 +40,18 @@ export default function HomePage() {
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [showRefreshDialog, setShowRefreshDialog] = useState(false);
 
-  const { messages, isLoading, error, sendMessage, clearMessages, retry } =
-    useChat({
-      sessionId,
-      onError: (err) => console.error('Chat error:', err),
-    });
+  const {
+    messages,
+    isLoading,
+    error,
+    sendMessage,
+    clearMessages,
+    retry,
+    editMessage,
+  } = useChat({
+    sessionId,
+    onError: (err) => console.error('Chat error:', err),
+  });
 
   const hasMessages = messages.length > 0 || isLoading;
 
@@ -238,6 +245,7 @@ export default function HomePage() {
                 isLoading={isLoading}
                 error={error}
                 onRetry={retry}
+                onEditMessage={editMessage}
               />
             </motion.div>
           )}
