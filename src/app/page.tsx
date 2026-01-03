@@ -14,12 +14,12 @@ const generateSessionId = () => {
   return `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 };
 
-// Starter questions for air quality
+// Starter questions for air quality (professional / policy oriented)
 const STARTER_QUESTIONS = [
-  "What's the air quality in my area today?",
-  'How do I improve indoor air quality?',
-  'What are the health effects of poor air quality?',
-  'Explain PM2.5 and why it matters',
+  'Assess current ambient air quality in my city (PM2.5, O3, NO2) and highlight key concerns.',
+  'Recommend evidence-based strategies to improve indoor air quality in offices and schools.',
+  'Summarize the health impacts of chronic PM2.5 exposure and relevant threshold values.',
+  'Outline practical policy measures to reduce urban air pollution and improve compliance.',
 ];
 
 export default function HomePage() {
