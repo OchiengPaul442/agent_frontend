@@ -65,15 +65,20 @@ const formatFileSize = (bytes: number) => {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 };
 
-const getFileIcon = (type: string) => {
-  if (type.includes('pdf')) return '📄';
+const getFilePreviewSrc = (file?: { type?: string; name?: string } | null) => {
+  if (!file) return '/file-unknown.svg';
+  const type = (file.type || '').toLowerCase();
+  const name = (file.name || '').toLowerCase();
+  if (type.includes('pdf') || name.endsWith('.pdf')) return '/file-pdf.svg';
+  if (type.includes('csv') || name.endsWith('.csv')) return '/file-csv.svg';
   if (
-    type.includes('csv') ||
     type.includes('excel') ||
-    type.includes('spreadsheet')
+    type.includes('spreadsheet') ||
+    name.endsWith('.xls') ||
+    name.endsWith('.xlsx')
   )
-    return '📊';
-  return '📎';
+    return '/file-xlsx.svg';
+  return '/file-unknown.svg';
 };
 
 export function MessageBubble({ message }: MessageBubbleProps) {
@@ -174,18 +179,27 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           )}
         >
           {/* File Attachment - Show above text for user messages */}
-          {isUser && message.file && (
+          {/* File Attachment - show preview for both user and assistant */}
+          {message.file && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.2 }}
-              className="w-full max-w-[320px]"
+              className={cn('w-full max-w-[320px]', isUser ? '' : '')}
             >
-              <div className="border-border bg-card flex items-center gap-3 rounded-2xl border p-3.5 shadow-sm">
-                <div className="bg-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-xl">
-                  <span className="text-2xl">
-                    {getFileIcon(message.file.type)}
-                  </span>
+              <div
+                className={cn(
+                  'border-border flex items-center gap-3 rounded-2xl border p-3.5 shadow-sm',
+                  'file-preview',
+                  isUser ? 'file-preview-user' : 'bg-card'
+                )}
+              >
+                <div className="bg-muted flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl">
+                  <img
+                    src={getFilePreviewSrc(message.file)}
+                    alt={message.file.name || 'file'}
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <div className="flex-1 overflow-hidden">
                   <p className="text-card-foreground m-0 truncate p-0 text-sm font-semibold">

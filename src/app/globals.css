@@ -55,8 +55,10 @@
     --bg-primary-inverted: #fff;
     --bg-secondary: #303030;
     --bg-tertiary: #414141;
+    --bg-tertiary-rgb: 65, 65, 65;
     --bg-scrim: #0d0d0d80;
     --bg-elevated-primary: #303030;
+    --bg-tertiary-rgb: 65, 65, 65;
     --bg-elevated-secondary: #181818;
     --bg-accent-static: #0285ff;
     --bg-status-warning: #4a2206;
@@ -218,6 +220,23 @@
 
   .card-glass {
     @apply rounded-2xl border border-white/30 bg-white/60 shadow-xl backdrop-blur-lg;
+  }
+
+  /* File preview backgrounds - lighter variant for user uploads */
+  .file-preview {
+    border-radius: 1rem;
+    border: 1px solid var(--border-default, rgba(255, 255, 255, 0.08));
+    background-color: var(--card);
+  }
+
+  .file-preview-user {
+    /* Match the bubble hue but render it lighter using alpha on the same RGB color */
+    background-color: rgba(var(--bg-tertiary-rgb), 0.22);
+    border: 1px solid rgba(var(--bg-tertiary-rgb), 0.32);
+    box-shadow:
+      0 6px 14px rgba(0, 0, 0, 0.16),
+      inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    color: var(--text-inverted-static, #000);
   }
 
   /* Button styles */

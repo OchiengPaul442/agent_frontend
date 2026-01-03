@@ -78,7 +78,15 @@ export function ChatInput({
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     ];
 
-    if (!allowedTypes.includes(file.type)) {
+    const name = (file.name || '').toLowerCase();
+
+    if (
+      !allowedTypes.includes(file.type) &&
+      !name.endsWith('.pdf') &&
+      !name.endsWith('.csv') &&
+      !name.endsWith('.xls') &&
+      !name.endsWith('.xlsx')
+    ) {
       alert('Only PDF, CSV, and Excel files are supported');
       return;
     }
@@ -135,11 +143,49 @@ export function ChatInput({
             className="mb-3"
           >
             <div className="border-border bg-muted flex items-center gap-3 rounded-xl border p-3">
-              <div className="bg-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg">
                 {isUploading ? (
                   <AqLoading01 className="text-primary h-5 w-5 animate-spin" />
                 ) : (
-                  <AqFile02 className="text-primary h-5 w-5" />
+                  (() => {
+                    const type = uploadedFile.type;
+                    if (
+                      type.includes('pdf') ||
+                      uploadedFile.name.toLowerCase().endsWith('.pdf')
+                    )
+                      return (
+                        <img
+                          src="/file-pdf.svg"
+                          alt="PDF"
+                          className="h-10 w-10 object-cover"
+                        />
+                      );
+                    if (
+                      type.includes('sheet') ||
+                      type.includes('excel') ||
+                      uploadedFile.name.toLowerCase().endsWith('.xlsx') ||
+                      uploadedFile.name.toLowerCase().endsWith('.xls')
+                    )
+                      return (
+                        <img
+                          src="/file-xlsx.svg"
+                          alt="Excel"
+                          className="h-10 w-10 object-cover"
+                        />
+                      );
+                    if (
+                      type.includes('csv') ||
+                      uploadedFile.name.toLowerCase().endsWith('.csv')
+                    )
+                      return (
+                        <img
+                          src="/file-csv.svg"
+                          alt="CSV"
+                          className="h-10 w-10 object-cover"
+                        />
+                      );
+                    return <AqFile02 className="text-primary h-5 w-5" />;
+                  })()
                 )}
               </div>
               <div className="flex-1 overflow-hidden">
