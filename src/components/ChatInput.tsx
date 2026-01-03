@@ -278,8 +278,7 @@ export function ChatInput({
             exit={{ opacity: 0, y: -10 }}
             className="mb-3"
           >
-            <div className="bg-destructive/10 text-destructive border-destructive/20 flex items-center gap-2 rounded-xl border p-3 text-sm">
-              <AqX className="h-4 w-4 shrink-0" />
+            <div className="text-foreground flex items-center gap-2 rounded-xl border border-gray-200 p-3 text-sm">
               <span className="flex-1">{errorMessage}</span>
               <button
                 onClick={() => {
@@ -289,7 +288,7 @@ export function ChatInput({
                     setInternalErrorMessage(null);
                   }
                 }}
-                className="text-destructive hover:bg-destructive/20 focus:ring-destructive flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors focus:ring-2 focus:outline-none"
+                className="text-muted-foreground flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-gray-200 focus:ring-2 focus:ring-gray-300 focus:outline-none"
                 aria-label="Close error message"
               >
                 <AqX className="h-3.5 w-3.5" />
