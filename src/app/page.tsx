@@ -152,8 +152,8 @@ export default function HomePage() {
 
         {/* Header */}
         <header className="bg-background/80 sticky top-0 z-10 backdrop-blur-sm">
-          <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3">
+          <div className="mx-auto flex max-w-4xl items-center justify-between px-3 py-2.5 sm:px-4 sm:py-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {hasMessages && (
                 <motion.div
                   layoutId="aeris-logo"
@@ -170,7 +170,7 @@ export default function HomePage() {
                     alt="Aeris Logo"
                     width={32}
                     height={32}
-                    className="h-8 w-8 rounded-lg"
+                    className="h-7 w-7 rounded-lg sm:h-8 sm:w-8"
                   />
                 </motion.div>
               )}
@@ -181,7 +181,7 @@ export default function HomePage() {
                   x: hasMessages ? 0 : -10,
                 }}
                 transition={{ duration: 0.3, delay: hasMessages ? 0.4 : 0 }}
-                className="text-foreground text-lg font-medium"
+                className="text-foreground text-base font-medium sm:text-lg"
               >
                 Aeris
               </motion.h1>
@@ -189,10 +189,10 @@ export default function HomePage() {
             {hasMessages && (
               <button
                 onClick={handleNewSession}
-                className="border-border bg-background text-foreground hover:bg-muted focus:ring-ring flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors focus:ring-2 focus:outline-none"
+                className="border-border bg-background text-foreground hover:bg-muted focus:ring-ring flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors focus:ring-2 focus:outline-none sm:px-4 sm:py-2 md:text-sm"
               >
                 <svg
-                  className="h-4 w-4"
+                  className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -220,9 +220,9 @@ export default function HomePage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.4, ease: 'easeOut' }}
-                className="bg-background absolute inset-0 z-10 flex flex-col items-center justify-center px-4 pb-32"
+                className="bg-background absolute inset-0 z-10 flex flex-col items-center justify-center px-3 pb-32 sm:px-4"
               >
-                <div className="w-full max-w-3xl space-y-8">
+                <div className="w-full max-w-3xl space-y-6 sm:space-y-8">
                   <div className="flex flex-col items-center text-center">
                     {/* Centered animated logo */}
                     <motion.div
@@ -260,7 +260,7 @@ export default function HomePage() {
                   </div>
 
                   {/* Starter Questions */}
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-3 sm:grid-cols-2 md:gap-4">
                     {STARTER_QUESTIONS.map((question, index) => (
                       <motion.button
                         key={index}
@@ -268,7 +268,7 @@ export default function HomePage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: 0.1 + index * 0.1 }}
                         onClick={() => handleStarterQuestion(question)}
-                        className="group border-border bg-card hover:border-border focus:ring-ring rounded-xl border p-4 text-left shadow-sm transition-all hover:shadow-md focus:ring-2 focus:outline-none"
+                        className="group border-border bg-card hover:border-border focus:ring-ring cursor-pointer rounded-xl border p-4 text-left shadow-sm transition-all hover:shadow-md focus:ring-2 focus:outline-none sm:p-5 md:p-4"
                       >
                         <div className="flex items-start gap-3">
                           <div className="bg-primary text-primary-foreground mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg">
@@ -286,7 +286,7 @@ export default function HomePage() {
                               />
                             </svg>
                           </div>
-                          <span className="text-card-foreground group-hover:text-primary text-sm font-medium">
+                          <span className="text-card-foreground group-hover:text-primary text-sm leading-relaxed font-medium">
                             {question}
                           </span>
                         </div>
@@ -334,7 +334,7 @@ export default function HomePage() {
           }}
           className="bg-background z-20 w-full"
         >
-          <div className="mx-auto max-w-3xl px-4">
+          <div className="mx-auto max-w-3xl px-2 sm:px-4">
             <ChatInput
               onSend={sendMessage}
               isLoading={isLoading}
@@ -346,9 +346,9 @@ export default function HomePage() {
 
         {/* Footer - only show when user has started a chat */}
         {hasMessages && (
-          <footer className="bg-background/30 pb-1">
-            <div className="mx-auto max-w-4xl px-4">
-              <p className="text-muted-foreground text-center text-xs">
+          <footer className="bg-background/30 pb-1.5">
+            <div className="mx-auto max-w-4xl px-3 sm:px-4">
+              <p className="text-muted-foreground text-center text-[9px] leading-tight sm:text-[10px]">
                 Aeris may be incorrect. Verify critical details.
               </p>
             </div>

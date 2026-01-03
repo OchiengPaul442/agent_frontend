@@ -101,9 +101,9 @@ export function ChatMessages({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="w-full py-8"
+          className="w-full py-4 sm:py-8"
         >
-          <div className="mx-auto max-w-3xl px-4 sm:px-6">
+          <div className="mx-auto max-w-3xl px-2 sm:px-4 lg:px-6">
             <div className="flex items-center gap-2">
               {[0, 1, 2].map((i) => (
                 <motion.div

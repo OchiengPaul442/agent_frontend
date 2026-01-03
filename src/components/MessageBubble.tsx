@@ -230,9 +230,9 @@ export function MessageBubble({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       ref={setOuterRef}
-      className="group relative w-full py-8"
+      className="group relative w-full py-4 sm:py-8"
     >
-      <div className="mx-auto flex max-w-3xl gap-6 px-4 sm:px-6">
+      <div className="mx-auto flex max-w-3xl gap-3 px-2 sm:gap-6 sm:px-4 lg:px-6">
         <div
           className={cn(
             'flex-1 space-y-3',

@@ -135,7 +135,7 @@ export function ChatInput({
   };
 
   return (
-    <div className="p-4">
+    <div className="p-2 sm:p-4">
       {/* File Upload Preview */}
       <AnimatePresence>
         {uploadedFile && (
@@ -235,7 +235,7 @@ export function ChatInput({
       {/* Input Area */}
       <div
         className={cn(
-          'bg-background relative flex items-center gap-2 rounded-3xl border-2 transition-all',
+          'bg-background relative flex min-w-0 items-center gap-1 rounded-3xl border-2 transition-all sm:gap-2',
           isDragging
             ? 'border-primary bg-primary'
             : 'border-muted-foreground/30',
@@ -260,7 +260,7 @@ export function ChatInput({
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled || isLoading || !!uploadedFile}
           className={cn(
-            'ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none',
+            'ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:ml-3 sm:h-9 sm:w-9',
             uploadedFile
               ? 'text-muted-foreground cursor-not-allowed'
               : 'text-muted-foreground hover:bg-muted',
@@ -268,7 +268,7 @@ export function ChatInput({
           )}
           aria-label="Upload file"
         >
-          <AqPaperclip className="h-5 w-5" />
+          <AqPaperclip className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
 
         {/* Textarea */}
@@ -285,8 +285,8 @@ export function ChatInput({
           disabled={disabled || isLoading}
           rows={1}
           className={cn(
-            'text-foreground placeholder:text-muted-foreground flex-1 resize-none border-0 bg-transparent px-1 py-3 text-base focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
-            'max-h-50'
+            'text-foreground placeholder:text-muted-foreground min-w-0 flex-1 resize-none border-0 bg-transparent px-1 py-2.5 text-sm focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:py-3 sm:text-base',
+            'max-h-32'
           )}
           style={{
             minHeight: '24px',
@@ -309,7 +309,7 @@ export function ChatInput({
             isUploading
           }
           className={cn(
-            'mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none',
+            'mr-1.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:mr-2 sm:h-9 sm:w-9',
             (!input.trim() && !uploadedFile) ||
               isLoading ||
               disabled ||
@@ -321,9 +321,9 @@ export function ChatInput({
           aria-label="Send message"
         >
           {isLoading || isUploading ? (
-            <AqLoading01 className="text-primary h-4 w-4 animate-spin" />
+            <AqLoading01 className="text-primary h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
           ) : (
-            <AqSend01 className="h-4 w-4" />
+            <AqSend01 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           )}
         </button>
       </div>
