@@ -17,6 +17,11 @@ interface ChatInputProps {
   placeholder?: string;
   disabled?: boolean;
   hasMessages?: boolean;
+  onFileSelect?: (file: File) => void;
+  uploadedFile?: File | null;
+  onRemoveFile?: () => void;
+  errorMessage?: string | null;
+  onClearError?: () => void;
 }
 
 export function ChatInput({
@@ -25,13 +30,35 @@ export function ChatInput({
   placeholder = 'Ask about air quality...',
   disabled = false,
   hasMessages = false,
+  onFileSelect,
+  uploadedFile: externalUploadedFile,
+  onRemoveFile,
+  errorMessage: externalErrorMessage,
+  onClearError,
 }: ChatInputProps) {
   const [input, setInput] = useState('');
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const [internalUploadedFile, setInternalUploadedFile] = useState<File | null>(
+    null
+  );
   const [isUploading, setIsUploading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [internalErrorMessage, setInternalErrorMessage] = useState<
+    string | null
+  >(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Use external state if provided, otherwise use internal state
+  const uploadedFile =
+    externalUploadedFile !== undefined
+      ? externalUploadedFile
+      : internalUploadedFile;
+  const errorMessage =
+    externalErrorMessage !== undefined
+      ? externalErrorMessage
+      : internalErrorMessage;
+  const setUploadedFile = onFileSelect || setInternalUploadedFile;
+  const setErrorMessage = onClearError
+    ? () => onClearError()
+    : setInternalErrorMessage;
 
   const handleSend = () => {
     if (
@@ -51,7 +78,11 @@ export function ChatInput({
           uploadedFile || undefined
         );
         setInput('');
-        setUploadedFile(null);
+        if (onRemoveFile) {
+          onRemoveFile();
+        } else {
+          setInternalUploadedFile(null);
+        }
         setIsUploading(false);
       }, 100);
     } else {
@@ -88,41 +119,64 @@ export function ChatInput({
       !name.endsWith('.xls') &&
       !name.endsWith('.xlsx')
     ) {
-      setErrorMessage('Only PDF, CSV, and Excel files are supported');
+      if (onClearError) {
+        onClearError();
+        // Use a timeout to ensure the state update happens after clearing
+        setTimeout(() => {
+          if (externalErrorMessage !== undefined) {
+            // If using external error management, notify parent
+            // Parent should handle this through onFileSelect callback
+          } else {
+            setInternalErrorMessage(
+              'Only PDF, CSV, and Excel files are supported'
+            );
+          }
+        }, 0);
+      } else {
+        setInternalErrorMessage('Only PDF, CSV, and Excel files are supported');
+      }
       return;
     }
 
     if (file.size > maxSize) {
-      setErrorMessage('File size must be less than 8MB');
+      if (onClearError) {
+        onClearError();
+        setTimeout(() => {
+          if (externalErrorMessage !== undefined) {
+            // Parent should handle this
+          } else {
+            setInternalErrorMessage('File size must be less than 8MB');
+          }
+        }, 0);
+      } else {
+        setInternalErrorMessage('File size must be less than 8MB');
+      }
       return;
     }
 
-    setErrorMessage(null);
-    setUploadedFile(file);
-  };
+    if (onClearError) onClearError();
+    else if (externalErrorMessage === undefined) setInternalErrorMessage(null);
 
-  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      handleFileSelect(file);
+    if (onFileSelect) {
+      onFileSelect(file);
+    } else {
+      setInternalUploadedFile(file);
     }
   };
 
-  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
   const removeFile = () => {
-    setUploadedFile(null);
-    setErrorMessage(null);
+    if (onRemoveFile) {
+      onRemoveFile();
+    } else {
+      setInternalUploadedFile(null);
+    }
+
+    if (onClearError) {
+      onClearError();
+    } else if (externalErrorMessage === undefined) {
+      setInternalErrorMessage(null);
+    }
+
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -226,7 +280,20 @@ export function ChatInput({
           >
             <div className="bg-destructive/10 text-destructive border-destructive/20 flex items-center gap-2 rounded-xl border p-3 text-sm">
               <AqX className="h-4 w-4 shrink-0" />
-              <span>{errorMessage}</span>
+              <span className="flex-1">{errorMessage}</span>
+              <button
+                onClick={() => {
+                  if (onClearError) {
+                    onClearError();
+                  } else if (externalErrorMessage === undefined) {
+                    setInternalErrorMessage(null);
+                  }
+                }}
+                className="text-destructive hover:bg-destructive/20 focus:ring-destructive flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors focus:ring-2 focus:outline-none"
+                aria-label="Close error message"
+              >
+                <AqX className="h-3.5 w-3.5" />
+              </button>
             </div>
           </motion.div>
         )}
@@ -236,14 +303,9 @@ export function ChatInput({
       <div
         className={cn(
           'bg-background relative flex min-w-0 items-center gap-1 rounded-3xl border-2 transition-all sm:gap-2',
-          isDragging
-            ? 'border-primary bg-primary'
-            : 'border-muted-foreground/30',
+          'border-muted-foreground/30',
           'shadow-sm'
         )}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
       >
         {/* File Upload Button */}
         <input
@@ -276,7 +338,13 @@ export function ChatInput({
           value={input}
           onChange={(e) => {
             setInput(e.target.value);
-            if (errorMessage) setErrorMessage(null);
+            if (errorMessage) {
+              if (onClearError) {
+                onClearError();
+              } else if (externalErrorMessage === undefined) {
+                setInternalErrorMessage(null);
+              }
+            }
           }}
           onKeyDown={handleKeyDown}
           placeholder={
@@ -327,17 +395,6 @@ export function ChatInput({
           )}
         </button>
       </div>
-
-      {/* Helper Text */}
-      {isDragging && (
-        <motion.div
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-primary mt-2 text-center text-sm font-medium"
-        >
-          Drop file to upload
-        </motion.div>
-      )}
     </div>
   );
 }

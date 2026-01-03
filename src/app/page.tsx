@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, DragEvent } from 'react';
 import Image from 'next/image';
 import { ChatMessages } from '@/components/ChatMessages';
 import { ChatInput } from '@/components/ChatInput';
@@ -40,6 +40,10 @@ export default function HomePage() {
 
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [showRefreshDialog, setShowRefreshDialog] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [fileErrorMessage, setFileErrorMessage] = useState<string | null>(null);
+  const dragCounterRef = useRef(0);
 
   const {
     messages,
@@ -98,6 +102,91 @@ export default function HomePage() {
     sendMessage(question);
   };
 
+  // Drag and drop handlers
+  const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounterRef.current = 0;
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      handleFileSelect(file);
+    }
+  };
+
+  const handleFileSelect = (file: File) => {
+    const maxSize = 8 * 1024 * 1024; // 8MB
+    const allowedTypes = [
+      'application/pdf',
+      'text/csv',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ];
+
+    const name = (file.name || '').toLowerCase();
+
+    if (
+      !allowedTypes.includes(file.type) &&
+      !name.endsWith('.pdf') &&
+      !name.endsWith('.csv') &&
+      !name.endsWith('.xls') &&
+      !name.endsWith('.xlsx')
+    ) {
+      setFileErrorMessage('Only PDF, CSV, and Excel files are supported');
+      setUploadedFile(null);
+      return;
+    }
+
+    if (file.size > maxSize) {
+      setFileErrorMessage('File size must be less than 8MB');
+      setUploadedFile(null);
+      return;
+    }
+
+    setFileErrorMessage(null);
+    setUploadedFile(file);
+  };
+
+  const handleRemoveFile = () => {
+    setUploadedFile(null);
+    setFileErrorMessage(null);
+  };
+
+  const handleClearError = () => {
+    setFileErrorMessage(null);
+  };
+
+  // Cleanup drag counter on unmount
+  useEffect(() => {
+    return () => {
+      dragCounterRef.current = 0;
+    };
+  }, []);
+
   const handleNewSession = async () => {
     // Show confirmation dialog if there are current messages
     if (messages.length > 0) {
@@ -137,7 +226,58 @@ export default function HomePage() {
 
   return (
     <div className="bg-muted/30 flex h-screen items-center justify-center p-2">
-      <div className="bg-background border-border relative flex h-full w-full flex-col overflow-hidden rounded-lg border shadow-xl">
+      <div
+        className={cn(
+          'bg-background border-border relative flex h-full w-full flex-col overflow-hidden rounded-lg shadow-xl transition-all duration-200',
+          isDragging
+            ? 'border-primary border-2 border-dashed'
+            : 'border border-solid'
+        )}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        {/* Drag and Drop Overlay */}
+        <AnimatePresence>
+          {isDragging && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="bg-primary/5 absolute inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
+              style={{ pointerEvents: 'none' }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-background border-primary text-primary flex flex-col items-center gap-4 rounded-2xl border-2 border-dashed p-8 shadow-2xl"
+              >
+                <svg
+                  className="h-16 w-16"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+                <div className="text-center">
+                  <p className="text-lg font-semibold">Drop file to upload</p>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    PDF, CSV, and Excel files only (max 8MB)
+                  </p>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Confirmation Dialog */}
         <ConfirmDialog
           isOpen={showNewChatDialog}
@@ -336,10 +476,21 @@ export default function HomePage() {
         >
           <div className="mx-auto max-w-3xl px-2 sm:px-4">
             <ChatInput
-              onSend={sendMessage}
+              onSend={(message, file) => {
+                sendMessage(message, file);
+                // Clear file after sending
+                if (uploadedFile) {
+                  handleRemoveFile();
+                }
+              }}
               isLoading={isLoading}
               placeholder="Ask Aeris..."
               hasMessages={hasMessages}
+              onFileSelect={handleFileSelect}
+              uploadedFile={uploadedFile}
+              onRemoveFile={handleRemoveFile}
+              errorMessage={fileErrorMessage}
+              onClearError={handleClearError}
             />
           </div>
         </motion.div>
