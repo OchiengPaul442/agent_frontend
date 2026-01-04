@@ -9,7 +9,7 @@ import {
   AqPaperclip,
   AqX,
   AqSend01,
-  AqLoading01,
+  AqLoading02,
 } from '@airqo/icons-react';
 
 interface ChatInputProps {
@@ -197,7 +197,7 @@ export function ChatInput({
             <div className="border-border bg-muted flex items-center gap-3 rounded-xl border p-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg">
                 {isUploading ? (
-                  <AqLoading01 className="text-primary h-5 w-5 animate-spin" />
+                  <AqLoading02 className="text-primary h-5 w-5 animate-spin" />
                 ) : (
                   (() => {
                     const type = uploadedFile.type;
@@ -389,7 +389,7 @@ export function ChatInput({
           aria-label="Send message"
         >
           {isLoading || isUploading ? (
-            <AqLoading01 className="text-primary h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
+            <AqLoading02 className="text-primary h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
           ) : (
             <AqSend01 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           )}

@@ -73,6 +73,9 @@ export function sanitizeMarkdown(content: string): string {
 
   let sanitized = content;
 
+  // Fix missing newlines between markdown elements (critical fix)
+  sanitized = fixMarkdownNewlines(sanitized);
+
   // Fix HTML tags like <br>
   sanitized = fixHtmlTags(sanitized);
 
@@ -89,6 +92,27 @@ export function sanitizeMarkdown(content: string): string {
   sanitized = fixTableFormatting(sanitized);
 
   return sanitized;
+}
+
+function fixMarkdownNewlines(content: string): string {
+  let fixed = content;
+
+  // Add newlines before headers (# ## ###) if missing
+  fixed = fixed.replace(/([^\n])(#{1,6}\s)/g, '$1\n\n$2');
+
+  // Add newline after headers if missing
+  fixed = fixed.replace(/(#{1,6}\s[^\n]+)([^\n])/g, '$1\n\n$2');
+
+  // Add newlines before list items if missing
+  fixed = fixed.replace(/([^\n])(\n?[-*+]\s+\*\*)/g, '$1\n\n$2');
+
+  // Add newlines before blockquotes if missing
+  fixed = fixed.replace(/([^\n])(>\s)/g, '$1\n\n$2');
+
+  // Fix multiple spaces into single newlines
+  fixed = fixed.replace(/\n{3,}/g, '\n\n');
+
+  return fixed;
 }
 
 function fixHtmlTags(content: string): string {

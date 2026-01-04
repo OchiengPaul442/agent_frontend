@@ -29,6 +29,10 @@
     /* subtle code block background variable (light/dark aware) */
     --prose-code-bg: rgba(0, 0, 0, 0.04);
     --prose-code-label-bg: rgba(0, 0, 0, 0.06);
+    --text-primary: 222.2 84% 4.9%;
+    --text-secondary: 215.4 16.3% 46.9%;
+    --text-tertiary: 215.4 16.3% 46.9%;
+    --text-accent: 25 95% 53%;
   }
 
   .dark {
