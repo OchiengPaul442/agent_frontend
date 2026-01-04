@@ -333,6 +333,17 @@ export function useChat(options: UseChatOptions = {}) {
     }
   }, [messages, sendMessage]);
 
+  // Function to add error messages to chat without sending to API
+  const addErrorMessage = useCallback((content: string) => {
+    const errorMessage: Message = {
+      role: 'assistant',
+      content: content,
+      timestamp: new Date().toISOString(),
+      isError: true,
+    };
+    setMessages((prev) => [...prev, errorMessage]);
+  }, []);
+
   return {
     messages,
     isLoading,
@@ -342,5 +353,6 @@ export function useChat(options: UseChatOptions = {}) {
     clearMessages,
     retry,
     editMessage,
+    addErrorMessage,
   };
 }

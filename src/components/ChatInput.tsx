@@ -352,7 +352,7 @@ export function ChatInput({
             data-tooltip={hasLocation ? 'Location enabled' : 'Share location'}
           >
             {locationLoading ? (
-              <AqLoading02 className="h-4 w-4 animate-spin sm:h-4 sm:w-4" />
+              <AqLoading02 className="text-primary h-4 w-4 animate-spin sm:h-4 sm:w-4" />
             ) : (
               <AqMarkerPin01 className="h-4 w-4 sm:h-4 sm:w-4" />
             )}

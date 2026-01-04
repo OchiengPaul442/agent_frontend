@@ -84,6 +84,7 @@ export default function HomePage() {
     clearMessages,
     retry,
     editMessage,
+    addErrorMessage,
   } = useChat({
     sessionId: sessionId || '',
     onError: (err) => console.error('Chat error:', err),
@@ -97,40 +98,53 @@ export default function HomePage() {
     try {
       setIsSendingLocation(true);
 
-      // If we already have coordinates from the hook, use them
-      if (geolocation.hasLocation) {
-        const lat = geolocation.latitude as number;
-        const lon = geolocation.longitude as number;
-        const preset = "What's the air quality in my area?";
-        await sendMessage(preset, undefined, lat, lon);
-      } else {
-        // Request current position then send
-        await new Promise<void>((resolve, reject) => {
-          if (!navigator.geolocation) {
-            reject(new Error('Geolocation not supported'));
-            return;
-          }
-          navigator.geolocation.getCurrentPosition(
-            async (pos) => {
-              const lat = pos.coords.latitude;
-              const lon = pos.coords.longitude;
-              const preset = "What's the air quality in my area?";
-              try {
-                await sendMessage(preset, undefined, lat, lon);
+      // Always request current position to ensure permission dialog shows if needed
+      await new Promise<void>((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject(new Error('Geolocation not supported'));
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            const preset = "What's the air quality in my area?";
+            try {
+              const response = await sendMessage(preset, undefined, lat, lon);
+              if (response === null) {
+                reject(new Error('Failed to send location query'));
+              } else {
                 resolve();
-              } catch (err) {
-                reject(err);
               }
-            },
-            (err) => {
+            } catch (err) {
               reject(err);
-            },
-            { enableHighAccuracy: true, timeout: 10000 }
-          );
-        });
-      }
+            }
+          },
+          (err) => {
+            reject(err);
+          },
+          { enableHighAccuracy: false, timeout: 30000, maximumAge: 600000 }
+        );
+      });
     } catch (err) {
-      console.error('Failed to send location query:', err);
+      console.error(
+        'Failed to send location query:',
+        (err as Error)?.message || (err as any)?.code || err
+      );
+      // Add specific error message to chat based on error type
+      let errorMessage = 'Unable to retrieve your location.';
+      if ((err as any)?.code === 1) {
+        errorMessage +=
+          ' Location permission was denied. Please allow location access in your browser settings.';
+      } else if ((err as any)?.code === 2) {
+        errorMessage +=
+          " Location information is unavailable. Please check your device's location services.";
+      } else if ((err as any)?.code === 3) {
+        errorMessage += ' Location request timed out. Please try again.';
+      } else {
+        errorMessage += ' Please check your browser permissions and try again.';
+      }
+      addErrorMessage(errorMessage);
     } finally {
       setIsSendingLocation(false);
     }
