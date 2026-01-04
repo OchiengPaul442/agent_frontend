@@ -12,6 +12,7 @@ import {
   AqCheckCircle,
   AqEdit01,
   AqRefreshCw01,
+  AqDownload01,
 } from '@airqo/icons-react';
 import React, { useState, useRef } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -19,6 +20,7 @@ import {
   oneLight,
   oneDark,
 } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import jsPDF from 'jspdf';
 
 interface MessageBubbleProps {
   message: Message;
@@ -216,6 +218,25 @@ export function MessageBubble({
     } catch (err) {
       console.error('Failed to copy:', err);
     }
+  };
+
+  const handleDownload = () => {
+    const doc = new jsPDF();
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(16);
+    doc.text('AI Response', 10, 20);
+    doc.setFontSize(12);
+    const lines = doc.splitTextToSize(message.content, 180);
+    let y = 40;
+    lines.forEach((line: string) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(line, 10, y);
+      y += 6;
+    });
+    doc.save('ai-response.pdf');
   };
 
   const handleEdit = () => {
@@ -462,6 +483,13 @@ export function MessageBubble({
                     ) : (
                       <AqCopy01 className="h-4 w-4" />
                     )}
+                  </button>
+                  <button
+                    onClick={handleDownload}
+                    className="text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer rounded-lg p-2 transition-colors"
+                    title="Download as PDF"
+                  >
+                    <AqDownload01 className="h-4 w-4" />
                   </button>
                 </>
               )}
