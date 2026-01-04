@@ -36,6 +36,8 @@ export interface ChatRequest {
   history?: Message[];
   save_to_db?: boolean;
   file?: File;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface ChatResponse {

@@ -22,6 +22,10 @@ interface ChatInputProps {
   onRemoveFile?: () => void;
   errorMessage?: string | null;
   onClearError?: () => void;
+  // Location props
+  onLocationRequest?: () => void;
+  locationLoading?: boolean;
+  hasLocation?: boolean;
 }
 
 export function ChatInput({
@@ -34,6 +38,10 @@ export function ChatInput({
   onRemoveFile,
   errorMessage: externalErrorMessage,
   onClearError,
+  // Location props
+  onLocationRequest,
+  locationLoading = false,
+  hasLocation = false,
 }: ChatInputProps) {
   const [input, setInput] = useState('');
   const [internalUploadedFile, setInternalUploadedFile] = useState<File | null>(
@@ -318,6 +326,48 @@ export function ChatInput({
           }}
           className="hidden"
         />
+
+        {/* Location Button */}
+        {onLocationRequest && (
+          <button
+            onClick={onLocationRequest}
+            disabled={disabled || isLoading || locationLoading}
+            className={cn(
+              'ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:ml-3 sm:h-9 sm:w-9',
+              hasLocation
+                ? 'text-green-600 hover:bg-green-50'
+                : 'text-muted-foreground hover:bg-muted',
+              'disabled:cursor-not-allowed disabled:opacity-50'
+            )}
+            aria-label="Share location"
+            title={hasLocation ? 'Location enabled' : 'Enable location'}
+          >
+            {locationLoading ? (
+              <AqLoading02 className="h-4 w-4 animate-spin sm:h-5 sm:w-5" />
+            ) : (
+              <svg
+                className="h-4 w-4 sm:h-5 sm:w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            )}
+          </button>
+        )}
+
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled || isLoading || !!uploadedFile}

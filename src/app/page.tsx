@@ -6,6 +6,7 @@ import { ChatMessages } from '@/components/ChatMessages';
 import { ChatInput } from '@/components/ChatInput';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useChat } from '@/hooks/useChat';
+import { useGeolocation } from '@/hooks/useGeolocation';
 import { apiService } from '@/services/api.service';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AqLoading02 } from '@airqo/icons-react';
@@ -73,6 +74,9 @@ export default function HomePage() {
   const [fileErrorMessage, setFileErrorMessage] = useState<string | null>(null);
   const dragCounterRef = useRef(0);
 
+  // Geolocation hook
+  const geolocation = useGeolocation({ autoRequest: false });
+
   const {
     messages,
     isLoading,
@@ -92,9 +96,14 @@ export default function HomePage() {
         console.error('Cannot send message: Session not initialized');
         return;
       }
-      sendMessage(content, file);
+      sendMessage(
+        content,
+        file,
+        geolocation.latitude || undefined,
+        geolocation.longitude || undefined
+      );
     },
-    [sessionId, sendMessage]
+    [sessionId, sendMessage, geolocation.latitude, geolocation.longitude]
   );
 
   const hasMessages = messages.length > 0 || isLoading;
@@ -596,6 +605,9 @@ export default function HomePage() {
               onRemoveFile={handleRemoveFile}
               errorMessage={fileErrorMessage}
               onClearError={handleClearError}
+              onLocationRequest={geolocation.getCurrentPosition}
+              locationLoading={geolocation.loading}
+              hasLocation={geolocation.hasLocation}
             />
           </div>
         </motion.div>

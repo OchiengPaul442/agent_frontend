@@ -71,6 +71,12 @@ class ApiService {
     if (data.file) {
       formData.append('file', data.file);
     }
+    if (data.latitude !== undefined) {
+      formData.append('latitude', data.latitude.toString());
+    }
+    if (data.longitude !== undefined) {
+      formData.append('longitude', data.longitude.toString());
+    }
 
     return this.fetchWithError<ChatResponse>(`${API_BASE}/agent/chat`, {
       method: 'POST',

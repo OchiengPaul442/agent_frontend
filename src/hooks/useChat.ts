@@ -108,7 +108,12 @@ export function useChat(options: UseChatOptions = {}) {
   // This prevents loops and keeps the session stable
 
   const sendMessage = useCallback(
-    async (content: string, file?: File): Promise<ChatResponse | null> => {
+    async (
+      content: string,
+      file?: File,
+      latitude?: number,
+      longitude?: number
+    ): Promise<ChatResponse | null> => {
       if (!content.trim() && !file) return null;
       if (isLoadingRef.current) return null; // Prevent concurrent requests
       if (!options.sessionId) return null; // Ensure session ID is available
@@ -147,6 +152,8 @@ export function useChat(options: UseChatOptions = {}) {
             history: messages,
             save_to_db: false,
             file,
+            latitude: latitude,
+            longitude: longitude,
           },
           { signal: controller.signal }
         );
