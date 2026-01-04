@@ -123,11 +123,11 @@ export default function HomePage() {
           (err) => {
             reject(err);
           },
-          { enableHighAccuracy: false, timeout: 30000, maximumAge: 600000 }
+          { enableHighAccuracy: true, timeout: 60000 }
         );
       });
     } catch (err) {
-      console.error(
+      console.warn(
         'Failed to send location query:',
         (err as Error)?.message || (err as any)?.code || err
       );
@@ -138,7 +138,7 @@ export default function HomePage() {
           ' Location permission was denied. Please allow location access in your browser settings.';
       } else if ((err as any)?.code === 2) {
         errorMessage +=
-          " Location information is unavailable. Please check your device's location services.";
+          ' Location information is unavailable. This may be due to network issues or disabled location services on your device. Please ensure location services are enabled and try again.';
       } else if ((err as any)?.code === 3) {
         errorMessage += ' Location request timed out. Please try again.';
       } else {
