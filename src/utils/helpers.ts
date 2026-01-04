@@ -73,23 +73,15 @@ export function sanitizeMarkdown(content: string): string {
 
   let sanitized = content;
 
-  // Fix missing newlines between markdown elements (critical fix)
-  sanitized = fixMarkdownNewlines(sanitized);
-
-  // Fix HTML tags like <br>
+  // Apply conservative, safe fixes only — avoid aggressive regexes that
+  // can accidentally inject characters (observed stray 'n' and 't').
   sanitized = fixHtmlTags(sanitized);
-
-  // Fix code block formatting
   sanitized = fixCodeBlockFormatting(sanitized);
-
-  // Fix list formatting
-  sanitized = fixListFormatting(sanitized);
-
-  // Fix link formatting
+  sanitized = fixTableFormatting(sanitized);
   sanitized = fixLinkFormatting(sanitized);
 
-  // Only apply minimal table fixes - let ReactMarkdown handle the rest
-  sanitized = fixTableFormatting(sanitized);
+  // Decode common HTML entities to avoid literal sequences in output
+  sanitized = decodeHtmlEntities(sanitized);
 
   return sanitized;
 }
@@ -119,15 +111,15 @@ function fixHtmlTags(content: string): string {
   let fixed = content;
 
   // Convert <br> and <br/> to newlines
-  fixed = fixed.replace(/<br\s*\/?>/gi, '\n');
+  fixed = fixed.replace(/<br\s*\/?\s*>/gi, '\n');
 
   // Convert bullet points • to markdown list items
   // Assuming • is followed by text, convert to -
   fixed = fixed.replace(/•\s*/g, '- ');
 
-  // Remove other HTML tags if any, but keep the content
-  // Simple regex to remove tags
-  fixed = fixed.replace(/<[^>]*>/g, '');
+  // Remove other HTML tags if any, but keep the content. Avoid removing
+  // tags like <br> which we already converted.
+  fixed = fixed.replace(/<\/?(?!br)[^>]*>/gi, '');
 
   return fixed;
 }
@@ -197,4 +189,16 @@ function fixLinkFormatting(content: string): string {
     }
     return `[${text.trim()}](${cleanUrl})`;
   });
+}
+
+// Minimal HTML entity decoder for common entities used in responses.
+function decodeHtmlEntities(text: string): string {
+  if (!text) return text;
+  return text
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
 }
