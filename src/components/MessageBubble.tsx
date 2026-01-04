@@ -21,6 +21,8 @@ import {
   oneDark,
 } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import jsPDF from 'jspdf';
+import { marked } from 'marked';
+import html2canvas from 'html2canvas';
 
 interface MessageBubbleProps {
   message: Message;
@@ -220,23 +222,86 @@ export function MessageBubble({
     }
   };
 
-  const handleDownload = () => {
-    const doc = new jsPDF();
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(16);
-    doc.text('AI Response', 10, 20);
-    doc.setFontSize(12);
-    const lines = doc.splitTextToSize(message.content, 180);
-    let y = 40;
-    lines.forEach((line: string) => {
-      if (y > 270) {
-        doc.addPage();
-        y = 20;
-      }
-      doc.text(line, 10, y);
-      y += 6;
-    });
-    doc.save('ai-response.pdf');
+  const handleDownload = async () => {
+    try {
+      // Prepare sanitized markdown -> HTML
+      const safeMd = sanitizeMarkdown(message.content);
+      const parsed = marked.parse(safeMd || '');
+      const html = typeof parsed === 'string' ? parsed : await parsed;
+
+      // Create hidden container with simple, professional styles
+      const container = document.createElement('div');
+      container.style.width = '794px'; // ~A4 width at 96dpi for better rendering
+      container.style.padding = '28px 36px';
+      container.style.background = '#ffffff';
+      container.style.color = '#111827';
+      container.style.fontFamily =
+        'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial';
+      container.style.fontSize = '12pt';
+      container.style.lineHeight = '1.6';
+      container.style.boxSizing = 'border-box';
+      container.style.visibility = 'hidden';
+
+      // Basic document CSS for headings, lists, code blocks
+      const style = document.createElement('style');
+      style.textContent = `
+        .pdf-content h1{font-size:18pt;margin:0 0 10px}
+        .pdf-content h2{font-size:14pt;margin:14px 0 8px}
+        .pdf-content h3{font-size:12pt;margin:12px 0 6px}
+        .pdf-content p{margin:6px 0}
+        .pdf-content ul, .pdf-content ol{margin:6px 0 6px 18px}
+        .pdf-content code{background:#f3f4f6;padding:2px 4px;border-radius:4px}
+        .pdf-content pre{background:#f3f4f6;padding:10px;border-radius:6px;overflow:auto}
+      `;
+
+      const content = document.createElement('div');
+      content.className = 'pdf-content';
+      content.innerHTML = html;
+
+      container.appendChild(style);
+      container.appendChild(content);
+      document.body.appendChild(container);
+
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+
+      await doc.html(container, {
+        html2canvas: {
+          scale: 1.6,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+        },
+        margin: [20, 20, 60, 20],
+        autoPaging: 'text',
+        callback: (pdf) => {
+          // Add footer 'Aeris' right-aligned on every page
+          const pageCount = pdf.getNumberOfPages();
+          const footerText = 'Aeris';
+          for (let i = 1; i <= pageCount; i++) {
+            pdf.setPage(i);
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(10);
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const textWidth = pdf.getTextWidth(footerText);
+            pdf.text(
+              footerText,
+              pageWidth - textWidth - 36,
+              pdf.internal.pageSize.getHeight() - 28
+            );
+          }
+          pdf.save('aeris-response.pdf');
+          // Cleanup
+          setTimeout(() => {
+            try {
+              document.body.removeChild(container);
+            } catch (e) {
+              /* ignore */
+            }
+          }, 500);
+        },
+      });
+    } catch (err) {
+      console.error('Failed to generate PDF', err);
+    }
   };
 
   const handleEdit = () => {
