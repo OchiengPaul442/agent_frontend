@@ -310,7 +310,7 @@ export function ChatInput({
       {/* Input Area */}
       <div
         className={cn(
-          'bg-background relative flex min-w-0 items-center gap-1 rounded-3xl border-2 transition-all sm:gap-2',
+          'bg-background relative flex min-w-0 items-center gap-0.5 rounded-3xl border-2 transition-all sm:gap-1',
           'border-muted-foreground/30',
           'shadow-sm'
         )}
@@ -333,14 +333,19 @@ export function ChatInput({
             onClick={onLocationRequest}
             disabled={disabled || isLoading || locationLoading}
             className={cn(
-              'ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:ml-3 sm:h-9 sm:w-9',
+              'ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:ml-2 sm:h-8 sm:w-8',
               hasLocation
                 ? 'text-green-600 hover:bg-green-50'
                 : 'text-muted-foreground hover:bg-muted',
               'disabled:cursor-not-allowed disabled:opacity-50'
             )}
             aria-label="Share location"
-            title={hasLocation ? 'Location enabled' : 'Enable location'}
+            title={
+              hasLocation
+                ? 'Location enabled — click to send location'
+                : 'Share my location with Aeris'
+            }
+            data-tooltip={hasLocation ? 'Location enabled' : 'Share location'}
           >
             {locationLoading ? (
               <AqLoading02 className="h-4 w-4 animate-spin sm:h-5 sm:w-5" />
@@ -368,19 +373,21 @@ export function ChatInput({
           </button>
         )}
 
+        {/* File Upload Button */}
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled || isLoading || !!uploadedFile}
           className={cn(
-            'ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:ml-3 sm:h-9 sm:w-9',
+            'ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:ml-2 sm:h-8 sm:w-8',
             uploadedFile
               ? 'text-muted-foreground cursor-not-allowed'
               : 'text-muted-foreground hover:bg-muted',
             'disabled:cursor-not-allowed disabled:opacity-50'
           )}
           aria-label="Upload file"
+          title="Upload a document for analysis"
         >
-          <AqPaperclip className="h-4 w-4 sm:h-5 sm:w-5" />
+          <AqPaperclip className="h-4 w-4 sm:h-4 sm:w-4" />
         </button>
 
         {/* Textarea */}

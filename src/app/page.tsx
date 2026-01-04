@@ -89,6 +89,53 @@ export default function HomePage() {
     onError: (err) => console.error('Chat error:', err),
   });
 
+  const [isSendingLocation, setIsSendingLocation] = useState(false);
+
+  // When user clicks GPS icon we should obtain current coordinates and send a preset message
+  const handleSendLocationQuery = async () => {
+    if (!sessionId) return;
+    try {
+      setIsSendingLocation(true);
+
+      // If we already have coordinates from the hook, use them
+      if (geolocation.hasLocation) {
+        const lat = geolocation.latitude as number;
+        const lon = geolocation.longitude as number;
+        const preset = "What's the air quality in my area?";
+        await sendMessage(preset, undefined, lat, lon);
+      } else {
+        // Request current position then send
+        await new Promise<void>((resolve, reject) => {
+          if (!navigator.geolocation) {
+            reject(new Error('Geolocation not supported'));
+            return;
+          }
+          navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+              const lat = pos.coords.latitude;
+              const lon = pos.coords.longitude;
+              const preset = "What's the air quality in my area?";
+              try {
+                await sendMessage(preset, undefined, lat, lon);
+                resolve();
+              } catch (err) {
+                reject(err);
+              }
+            },
+            (err) => {
+              reject(err);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+          );
+        });
+      }
+    } catch (err) {
+      console.error('Failed to send location query:', err);
+    } finally {
+      setIsSendingLocation(false);
+    }
+  };
+
   // Create a safe sendMessage function that checks for session
   const safeSendMessage = useCallback(
     (content: string, file?: File) => {
@@ -605,8 +652,8 @@ export default function HomePage() {
               onRemoveFile={handleRemoveFile}
               errorMessage={fileErrorMessage}
               onClearError={handleClearError}
-              onLocationRequest={geolocation.getCurrentPosition}
-              locationLoading={geolocation.loading}
+              onLocationRequest={handleSendLocationQuery}
+              locationLoading={isSendingLocation || geolocation.loading}
               hasLocation={geolocation.hasLocation}
             />
           </div>
