@@ -6,6 +6,7 @@ import { cn } from '@/utils/helpers';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AqFile02,
+  AqMarkerPin01,
   AqPaperclip,
   AqX,
   AqSend01,
@@ -310,7 +311,7 @@ export function ChatInput({
       {/* Input Area */}
       <div
         className={cn(
-          'bg-background relative flex min-w-0 items-center gap-0.5 rounded-3xl border-2 transition-all sm:gap-1',
+          'bg-background relative flex min-w-0 items-center gap-0 rounded-3xl border-2 transition-all sm:gap-0.5',
           'border-muted-foreground/30',
           'shadow-sm'
         )}
@@ -333,13 +334,16 @@ export function ChatInput({
             onClick={onLocationRequest}
             disabled={disabled || isLoading || locationLoading}
             className={cn(
-              'ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:ml-2 sm:h-8 sm:w-8',
+              'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:ml-0.5 sm:h-8 sm:w-8',
               hasLocation
                 ? 'text-green-600 hover:bg-green-50'
                 : 'text-muted-foreground hover:bg-muted',
               'disabled:cursor-not-allowed disabled:opacity-50'
             )}
             aria-label="Share location"
+            style={{
+              marginLeft: '8px',
+            }}
             title={
               hasLocation
                 ? 'Location enabled — click to send location'
@@ -348,27 +352,9 @@ export function ChatInput({
             data-tooltip={hasLocation ? 'Location enabled' : 'Share location'}
           >
             {locationLoading ? (
-              <AqLoading02 className="h-4 w-4 animate-spin sm:h-5 sm:w-5" />
+              <AqLoading02 className="h-4 w-4 animate-spin sm:h-4 sm:w-4" />
             ) : (
-              <svg
-                className="h-4 w-4 sm:h-5 sm:w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
+              <AqMarkerPin01 className="h-4 w-4 sm:h-4 sm:w-4" />
             )}
           </button>
         )}
@@ -378,12 +364,15 @@ export function ChatInput({
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled || isLoading || !!uploadedFile}
           className={cn(
-            'ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:ml-2 sm:h-8 sm:w-8',
+            'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:ml-0.5 sm:h-8 sm:w-8',
             uploadedFile
               ? 'text-muted-foreground cursor-not-allowed'
               : 'text-muted-foreground hover:bg-muted',
             'disabled:cursor-not-allowed disabled:opacity-50'
           )}
+          style={{
+            marginLeft: '-4px',
+          }}
           aria-label="Upload file"
           title="Upload a document for analysis"
         >
