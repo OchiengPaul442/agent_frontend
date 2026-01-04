@@ -9,6 +9,9 @@ export const config = {
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000',
     version: 'v1',
   },
+  analytics: {
+    googleAnalyticsId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
+  },
   theme: {
     primary: {
       50: '#fffbeb', // Warm amber palette

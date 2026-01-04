@@ -322,7 +322,7 @@ export default function HomePage() {
       <div className="bg-muted/30 flex h-screen items-center justify-center p-2">
         <div className="bg-background border-border flex h-full w-full flex-col items-center justify-center rounded-lg shadow-xl">
           <div className="text-center">
-            <AqLoading02 className="text-primary mx-auto mb-4 h-8 w-8 animate-spin" />
+            <AqLoading02 className="text-primary mx-auto mb-4 animate-spin" />
             <p className="text-muted-foreground">
               Initializing chat session...
             </p>

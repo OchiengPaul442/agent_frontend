@@ -1,6 +1,7 @@
+import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import './globals.css';
+import Script from 'next/script';
 import { config } from '@/config';
 import { cn } from '@/utils/helpers';
 
@@ -25,6 +26,19 @@ export default function RootLayout({
       className={cn(inter.className, 'dark')}
       suppressHydrationWarning
     >
+      <Script
+        async
+        src="https://www.googletagmanager.com/gtag/js?id=G-444B7CRNWX"
+        strategy="afterInteractive"
+      />
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-444B7CRNWX');
+        `}
+      </Script>
       <body className="antialiased">{children}</body>
     </html>
   );
