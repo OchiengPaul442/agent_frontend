@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { AqLoading02 } from '@airqo/icons-react';
 
 export default function Error({
   error,

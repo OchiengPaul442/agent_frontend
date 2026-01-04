@@ -76,7 +76,6 @@ export default function HomePage() {
   const {
     messages,
     isLoading,
-    error,
     sendMessage,
     clearMessages,
     retry,

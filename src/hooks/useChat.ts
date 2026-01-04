@@ -195,7 +195,7 @@ export function useChat(options: UseChatOptions = {}) {
         abortControllerRef.current = null;
       }
     },
-    [messages, options]
+    [messages, options, animateTypewriter]
   );
 
   const clearMessages = useCallback(() => {
@@ -307,7 +307,7 @@ export function useChat(options: UseChatOptions = {}) {
         abortControllerRef.current = null;
       }
     },
-    [messages, options]
+    [messages, options, animateTypewriter]
   );
 
   const retry = useCallback(() => {

@@ -86,6 +86,7 @@ export function sanitizeMarkdown(content: string): string {
   return sanitized;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function fixMarkdownNewlines(content: string): string {
   let fixed = content;
 
@@ -166,6 +167,7 @@ function fixCodeBlockFormatting(content: string): string {
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function fixListFormatting(content: string): string {
   // Fix inconsistent list markers
   const listRegex = /^(\s*)([-*+])\s+/gm;

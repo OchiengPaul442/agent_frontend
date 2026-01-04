@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { MessageBubble } from './MessageBubble';
-import { ConfirmDialog } from './ConfirmDialog';
 import { Message } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 
