@@ -76,9 +76,6 @@ export function sanitizeMarkdown(content: string): string {
   // Fix HTML tags like <br>
   sanitized = fixHtmlTags(sanitized);
 
-  // Fix common table formatting issues
-  sanitized = fixTableFormatting(sanitized);
-
   // Fix code block formatting
   sanitized = fixCodeBlockFormatting(sanitized);
 
@@ -87,6 +84,9 @@ export function sanitizeMarkdown(content: string): string {
 
   // Fix link formatting
   sanitized = fixLinkFormatting(sanitized);
+
+  // Only apply minimal table fixes - let ReactMarkdown handle the rest
+  sanitized = fixTableFormatting(sanitized);
 
   return sanitized;
 }
@@ -109,52 +109,34 @@ function fixHtmlTags(content: string): string {
 }
 
 function fixTableFormatting(content: string): string {
-  // Pattern to match malformed tables with extra pipes
-  const malformedTableRegex =
-    /\|[\s-]+\|[\s-]+\|[\s-]+\|\s*\n(\|.*\|.*\|.*\|\s*\n)+/g;
+  // Ensure tables have proper formatting for ReactMarkdown
+  // Add minimal spacing around pipes to ensure proper parsing
+  const lines = content.split('\n');
+  const result: string[] = [];
 
-  return content.replace(malformedTableRegex, (match) => {
-    const lines = match.trim().split('\n');
-
-    // Remove the separator line if it exists and is malformed
-    if (lines.length >= 2) {
-      const separatorLine = lines[1];
-      // Check if separator line has extra pipes or dashes
-      if (
-        separatorLine.includes('| ----------------') ||
-        separatorLine.match(/\|[\s-]+\|/g)
-      ) {
-        // Remove the malformed separator and reconstruct proper table
-        const headerLine = lines[0];
-        const dataLines = lines.slice(2);
-
-        // Extract headers
-        const headers = headerLine
-          .split('|')
-          .slice(1, -1)
-          .map((h) => h.trim());
-        const numCols = headers.length;
-
-        // Create proper separator
-        const separator = '| ' + headers.map(() => '---').join(' | ') + ' |';
-
-        // Fix data lines
-        const fixedDataLines = dataLines.map((line) => {
-          const cells = line
-            .split('|')
+  for (const line of lines) {
+    if (line.includes('|')) {
+      // For table rows, ensure proper spacing
+      const parts = line.split('|');
+      if (parts.length > 2) {
+        // This looks like a table row
+        const formatted =
+          '| ' +
+          parts
             .slice(1, -1)
-            .map((cell) => cell.trim());
-          // Ensure we have the right number of cells
-          while (cells.length < numCols) cells.push('');
-          return '| ' + cells.slice(0, numCols).join(' | ') + ' |';
-        });
-
-        return [headerLine, separator, ...fixedDataLines].join('\n') + '\n';
+            .map((p) => p.trim())
+            .join(' | ') +
+          ' |';
+        result.push(formatted);
+      } else {
+        result.push(line);
       }
+    } else {
+      result.push(line);
     }
+  }
 
-    return match;
-  });
+  return result.join('\n');
 }
 
 function fixCodeBlockFormatting(content: string): string {

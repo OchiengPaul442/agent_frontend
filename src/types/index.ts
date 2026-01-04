@@ -20,6 +20,12 @@ export interface Session {
   title?: string;
 }
 
+export interface CreateSessionResponse {
+  session_id: string;
+  created_at: string;
+  message: string;
+}
+
 export interface SessionDetails extends Session {
   messages: Message[];
 }

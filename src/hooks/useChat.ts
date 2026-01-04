@@ -111,6 +111,7 @@ export function useChat(options: UseChatOptions = {}) {
     async (content: string, file?: File): Promise<ChatResponse | null> => {
       if (!content.trim() && !file) return null;
       if (isLoadingRef.current) return null; // Prevent concurrent requests
+      if (!options.sessionId) return null; // Ensure session ID is available
 
       // Cancel any ongoing request
       if (abortControllerRef.current) {

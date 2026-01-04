@@ -501,7 +501,14 @@ export function MessageBubble({
                       children,
                       ...props
                     }: React.TableHTMLAttributes<HTMLTableElement>) => (
-                      <CustomTable {...props}>{children}</CustomTable>
+                      <div className="my-4 overflow-x-auto">
+                        <table
+                          className="border-border w-full border-collapse border text-sm"
+                          {...props}
+                        >
+                          {children}
+                        </table>
+                      </div>
                     ),
                   }}
                 >

@@ -7,6 +7,7 @@ import type {
   AirQualityQuery,
   AirQualityResponse,
   Message,
+  CreateSessionResponse,
 } from '@/types';
 
 const API_BASE = `${config.api.baseUrl}/api/${config.api.version}`;
@@ -83,10 +84,13 @@ class ApiService {
     return this.fetchWithError<Session[]>(`${API_BASE}/sessions`);
   }
 
-  async createSession(): Promise<Session> {
-    return this.fetchWithError<Session>(`${API_BASE}/sessions/new`, {
-      method: 'POST',
-    });
+  async createSession(): Promise<CreateSessionResponse> {
+    return this.fetchWithError<CreateSessionResponse>(
+      `${API_BASE}/sessions/new`,
+      {
+        method: 'POST',
+      }
+    );
   }
 
   async getSessionDetails(sessionId: string): Promise<SessionDetails> {

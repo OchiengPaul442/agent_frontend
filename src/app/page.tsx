@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, DragEvent } from 'react';
+import { useState, useEffect, useRef, useCallback, DragEvent } from 'react';
 import Image from 'next/image';
 import { ChatMessages } from '@/components/ChatMessages';
 import { ChatInput } from '@/components/ChatInput';
@@ -25,18 +25,46 @@ const STARTER_QUESTIONS = [
 
 export default function HomePage() {
   // Initialize session ID once and keep it stable
-  const [sessionId, setSessionId] = useState<string>(() => {
-    // Try to get from sessionStorage first
-    if (typeof window !== 'undefined') {
-      const stored = sessionStorage.getItem('currentSessionId');
-      if (stored) return stored;
-    }
-    const newId = generateSessionId();
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('currentSessionId', newId);
-    }
-    return newId;
-  });
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isInitializingSession, setIsInitializingSession] = useState(true);
+
+  // Initialize session on mount
+  useEffect(() => {
+    const initializeSession = async () => {
+      try {
+        // Try to get from sessionStorage first
+        if (typeof window !== 'undefined') {
+          const stored = sessionStorage.getItem('currentSessionId');
+          if (stored) {
+            setSessionId(stored);
+            setIsInitializingSession(false);
+            return;
+          }
+        }
+
+        // No stored session, create a new one from backend
+        const newSession = await apiService.createSession();
+        setSessionId(newSession.session_id);
+
+        // Store in sessionStorage
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('currentSessionId', newSession.session_id);
+        }
+      } catch (error) {
+        console.error('Failed to initialize session:', error);
+        // Fallback to local generation if backend fails
+        const newId = generateSessionId();
+        setSessionId(newId);
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('currentSessionId', newId);
+        }
+      } finally {
+        setIsInitializingSession(false);
+      }
+    };
+
+    initializeSession();
+  }, []);
 
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -53,9 +81,21 @@ export default function HomePage() {
     retry,
     editMessage,
   } = useChat({
-    sessionId,
+    sessionId: sessionId || '',
     onError: (err) => console.error('Chat error:', err),
   });
+
+  // Create a safe sendMessage function that checks for session
+  const safeSendMessage = useCallback(
+    (content: string, file?: File) => {
+      if (!sessionId) {
+        console.error('Cannot send message: Session not initialized');
+        return;
+      }
+      sendMessage(content, file);
+    },
+    [sessionId, sendMessage]
+  );
 
   const hasMessages = messages.length > 0 || isLoading;
 
@@ -72,14 +112,27 @@ export default function HomePage() {
     const handleUnload = async () => {
       if (sessionId) {
         try {
+          console.log('Deleting session on page unload:', sessionId);
           // Use fetch with keepalive to send DELETE request reliably on page unload
-          await fetch(
+          const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/v1/sessions/${sessionId}`,
             {
               method: 'DELETE',
               keepalive: true,
+              headers: {
+                'Content-Type': 'application/json',
+              },
             }
           );
+          if (response.ok) {
+            console.log('Successfully deleted session on unload');
+          } else {
+            console.error(
+              'Failed to delete session on unload:',
+              response.status,
+              response.statusText
+            );
+          }
         } catch (error) {
           console.error('Failed to delete session on unload:', error);
         }
@@ -97,8 +150,37 @@ export default function HomePage() {
     };
   }, [hasMessages, sessionId]);
 
+  // Handle tab visibility changes for session cleanup
+  useEffect(() => {
+    let hiddenTime: number | null = null;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        hiddenTime = Date.now();
+      } else if (hiddenTime && sessionId) {
+        const hiddenDuration = Date.now() - hiddenTime;
+        // If tab was hidden for more than 30 minutes, consider cleaning up the session
+        if (hiddenDuration > 30 * 60 * 1000) {
+          console.log(
+            'Tab was hidden for extended period, session may need cleanup'
+          );
+          // Note: We don't auto-delete here as user might come back, but we could add logic to check session validity
+        }
+        hiddenTime = null;
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () =>
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [sessionId]);
+
   const handleStarterQuestion = (question: string) => {
-    sendMessage(question);
+    if (!sessionId) {
+      console.error('Session not initialized yet');
+      return;
+    }
+    safeSendMessage(question);
   };
 
   // Drag and drop handlers
@@ -199,29 +281,55 @@ export default function HomePage() {
 
   const createNewSession = async () => {
     try {
-      // Delete the old session
-      try {
-        await apiService.deleteSession(sessionId);
-      } catch (err) {
-        console.error('Failed to delete old session:', err);
+      // Delete the old session if it exists
+      if (sessionId) {
+        try {
+          console.log('Deleting old session:', sessionId);
+          await apiService.deleteSession(sessionId);
+          console.log('Successfully deleted old session');
+        } catch (err) {
+          console.error('Failed to delete old session:', err);
+          // Continue anyway - don't let deletion failure block new session creation
+        }
       }
 
-      // Clear current messages
+      // Clear current messages immediately
       clearMessages();
 
-      // Generate new session ID
-      const newId = generateSessionId();
-      setSessionId(newId);
+      // Create new session from backend
+      console.log('Creating new session...');
+      const newSession = await apiService.createSession();
+      console.log('New session created:', newSession.session_id);
+
+      setSessionId(newSession.session_id);
 
       // Store in sessionStorage
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem('currentSessionId', newId);
+        sessionStorage.setItem('currentSessionId', newSession.session_id);
       }
+
+      // Close dialog
+      setShowNewChatDialog(false);
     } catch (err) {
       console.error('Failed to create new session:', err);
       alert('Failed to start new conversation. Please try again.');
     }
   };
+
+  if (isInitializingSession) {
+    return (
+      <div className="bg-muted/30 flex h-screen items-center justify-center p-2">
+        <div className="bg-background border-border flex h-full w-full flex-col items-center justify-center rounded-lg shadow-xl">
+          <div className="text-center">
+            <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"></div>
+            <p className="text-muted-foreground">
+              Initializing chat session...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-muted/30 flex h-screen items-center justify-center p-2">
@@ -353,7 +461,7 @@ export default function HomePage() {
         <div className="relative flex flex-1 flex-col overflow-hidden">
           {/* Welcome Screen (Centered) */}
           <AnimatePresence>
-            {!hasMessages && (
+            {!hasMessages && !isInitializingSession && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -475,7 +583,7 @@ export default function HomePage() {
           <div className="mx-auto max-w-3xl px-2 sm:px-4">
             <ChatInput
               onSend={(message, file) => {
-                sendMessage(message, file);
+                safeSendMessage(message, file);
                 // Clear file after sending
                 if (uploadedFile) {
                   handleRemoveFile();
