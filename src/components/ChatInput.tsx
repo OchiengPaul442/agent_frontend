@@ -29,6 +29,8 @@ interface ChatInputProps {
   onLocationRequest?: () => void;
   locationLoading?: boolean;
   hasLocation?: boolean;
+  // File preview
+  onFilePreview?: (file: File) => void;
 }
 
 export function ChatInput({
@@ -45,6 +47,8 @@ export function ChatInput({
   onLocationRequest,
   locationLoading = false,
   hasLocation = false,
+  // File preview
+  onFilePreview,
 }: ChatInputProps) {
   const [input, setInput] = useState('');
   const [internalUploadedFile, setInternalUploadedFile] = useState<File | null>(
@@ -261,7 +265,8 @@ export function ChatInput({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mb-3"
+            className={cn('mb-3', onFilePreview && 'cursor-pointer')}
+            onClick={() => onFilePreview && onFilePreview(uploadedFile)}
           >
             <div className="border-border flex items-center gap-3 rounded-xl border bg-[#161616] p-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg">

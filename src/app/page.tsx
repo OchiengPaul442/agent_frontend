@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { ChatMessages } from '@/components/ChatMessages';
 import { ChatInput } from '@/components/ChatInput';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { FilePreviewDrawer } from '@/components/FilePreviewDrawer';
 import { useChat } from '@/hooks/useChat';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { apiService } from '@/services/api.service';
@@ -71,6 +72,9 @@ export default function HomePage() {
   }, []);
 
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
+  const [isFilePreviewDrawerOpen, setIsFilePreviewDrawerOpen] = useState(false);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [drawerWidth, setDrawerWidth] = useState(400);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [fileErrorMessage, setFileErrorMessage] = useState<string | null>(null);
@@ -449,6 +453,9 @@ export default function HomePage() {
             ? 'border-primary border-2 border-dashed'
             : 'border border-solid'
         )}
+        style={{
+          marginRight: isFilePreviewDrawerOpen ? `${drawerWidth}px` : '0px',
+        }}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -765,6 +772,10 @@ export default function HomePage() {
               onLocationRequest={handleSendLocationQuery}
               locationLoading={isSendingLocation || geolocation.loading}
               hasLocation={geolocation.hasLocation}
+              onFilePreview={(file) => {
+                setPreviewFile(file);
+                setIsFilePreviewDrawerOpen(true);
+              }}
             />
           </div>
         </motion.div>
@@ -780,6 +791,15 @@ export default function HomePage() {
           </footer>
         )}
       </div>
+
+      {/* File Preview Drawer */}
+      <FilePreviewDrawer
+        isOpen={isFilePreviewDrawerOpen}
+        onClose={() => setIsFilePreviewDrawerOpen(false)}
+        file={previewFile}
+        width={drawerWidth}
+        onWidthChange={setDrawerWidth}
+      />
     </div>
   );
 }
