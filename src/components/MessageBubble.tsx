@@ -224,83 +224,178 @@ export function MessageBubble({
 
   const handleDownload = async () => {
     try {
-      // Prepare sanitized markdown -> HTML
-      const safeMd = sanitizeMarkdown(message.content);
-      const parsed = marked.parse(safeMd || '');
-      const html = typeof parsed === 'string' ? parsed : await parsed;
-
-      // Create hidden container with simple, professional styles
+      // Create a temporary container for the content
       const container = document.createElement('div');
-      container.style.width = '794px'; // ~A4 width at 96dpi for better rendering
-      container.style.padding = '28px 36px';
+      container.style.width = '800px'; // Fixed width for consistent rendering
+      container.style.padding = '40px';
       container.style.background = '#ffffff';
       container.style.color = '#111827';
       container.style.fontFamily =
-        'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial';
-      container.style.fontSize = '12pt';
+        'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+      container.style.fontSize = '14px';
       container.style.lineHeight = '1.6';
-      container.style.boxSizing = 'border-box';
-      container.style.visibility = 'hidden';
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.top = '-9999px';
+      container.style.zIndex = '-1';
 
-      // Basic document CSS for headings, lists, code blocks
+      // Add CSS styles for proper formatting
       const style = document.createElement('style');
       style.textContent = `
-        .pdf-content h1{font-size:18pt;margin:0 0 10px}
-        .pdf-content h2{font-size:14pt;margin:14px 0 8px}
-        .pdf-content h3{font-size:12pt;margin:12px 0 6px}
-        .pdf-content p{margin:6px 0}
-        .pdf-content ul, .pdf-content ol{margin:6px 0 6px 18px}
-        .pdf-content code{background:#f3f4f6;padding:2px 4px;border-radius:4px}
-        .pdf-content pre{background:#f3f4f6;padding:10px;border-radius:6px;overflow:auto}
+        .pdf-content {
+          max-width: none;
+          margin: 0;
+          padding: 0;
+        }
+        .pdf-content h1 {
+          font-size: 24px;
+          font-weight: bold;
+          margin: 20px 0 12px 0;
+          color: #111827;
+        }
+        .pdf-content h2 {
+          font-size: 20px;
+          font-weight: bold;
+          margin: 16px 0 10px 0;
+          color: #111827;
+        }
+        .pdf-content h3 {
+          font-size: 16px;
+          font-weight: bold;
+          margin: 14px 0 8px 0;
+          color: #111827;
+        }
+        .pdf-content p {
+          margin: 8px 0;
+          text-align: justify;
+        }
+        .pdf-content ul, .pdf-content ol {
+          margin: 8px 0 8px 20px;
+          padding-left: 0;
+        }
+        .pdf-content li {
+          margin: 4px 0;
+        }
+        .pdf-content code {
+          background: #f3f4f6;
+          padding: 2px 4px;
+          border-radius: 3px;
+          font-family: 'Courier New', monospace;
+          font-size: 12px;
+        }
+        .pdf-content pre {
+          background: #f3f4f6;
+          padding: 10px;
+          border-radius: 6px;
+          overflow-wrap: break-word;
+          white-space: pre-wrap;
+          font-family: 'Courier New', monospace;
+          font-size: 12px;
+          margin: 10px 0;
+        }
+        .pdf-content blockquote {
+          border-left: 4px solid #e5e7eb;
+          padding-left: 12px;
+          margin: 12px 0;
+          font-style: italic;
+          color: #6b7280;
+        }
+        .pdf-content table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 12px 0;
+        }
+        .pdf-content th, .pdf-content td {
+          border: 1px solid #e5e7eb;
+          padding: 6px 8px;
+          text-align: left;
+        }
+        .pdf-content th {
+          background: #f9fafb;
+          font-weight: bold;
+        }
+        .pdf-content a {
+          color: #3b82f6;
+          text-decoration: underline;
+        }
       `;
 
-      const content = document.createElement('div');
-      content.className = 'pdf-content';
-      content.innerHTML = html;
+      // Sanitize and parse markdown to HTML
+      const safeMd = sanitizeMarkdown(message.content);
+      const parsed = marked.parse(safeMd || '');
+      const htmlContent = typeof parsed === 'string' ? parsed : await parsed;
+
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'pdf-content';
+      contentDiv.innerHTML = htmlContent;
 
       container.appendChild(style);
-      container.appendChild(content);
+      container.appendChild(contentDiv);
       document.body.appendChild(container);
 
-      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      // Wait for rendering
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
-      await doc.html(container, {
-        html2canvas: {
-          scale: 1.6,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-        },
-        margin: [20, 20, 60, 20],
-        autoPaging: 'text',
-        callback: (pdf) => {
-          // Add footer 'Aeris' right-aligned on every page
-          const pageCount = pdf.getNumberOfPages();
-          const footerText = 'Aeris';
-          for (let i = 1; i <= pageCount; i++) {
-            pdf.setPage(i);
-            pdf.setFont('helvetica', 'normal');
-            pdf.setFontSize(10);
-            const pageWidth = pdf.internal.pageSize.getWidth();
-            const textWidth = pdf.getTextWidth(footerText);
-            pdf.text(
-              footerText,
-              pageWidth - textWidth - 36,
-              pdf.internal.pageSize.getHeight() - 28
-            );
-          }
-          pdf.save('aeris-response.pdf');
-          // Cleanup
-          setTimeout(() => {
-            try {
-              document.body.removeChild(container);
-            } catch (e) {
-              /* ignore */
-            }
-          }, 500);
-        },
+      // Use html2canvas to capture the content
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        width: 800,
+        height: container.scrollHeight,
+        logging: false,
       });
+
+      // Create PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // Add additional pages if content is longer
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      // Download the PDF
+      pdf.save('aeris-response.pdf');
+
+      // Cleanup
+      if (document.body.contains(container)) {
+        document.body.removeChild(container);
+      }
     } catch (err) {
-      console.error('Failed to generate PDF', err);
+      console.error('Failed to generate PDF:', err);
+      // Fallback: try to download as text file
+      try {
+        const blob = new Blob([message.content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'aeris-response.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (fallbackErr) {
+        console.error('Fallback download failed:', fallbackErr);
+      }
     }
   };
 
