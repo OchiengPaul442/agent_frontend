@@ -371,74 +371,11 @@ export function ChatInput({
       {/* Input Area */}
       <div
         className={cn(
-          'bg-background relative flex min-w-0 items-center gap-0 rounded-3xl border-2 transition-all sm:gap-0.5',
+          'bg-background relative flex min-h-[120px] flex-col rounded-3xl border-2 transition-all',
           'border-muted-foreground/30',
           'shadow-sm'
         )}
       >
-        {/* File Upload Button */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,.csv,.xlsx,.xls"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleFileSelect(file);
-          }}
-          className="hidden"
-        />
-
-        {/* Location Button */}
-        {onLocationRequest && (
-          <button
-            onClick={onLocationRequest}
-            disabled={disabled || isLoading || locationLoading}
-            className={cn(
-              'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:ml-0.5 sm:h-8 sm:w-8',
-              hasLocation
-                ? 'cursor-pointer text-green-600 hover:bg-green-50'
-                : 'text-muted-foreground hover:bg-muted cursor-pointer',
-              'disabled:cursor-not-allowed disabled:opacity-50'
-            )}
-            aria-label="Share location"
-            style={{
-              marginLeft: '8px',
-            }}
-            title={
-              hasLocation
-                ? 'Location enabled — click to send location'
-                : 'Share my location with Aeris'
-            }
-            data-tooltip={hasLocation ? 'Location enabled' : 'Share location'}
-          >
-            {locationLoading ? (
-              <AqLoading02 className="text-primary h-4 w-4 animate-spin sm:h-4 sm:w-4" />
-            ) : (
-              <AqMarkerPin01 className="h-4 w-4 sm:h-4 sm:w-4" />
-            )}
-          </button>
-        )}
-
-        {/* File Upload Button */}
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={disabled || isLoading || !!uploadedFile}
-          className={cn(
-            'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:ml-0.5 sm:h-8 sm:w-8',
-            uploadedFile
-              ? 'text-muted-foreground cursor-not-allowed'
-              : 'text-muted-foreground hover:bg-muted cursor-pointer',
-            'disabled:cursor-not-allowed disabled:opacity-50'
-          )}
-          style={{
-            marginLeft: '-4px',
-          }}
-          aria-label="Upload file"
-          title="Upload a document for analysis"
-        >
-          <AqPaperclip className="h-4 w-4 sm:h-4 sm:w-4" />
-        </button>
-
         {/* Textarea */}
         <textarea
           value={input}
@@ -459,11 +396,10 @@ export function ChatInput({
           disabled={disabled || isLoading}
           rows={1}
           className={cn(
-            'text-foreground placeholder:text-muted-foreground min-w-0 flex-1 resize-none border-0 bg-transparent px-1 py-2.5 text-sm focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:py-3 sm:text-base',
-            'max-h-32'
+            'text-foreground placeholder:text-muted-foreground flex-1 resize-none border-0 bg-transparent px-4 py-3 text-sm focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:text-base',
+            'min-h-[60px]'
           )}
           style={{
-            minHeight: '24px',
             height: 'auto',
           }}
           onInput={(e) => {
@@ -473,10 +409,67 @@ export function ChatInput({
           }}
         />
 
-        {/* Send Button */}
-        <div className="mr-1.5 flex items-center gap-1.5 sm:mr-2">
+        {/* Buttons Row */}
+        <div className="flex items-center gap-1 px-3 pb-3">
+          {/* File Upload Button */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.csv,.xlsx,.xls"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleFileSelect(file);
+            }}
+            className="hidden"
+          />
+
+          {/* Location Button */}
+          {onLocationRequest && (
+            <button
+              onClick={onLocationRequest}
+              disabled={disabled || isLoading || locationLoading}
+              className={cn(
+                'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none',
+                hasLocation
+                  ? 'cursor-pointer text-green-600 hover:bg-green-50'
+                  : 'text-muted-foreground hover:bg-muted cursor-pointer',
+                'disabled:cursor-not-allowed disabled:opacity-50'
+              )}
+              aria-label="Share location"
+              title={
+                hasLocation
+                  ? 'Location enabled — click to send location'
+                  : 'Share my location with Aeris'
+              }
+              data-tooltip={hasLocation ? 'Location enabled' : 'Share location'}
+            >
+              {locationLoading ? (
+                <AqLoading02 className="text-primary h-4 w-4 animate-spin" />
+              ) : (
+                <AqMarkerPin01 className="h-4 w-4" />
+              )}
+            </button>
+          )}
+
+          {/* File Upload Button */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={disabled || isLoading || !!uploadedFile}
+            className={cn(
+              'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none',
+              uploadedFile
+                ? 'text-muted-foreground cursor-not-allowed'
+                : 'text-muted-foreground hover:bg-muted cursor-pointer',
+              'disabled:cursor-not-allowed disabled:opacity-50'
+            )}
+            aria-label="Upload file"
+            title="Upload a document for analysis"
+          >
+            <AqPaperclip className="h-4 w-4" />
+          </button>
+
           {/* Role Selector Dropdown */}
-          <div className="relative" ref={roleDropdownRef}>
+          <div className="relative ml-auto" ref={roleDropdownRef}>
             <button
               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
               disabled={disabled || isLoading}
