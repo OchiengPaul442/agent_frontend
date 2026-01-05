@@ -332,7 +332,10 @@ export function ChatInput({
               </div>
               {!isUploading && (
                 <button
-                  onClick={removeFile}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFile();
+                  }}
                   className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus:ring-destructive flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors focus:ring-2 focus:outline-none"
                   aria-label="Remove file"
                 >
