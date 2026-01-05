@@ -348,16 +348,20 @@ export function MessageBubble({
       for (let i = 0; i < slices.length; i++) {
         if (i > 0) pdf.addPage();
 
-        // Header
+        // Header: white background and formatted date on the right
         pdf.setFillColor('#ffffff');
         pdf.rect(0, 0, pdfWidthMm, pdfHeightMm, 'F');
-        pdf.setFontSize(12);
-        pdf.setTextColor('#111827');
-        pdf.text('AI Response', contentX, marginMm - 4 + 8);
         pdf.setFontSize(9);
         pdf.setTextColor('#6b7280');
-        const now = new Date().toLocaleString();
-        pdf.text(now, pdfWidthMm - marginMm, marginMm - 4 + 8, {
+        const now = new Date();
+        const formatted = new Intl.DateTimeFormat('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+        }).format(now);
+        pdf.text(formatted, pdfWidthMm - marginMm, marginMm - 4 + 8, {
           align: 'right',
         });
 
@@ -373,17 +377,15 @@ export function MessageBubble({
           imgHeight
         );
 
-        // Footer with page number
+        // Footer with left 'Aeris' label and page number on the right
         const pageNum = i + 1;
         const totalPages = slices.length;
         pdf.setFontSize(9);
         pdf.setTextColor('#6b7280');
-        pdf.text(
-          `Page ${pageNum} of ${totalPages}`,
-          pdfWidthMm - marginMm,
-          pdfHeightMm - 6,
-          { align: 'right' }
-        );
+        pdf.text('Aeris', contentX, pdfHeightMm - 6);
+        pdf.text(`Page ${pageNum} of ${totalPages}`, pdfWidthMm - marginMm, pdfHeightMm - 6, {
+          align: 'right',
+        });
       }
 
       // Trigger download
