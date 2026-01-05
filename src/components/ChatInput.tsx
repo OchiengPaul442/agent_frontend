@@ -263,7 +263,7 @@ export function ChatInput({
             exit={{ opacity: 0, y: -10 }}
             className="mb-3"
           >
-            <div className="border-border bg-muted flex items-center gap-3 rounded-xl border p-3">
+            <div className="border-border flex items-center gap-3 rounded-xl border bg-[#161616] p-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg">
                 {isUploading ? (
                   <AqLoading02 className="text-primary h-5 w-5 animate-spin" />
