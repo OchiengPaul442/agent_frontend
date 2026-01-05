@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { apiService } from '@/services/api.service';
-import type { Message, ChatResponse } from '@/types';
+import type { Message, ChatResponse, ResponseRole } from '@/types';
 import { sanitizeMarkdown } from '@/utils/helpers';
 
 export interface UseChatOptions {
@@ -112,7 +112,8 @@ export function useChat(options: UseChatOptions = {}) {
       content: string,
       file?: File,
       latitude?: number,
-      longitude?: number
+      longitude?: number,
+      role?: ResponseRole
     ): Promise<ChatResponse | null> => {
       if (!content.trim() && !file) return null;
       if (isLoadingRef.current) return null; // Prevent concurrent requests
@@ -154,6 +155,7 @@ export function useChat(options: UseChatOptions = {}) {
             file,
             latitude: latitude,
             longitude: longitude,
+            role: role,
           },
           { signal: controller.signal }
         );

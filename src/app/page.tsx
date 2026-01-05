@@ -12,6 +12,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AqLoading02 } from '@airqo/icons-react';
 import { cn } from '@/utils/helpers';
 
+import type { ResponseRole } from '@/types';
+
 // Generate a stable session ID for the browser session
 const generateSessionId = () => {
   return `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
@@ -19,10 +21,10 @@ const generateSessionId = () => {
 
 // Starter questions for air quality (professional / policy oriented)
 const STARTER_QUESTIONS = [
-  "Is it safe for my family to be outside right now—what's the 1-hour vs. 24-hour risk?",
-  'What are the most cost-effective ways to cut indoor PM2.5 by 50%?',
-  "How does air pollution affect pregnancy and children's lung development?",
-  'What policies actually work to reduce traffic pollution near schools?',
+  "What's the current air quality in New York City?",
+  'How does air pollution affect human health?',
+  'What will the air quality be like tomorrow in London?',
+  'Can you explain air quality standards and regulations?',
 ];
 
 export default function HomePage() {
@@ -188,7 +190,7 @@ export default function HomePage() {
 
   // Create a safe sendMessage function that checks for session
   const safeSendMessage = useCallback(
-    (content: string, file?: File) => {
+    (content: string, file?: File, role?: ResponseRole) => {
       if (!sessionId) {
         console.error('Cannot send message: Session not initialized');
         return;
@@ -197,7 +199,8 @@ export default function HomePage() {
         content,
         file,
         geolocation.latitude || undefined,
-        geolocation.longitude || undefined
+        geolocation.longitude || undefined,
+        role
       );
     },
     [sessionId, sendMessage, geolocation.latitude, geolocation.longitude]
@@ -575,7 +578,7 @@ export default function HomePage() {
             >
               <div className="max-w-md rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 shadow-lg">
                 <div className="flex items-start">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <svg
                       className="h-5 w-5 text-yellow-400"
                       viewBox="0 0 20 20"
@@ -595,7 +598,7 @@ export default function HomePage() {
                       you for your patience.
                     </p>
                   </div>
-                  <div className="ml-4 flex-shrink-0">
+                  <div className="ml-4 shrink-0">
                     <button
                       onClick={() => setShowDelayNotification(false)}
                       className="text-yellow-400 transition-colors hover:text-yellow-600"
@@ -745,8 +748,8 @@ export default function HomePage() {
         >
           <div className="mx-auto max-w-3xl px-2 sm:px-4">
             <ChatInput
-              onSend={(message, file) => {
-                safeSendMessage(message, file);
+              onSend={(message, file, role) => {
+                safeSendMessage(message, file, role);
                 // Clear file after sending
                 if (uploadedFile) {
                   handleRemoveFile();

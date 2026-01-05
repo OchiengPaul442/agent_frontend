@@ -30,6 +30,13 @@ export interface SessionDetails extends Session {
   messages: Message[];
 }
 
+export type ResponseRole =
+  | 'general'
+  | 'executive'
+  | 'technical'
+  | 'simple'
+  | 'policy';
+
 export interface ChatRequest {
   message: string;
   session_id?: string;
@@ -38,6 +45,7 @@ export interface ChatRequest {
   file?: File;
   latitude?: number;
   longitude?: number;
+  role?: ResponseRole;
 }
 
 export interface ChatResponse {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, KeyboardEvent, useRef } from 'react';
+import { useState, KeyboardEvent, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { cn } from '@/utils/helpers';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,10 +11,12 @@ import {
   AqX,
   AqSend01,
   AqLoading02,
+  AqChevronDown,
 } from '@airqo/icons-react';
+import type { ResponseRole } from '@/types';
 
 interface ChatInputProps {
-  onSend: (message: string, file?: File) => void;
+  onSend: (message: string, file?: File, role?: ResponseRole) => void;
   isLoading?: boolean;
   placeholder?: string;
   disabled?: boolean;
@@ -52,7 +54,27 @@ export function ChatInput({
   const [internalErrorMessage, setInternalErrorMessage] = useState<
     string | null
   >(null);
+  const [selectedRole, setSelectedRole] = useState<ResponseRole>('general');
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const roleDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        roleDropdownRef.current &&
+        !roleDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsRoleDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Use external state if provided, otherwise use internal state
   const uploadedFile =
@@ -63,6 +85,42 @@ export function ChatInput({
     externalErrorMessage !== undefined
       ? externalErrorMessage
       : internalErrorMessage;
+
+  // Role options with professional names
+  const roleOptions: {
+    value: ResponseRole;
+    label: string;
+    description: string;
+  }[] = [
+    {
+      value: 'general',
+      label: 'Balanced',
+      description: 'Well-rounded responses for everyone',
+    },
+    {
+      value: 'executive',
+      label: 'Executive Summary',
+      description: 'High-level insights and key takeaways',
+    },
+    {
+      value: 'technical',
+      label: 'Technical Deep-Dive',
+      description: 'Detailed analysis with scientific data',
+    },
+    {
+      value: 'simple',
+      label: 'Simple & Clear',
+      description: 'Easy-to-understand explanations',
+    },
+    {
+      value: 'policy',
+      label: 'Policy & Compliance',
+      description: 'Regulatory and policy-focused insights',
+    },
+  ];
+
+  const selectedRoleOption =
+    roleOptions.find((opt) => opt.value === selectedRole) || roleOptions[0];
 
   const handleSend = () => {
     if (
@@ -79,7 +137,8 @@ export function ChatInput({
       setTimeout(() => {
         onSend(
           input.trim() || 'Analyze this document',
-          uploadedFile || undefined
+          uploadedFile || undefined,
+          selectedRole
         );
         setInput('');
         if (onRemoveFile) {
@@ -92,7 +151,8 @@ export function ChatInput({
     } else {
       onSend(
         input.trim() || 'Analyze this document',
-        uploadedFile || undefined
+        uploadedFile || undefined,
+        selectedRole
       );
       setInput('');
     }
@@ -268,7 +328,7 @@ export function ChatInput({
               {!isUploading && (
                 <button
                   onClick={removeFile}
-                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus:ring-destructive flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors focus:ring-2 focus:outline-none"
+                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus:ring-destructive flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors focus:ring-2 focus:outline-none"
                   aria-label="Remove file"
                 >
                   <AqX className="h-4 w-4" />
@@ -298,7 +358,7 @@ export function ChatInput({
                     setInternalErrorMessage(null);
                   }
                 }}
-                className="text-muted-foreground flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-gray-200 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+                className="text-muted-foreground flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-gray-200 focus:ring-2 focus:ring-gray-300 focus:outline-none"
                 aria-label="Close error message"
               >
                 <AqX className="h-3.5 w-3.5" />
@@ -336,8 +396,8 @@ export function ChatInput({
             className={cn(
               'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:ml-0.5 sm:h-8 sm:w-8',
               hasLocation
-                ? 'text-green-600 hover:bg-green-50'
-                : 'text-muted-foreground hover:bg-muted',
+                ? 'cursor-pointer text-green-600 hover:bg-green-50'
+                : 'text-muted-foreground hover:bg-muted cursor-pointer',
               'disabled:cursor-not-allowed disabled:opacity-50'
             )}
             aria-label="Share location"
@@ -367,7 +427,7 @@ export function ChatInput({
             'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:ml-0.5 sm:h-8 sm:w-8',
             uploadedFile
               ? 'text-muted-foreground cursor-not-allowed'
-              : 'text-muted-foreground hover:bg-muted',
+              : 'text-muted-foreground hover:bg-muted cursor-pointer',
             'disabled:cursor-not-allowed disabled:opacity-50'
           )}
           style={{
@@ -414,32 +474,103 @@ export function ChatInput({
         />
 
         {/* Send Button */}
-        <button
-          onClick={handleSend}
-          disabled={
-            (!input.trim() && !uploadedFile) ||
-            isLoading ||
-            disabled ||
-            isUploading
-          }
-          className={cn(
-            'mr-1.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:mr-2 sm:h-9 sm:w-9',
-            (!input.trim() && !uploadedFile) ||
+        <div className="mr-1.5 flex items-center gap-1.5 sm:mr-2">
+          {/* Role Selector Dropdown */}
+          <div className="relative" ref={roleDropdownRef}>
+            <button
+              onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+              disabled={disabled || isLoading}
+              className={cn(
+                'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none',
+                'bg-muted/80 text-muted-foreground hover:bg-muted cursor-pointer',
+                'disabled:cursor-not-allowed disabled:opacity-50',
+                'border-border/50 border'
+              )}
+              aria-label="Select response style"
+            >
+              <span className="hidden sm:inline">
+                {selectedRoleOption.label}
+              </span>
+              <span className="sm:hidden">
+                {selectedRoleOption.label.split(' ')[0]}
+              </span>
+              <AqChevronDown
+                className={cn(
+                  'h-3 w-3 transition-transform',
+                  isRoleDropdownOpen && 'rotate-180'
+                )}
+              />
+            </button>
+
+            {/* Dropdown Menu */}
+            <AnimatePresence>
+              {isRoleDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="border-border absolute right-0 bottom-full z-50 mb-2 w-72 overflow-hidden rounded-xl border bg-[#161616] shadow-lg"
+                >
+                  <div className="p-2">
+                    <div className="text-muted-foreground px-3 py-2 text-xs font-semibold">
+                      Response Style
+                    </div>
+                    {roleOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setSelectedRole(option.value);
+                          setIsRoleDropdownOpen(false);
+                        }}
+                        className={cn(
+                          'w-full cursor-pointer rounded-lg px-3 py-2.5 text-left transition-colors',
+                          'hover:bg-muted',
+                          selectedRole === option.value &&
+                            'bg-primary/10 text-primary'
+                        )}
+                      >
+                        <div className="text-sm font-medium">
+                          {option.label}
+                        </div>
+                        <div className="text-muted-foreground mt-0.5 text-xs">
+                          {option.description}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <button
+            onClick={handleSend}
+            disabled={
+              (!input.trim() && !uploadedFile) ||
               isLoading ||
               disabled ||
               isUploading
-              ? 'bg-muted text-muted-foreground cursor-not-allowed'
-              : 'bg-primary text-primary-foreground hover:opacity-95',
-            'disabled:cursor-not-allowed disabled:opacity-50'
-          )}
-          aria-label="Send message"
-        >
-          {isLoading || isUploading ? (
-            <AqLoading02 className="text-primary h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
-          ) : (
-            <AqSend01 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          )}
-        </button>
+            }
+            className={cn(
+              'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:h-9 sm:w-9',
+              (!input.trim() && !uploadedFile) ||
+                isLoading ||
+                disabled ||
+                isUploading
+                ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                : 'bg-primary text-primary-foreground cursor-pointer hover:opacity-95',
+              'disabled:cursor-not-allowed disabled:opacity-50'
+            )}
+            aria-label="Send message"
+          >
+            {isLoading || isUploading ? (
+              <AqLoading02 className="text-primary h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
+            ) : (
+              <AqSend01 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
