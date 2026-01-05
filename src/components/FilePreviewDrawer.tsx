@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AqX, AqFile02 } from '@airqo/icons-react';
 import Image from 'next/image';
 import * as XLSX from 'xlsx';
+import { cn } from '@/utils/helpers';
 
 interface FilePreviewDrawerProps {
   isOpen: boolean;
@@ -26,6 +27,17 @@ export function FilePreviewDrawer({
   const [error, setError] = useState<string | null>(null);
   const resizeRef = useRef<HTMLDivElement>(null);
   const isResizingRef = useRef(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -75,39 +87,41 @@ export function FilePreviewDrawer({
           const text = reader.result as string;
           const rows = text.split('\n').filter((row) => row.trim());
           const tableHtml = `
-            <table class="w-full border-collapse border border-gray-300 text-sm">
-              <thead>
-                <tr class="bg-gray-100">
-                  ${
-                    rows[0]
-                      ?.split(',')
-                      .map(
-                        (cell) =>
-                          `<th class="border border-gray-300 px-2 py-1 text-left">${cell.trim()}</th>`
-                      )
-                      .join('') || ''
-                  }
-                </tr>
-              </thead>
-              <tbody>
-                ${rows
-                  .slice(1)
-                  .map(
-                    (row) => `
-                  <tr>
-                    ${row
-                      .split(',')
-                      .map(
-                        (cell) =>
-                          `<td class="border border-gray-300 px-2 py-1">${cell.trim()}</td>`
-                      )
-                      .join('')}
+            <div class="overflow-x-auto">
+              <table class="w-full border-collapse border border-gray-300 text-xs sm:text-sm">
+                <thead>
+                  <tr class="bg-gray-100">
+                    ${
+                      rows[0]
+                        ?.split(',')
+                        .map(
+                          (cell) =>
+                            `<th class="border border-gray-300 px-1 py-1 sm:px-2 sm:py-1 text-left font-medium">${cell.trim()}</th>`
+                        )
+                        .join('') || ''
+                    }
                   </tr>
-                `
-                  )
-                  .join('')}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  ${rows
+                    .slice(1)
+                    .map(
+                      (row) => `
+                    <tr>
+                      ${row
+                        .split(',')
+                        .map(
+                          (cell) =>
+                            `<td class="border border-gray-300 px-1 py-1 sm:px-2 sm:py-1 break-words max-w-24 sm:max-w-none">${cell.trim()}</td>`
+                        )
+                        .join('')}
+                    </tr>
+                  `
+                    )
+                    .join('')}
+                </tbody>
+              </table>
+            </div>
           `;
           setContent(tableHtml);
           setIsLoading(false);
@@ -130,19 +144,21 @@ export function FilePreviewDrawer({
             }) as unknown[][];
 
             const tableHtml = `
-              <table class="w-full border-collapse border border-gray-300 text-sm">
-                <tbody>
-                  ${jsonData
-                    .map(
-                      (row: unknown[]) => `
-                    <tr>
-                      ${row.map((cell: unknown) => `<td class="border border-gray-300 px-2 py-1">${String(cell || '')}</td>`).join('')}
-                    </tr>
-                  `
-                    )
-                    .join('')}
-                </tbody>
-              </table>
+              <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300 text-xs sm:text-sm">
+                  <tbody>
+                    ${jsonData
+                      .map(
+                        (row: unknown[], rowIndex: number) => `
+                      <tr class="${rowIndex === 0 ? 'bg-gray-100 font-medium' : ''}">
+                        ${row.map((cell: unknown) => `<td class="border border-gray-300 px-1 py-1 sm:px-2 sm:py-1 break-words max-w-24 sm:max-w-none">${String(cell || '')}</td>`).join('')}
+                      </tr>
+                    `
+                      )
+                      .join('')}
+                  </tbody>
+                </table>
+              </div>
             `;
             setContent(tableHtml);
           } catch (err) {
@@ -165,7 +181,7 @@ export function FilePreviewDrawer({
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizingRef.current) return;
+      if (!isResizingRef.current || isMobile) return;
       const newWidth = window.innerWidth - e.clientX;
       const clampedWidth = Math.max(300, Math.min(800, newWidth));
       onWidthChange(clampedWidth);
@@ -177,7 +193,7 @@ export function FilePreviewDrawer({
       document.body.style.userSelect = '';
     };
 
-    if (isOpen) {
+    if (isOpen && !isMobile) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     }
@@ -186,9 +202,10 @@ export function FilePreviewDrawer({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isOpen, onWidthChange]);
+  }, [isOpen, onWidthChange, isMobile]);
 
   const handleResizeStart = () => {
+    if (isMobile) return;
     isResizingRef.current = true;
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
@@ -242,39 +259,44 @@ export function FilePreviewDrawer({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ x: '100%' }}
+          initial={{ x: isMobile ? '100%' : '100%' }}
           animate={{ x: 0 }}
-          exit={{ x: '100%' }}
+          exit={{ x: isMobile ? '100%' : '100%' }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-          className="bg-background glass-dark border-border fixed top-0 right-0 z-40 flex h-full flex-col border-l shadow-2xl"
-          style={{ width: `${width}px` }}
+          className={cn(
+            'bg-background glass-dark border-border fixed z-40 flex h-full flex-col border-l shadow-2xl',
+            isMobile ? 'inset-0 border-l-0' : 'top-0 right-0'
+          )}
+          style={isMobile ? {} : { width: `${width}px` }}
         >
-          {/* Resize Handle */}
-          <div
-            ref={resizeRef}
-            onMouseDown={handleResizeStart}
-            className="bg-border/50 hover:bg-border absolute top-0 left-0 z-50 h-full w-1 cursor-col-resize transition-colors"
-          >
-            <div className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col gap-1">
-              <div className="bg-muted-foreground h-1 w-1 rounded-full"></div>
-              <div className="bg-muted-foreground h-1 w-1 rounded-full"></div>
-              <div className="bg-muted-foreground h-1 w-1 rounded-full"></div>
+          {/* Resize Handle - Hidden on mobile */}
+          {!isMobile && (
+            <div
+              ref={resizeRef}
+              onMouseDown={handleResizeStart}
+              className="bg-border/50 hover:bg-border absolute top-0 left-0 z-50 h-full w-1 cursor-col-resize transition-colors"
+            >
+              <div className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col gap-1">
+                <div className="bg-muted-foreground h-1 w-1 rounded-full"></div>
+                <div className="bg-muted-foreground h-1 w-1 rounded-full"></div>
+                <div className="bg-muted-foreground h-1 w-1 rounded-full"></div>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Header */}
-          <div className="border-border flex items-center justify-between border-b p-3">
+          <div className="border-border flex items-center justify-between border-b p-3 sm:p-4">
             <div className="flex items-center gap-3">
               {file && getFileIcon(file)}
-              <div>
-                <h2 className="text-foreground text-base font-semibold">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-foreground truncate text-base font-semibold">
                   {file?.name || 'File Preview'}
                 </h2>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="text-muted-foreground hover:bg-muted hover:text-foreground focus:ring-ring flex h-7 w-7 items-center justify-center rounded-md transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground focus:ring-ring flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none"
               aria-label="Close drawer"
             >
               <AqX className="h-4 w-4" />
@@ -282,15 +304,17 @@ export function FilePreviewDrawer({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-auto p-4">
+          <div className="flex-1 overflow-auto p-3 sm:p-4">
             {isLoading && (
               <div className="flex h-full items-center justify-center">
                 <div className="text-muted-foreground">Loading preview...</div>
               </div>
             )}
             {error && (
-              <div className="flex h-full items-center justify-center">
-                <div className="text-destructive text-center">{error}</div>
+              <div className="flex h-full items-center justify-center px-4">
+                <div className="text-destructive text-center text-sm sm:text-base">
+                  {error}
+                </div>
               </div>
             )}
             {content && !isLoading && !error && (
@@ -306,7 +330,7 @@ export function FilePreviewDrawer({
                   />
                 ) : (
                   <div
-                    className="h-full overflow-auto"
+                    className="border-border bg-card h-full overflow-auto rounded-lg border p-2 sm:p-4"
                     dangerouslySetInnerHTML={{ __html: content }}
                   />
                 )}

@@ -74,7 +74,8 @@ export default function HomePage() {
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [isFilePreviewDrawerOpen, setIsFilePreviewDrawerOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
-  const [drawerWidth, setDrawerWidth] = useState(400);
+  const [drawerWidth, setDrawerWidth] = useState(450);
+  const [isMobile, setIsMobile] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [fileErrorMessage, setFileErrorMessage] = useState<string | null>(null);
@@ -83,6 +84,17 @@ export default function HomePage() {
 
   // Geolocation hook
   const geolocation = useGeolocation({ autoRequest: false });
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const {
     messages,
@@ -454,7 +466,8 @@ export default function HomePage() {
             : 'border border-solid'
         )}
         style={{
-          marginRight: isFilePreviewDrawerOpen ? `${drawerWidth}px` : '0px',
+          marginRight:
+            isFilePreviewDrawerOpen && !isMobile ? `${drawerWidth}px` : '0px',
         }}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
