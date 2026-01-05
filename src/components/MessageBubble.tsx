@@ -6,7 +6,7 @@ import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/utils/helpers';
-import { sanitizeMarkdown } from '@/utils/helpers';
+import { sanitizeMarkdown, stripMarkdown } from '@/utils/helpers';
 import {
   AqCopy01,
   AqCheckCircle,
@@ -21,8 +21,7 @@ import {
   oneDark,
 } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import jsPDF from 'jspdf';
-import { marked } from 'marked';
-import html2canvas from 'html2canvas';
+import autoTable from 'jspdf-autotable';
 
 interface MessageBubbleProps {
   message: Message;
@@ -224,135 +223,25 @@ export function MessageBubble({
 
   const handleDownload = async () => {
     try {
-      // PDF layout constants
-      const pdfWidthMm = 210; // A4
-      const pdfHeightMm = 297; // A4
-      const marginMm = 15; // page margin
-      const headerMm = 12; // header height
-      const footerMm = 10; // footer height
-
-      // Convert mm to CSS pixels (assume 96 DPI)
-      const pxPerMm = 96 / 25.4;
-      const scale = window.devicePixelRatio || 2;
-
-      // Content width in mm and px
-      const contentWidthMm = pdfWidthMm - marginMm * 2;
-      const contentWidthPx = Math.round(contentWidthMm * pxPerMm);
-
-      // Create off-screen container sized to the PDF content width
-      const container = document.createElement('div');
-      container.style.width = `${contentWidthPx}px`;
-      container.style.padding = `${Math.round(8 * pxPerMm)}px`;
-      container.style.background = '#ffffff';
-      container.style.color = '#111827';
-      container.style.fontFamily =
-        'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-      container.style.fontSize = `${Math.round((12 * pxPerMm) / pxPerMm)}px`;
-      container.style.lineHeight = '1.6';
-      container.style.boxSizing = 'border-box';
-      container.style.position = 'absolute';
-      container.style.left = '-9999px';
-      container.style.top = '-9999px';
-      container.style.zIndex = '-1';
-
-      // Add minimal, print-friendly CSS
-      const style = document.createElement('style');
-      style.textContent = `
-        .pdf-content { max-width: none; margin: 0; padding: 0; color: #111827; }
-        .pdf-content h1, .pdf-content h2, .pdf-content h3 { color: #111827; }
-        .pdf-content pre { white-space: pre-wrap; word-break: break-word; }
-        .pdf-content table { width: 100%; border-collapse: collapse; }
-        .pdf-content th, .pdf-content td { border: 1px solid #e5e7eb; padding: 6px 8px; }
-        .pdf-content img { max-width: 100%; height: auto; }
-        .no-break { page-break-inside: avoid; }
-      `;
-
-      // Render sanitized markdown into the container
-      const safeMd = sanitizeMarkdown(message.content);
-      const parsed = marked.parse(safeMd || '');
-      const htmlContent = typeof parsed === 'string' ? parsed : await parsed;
-
-      const contentDiv = document.createElement('div');
-      contentDiv.className = 'pdf-content';
-      contentDiv.innerHTML = htmlContent;
-
-      // Try to mark large block elements to reduce awkward breaks
-      Array.from(
-        contentDiv.querySelectorAll('table, pre, blockquote, img')
-      ).forEach((el) => {
-        (el as HTMLElement).classList.add('no-break');
-      });
-
-      container.appendChild(style);
-      container.appendChild(contentDiv);
-      document.body.appendChild(container);
-
-      // Allow images and fonts to settle
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      // Capture the container at a high scale for crisp output
-      const canvas = await html2canvas(container, {
-        scale,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#ffffff',
-        logging: false,
-      });
-
-      // Calculate page content height in pixels (excluding header/footer and margins)
-      const pageContentHeightMm =
-        pdfHeightMm - marginMm * 2 - headerMm - footerMm;
-      const pageContentHeightPx = Math.floor(
-        pageContentHeightMm * pxPerMm * scale
-      );
-
-      // Slice the canvas vertically into page-sized images with a small overlap to avoid seams
-      const overlapPx = Math.max(2, Math.round(2 * scale));
-      const slices: { dataUrl: string; heightMm: number }[] = [];
-      const totalWidthPx = canvas.width;
-      for (let y = 0; y < canvas.height; y += pageContentHeightPx - overlapPx) {
-        const sliceHeightPx = Math.min(pageContentHeightPx, canvas.height - y);
-        const sliceCanvas = document.createElement('canvas');
-        sliceCanvas.width = totalWidthPx;
-        sliceCanvas.height = sliceHeightPx;
-        const ctx = sliceCanvas.getContext('2d');
-        if (!ctx) throw new Error('Failed to create canvas context');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
-        ctx.drawImage(
-          canvas,
-          0,
-          y,
-          totalWidthPx,
-          sliceHeightPx,
-          0,
-          0,
-          totalWidthPx,
-          sliceHeightPx
-        );
-
-        const dataUrl = sliceCanvas.toDataURL('image/png');
-        const heightMm = sliceHeightPx / (pxPerMm * scale);
-        slices.push({ dataUrl, heightMm });
-      }
-
-      // Build PDF from slices
+      // PDF configuration with professional layout
       const pdf = new jsPDF({
         unit: 'mm',
         format: 'a4',
         orientation: 'portrait',
       });
-      const contentX = marginMm;
-      const contentWidth = contentWidthMm;
 
-      for (let i = 0; i < slices.length; i++) {
-        if (i > 0) pdf.addPage();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      const contentWidth = pageWidth - margin * 2;
+      let yPosition = margin;
+      let pageNumber = 1;
 
-        // Header: white background and formatted date on the right
-        pdf.setFillColor('#ffffff');
-        pdf.rect(0, 0, pdfWidthMm, pdfHeightMm, 'F');
+      // Helper to add header on each page
+      const addHeader = () => {
         pdf.setFontSize(9);
-        pdf.setTextColor('#6b7280');
+        pdf.setFont('times', 'normal');
+        pdf.setTextColor(107, 114, 128); // #6b7280
         const now = new Date();
         const formatted = new Intl.DateTimeFormat('en-US', {
           month: 'short',
@@ -361,39 +250,332 @@ export function MessageBubble({
           hour: 'numeric',
           minute: '2-digit',
         }).format(now);
-        pdf.text(formatted, pdfWidthMm - marginMm, marginMm - 4 + 8, {
-          align: 'right',
-        });
+        pdf.text(formatted, pageWidth - margin, 15, { align: 'right' });
+        return 25; // Start content after header
+      };
 
-        // Image content
-        const img = slices[i];
-        const imgHeight = img.heightMm;
-        pdf.addImage(
-          img.dataUrl,
-          'PNG',
-          contentX,
-          marginMm + headerMm,
-          contentWidth,
-          imgHeight
-        );
-
-        // Footer with left 'Aeris' label and page number on the right
-        const pageNum = i + 1;
-        const totalPages = slices.length;
+      // Helper to add footer on each page
+      const addFooter = () => {
         pdf.setFontSize(9);
-        pdf.setTextColor('#6b7280');
-        pdf.text('Aeris', contentX, pdfHeightMm - 6);
-        pdf.text(`Page ${pageNum} of ${totalPages}`, pdfWidthMm - marginMm, pdfHeightMm - 6, {
+        pdf.setFont('times', 'normal');
+        pdf.setTextColor(107, 114, 128);
+        pdf.text('Aeris', margin, pageHeight - 10);
+        pdf.text(`Page ${pageNumber}`, pageWidth - margin, pageHeight - 10, {
           align: 'right',
         });
+      };
+
+      // Helper to check if we need a new page
+      const checkNewPage = (requiredHeight: number) => {
+        if (yPosition + requiredHeight > pageHeight - 25) {
+          addFooter();
+          pdf.addPage();
+          pageNumber++;
+          yPosition = addHeader();
+        }
+      };
+
+      // Helper to safely render text with proper encoding
+      const renderText = (
+        text: string,
+        x: number,
+        y: number,
+        maxWidth?: number,
+        options?: { align?: 'left' | 'center' | 'right' }
+      ) => {
+        // Clean and normalize text to prevent encoding issues
+        const cleanText = text
+          .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width chars
+          .replace(/\s+/g, ' ') // Normalize whitespace
+          .trim();
+
+        if (maxWidth) {
+          const lines = pdf.splitTextToSize(cleanText, maxWidth);
+          lines.forEach((line: string, index: number) => {
+            pdf.text(line, x, y + index * 6, options);
+          });
+          return lines.length;
+        } else {
+          pdf.text(cleanText, x, y, options);
+          return 1;
+        }
+      };
+
+      // Parse markdown to structured content
+      const parseMarkdown = (content: string) => {
+        const lines = content.split('\n');
+        const blocks: Array<{
+          type: string;
+          content: string;
+          level?: number;
+          items?: string[];
+          language?: string;
+          headers?: string[];
+          rows?: string[][];
+        }> = [];
+
+        let i = 0;
+        while (i < lines.length) {
+          const line = lines[i];
+
+          // Code blocks
+          if (line.startsWith('```')) {
+            const language = line.slice(3).trim() || 'text';
+            const codeLines: string[] = [];
+            i++;
+            while (i < lines.length && !lines[i].startsWith('```')) {
+              codeLines.push(lines[i]);
+              i++;
+            }
+            blocks.push({
+              type: 'code',
+              content: codeLines.join('\n'),
+              language,
+            });
+            i++;
+            continue;
+          }
+
+          // Tables
+          if (
+            line.includes('|') &&
+            i + 1 < lines.length &&
+            lines[i + 1].match(/^[\s]*\|[\s]*[-:]+[\s]*\|/)
+          ) {
+            const headers = line
+              .split('|')
+              .map((cell) => cell.trim())
+              .filter((cell) => cell);
+            const separator = lines[i + 1];
+            if (headers.length > 0 && separator.includes('|')) {
+              const tableRows: string[][] = [headers];
+              i += 2; // Skip header and separator
+              while (
+                i < lines.length &&
+                lines[i].includes('|') &&
+                !lines[i].match(/^[\s]*\|[\s]*[-:]+[\s]*\|/)
+              ) {
+                const row = lines[i]
+                  .split('|')
+                  .map((cell) => cell.trim())
+                  .filter((cell) => cell);
+                if (row.length === headers.length) {
+                  tableRows.push(row);
+                }
+                i++;
+              }
+              blocks.push({
+                type: 'table',
+                content: '',
+                headers,
+                rows: tableRows.slice(1), // Exclude headers from rows
+              });
+              continue;
+            }
+          }
+
+          // Headers
+          const headerMatch = line.match(/^(#{1,6})\s+(.+)$/);
+          if (headerMatch) {
+            blocks.push({
+              type: 'header',
+              level: headerMatch[1].length,
+              content: headerMatch[2],
+            });
+            i++;
+            continue;
+          }
+
+          // Lists
+          if (line.match(/^[\s]*[-*+]\s+/) || line.match(/^[\s]*\d+\.\s+/)) {
+            const listItems: string[] = [];
+            while (
+              i < lines.length &&
+              (lines[i].match(/^[\s]*[-*+]\s+/) ||
+                lines[i].match(/^[\s]*\d+\.\s+/))
+            ) {
+              const itemContent = lines[i]
+                .replace(/^[\s]*[-*+]\s+/, '')
+                .replace(/^[\s]*\d+\.\s+/, '');
+              listItems.push(itemContent);
+              i++;
+            }
+            blocks.push({ type: 'list', content: '', items: listItems });
+            continue;
+          }
+
+          // Empty line
+          if (line.trim() === '') {
+            i++;
+            continue;
+          }
+
+          // Regular paragraph
+          let paragraph = line;
+          i++;
+          while (
+            i < lines.length &&
+            lines[i].trim() !== '' &&
+            !lines[i].match(/^#{1,6}\s/) &&
+            !lines[i].match(/^[\s]*[-*+]\s+/) &&
+            !lines[i].match(/^[\s]*\d+\.\s+/) &&
+            !lines[i].startsWith('```') &&
+            !lines[i].includes('|')
+          ) {
+            paragraph += ' ' + lines[i];
+            i++;
+          }
+          blocks.push({ type: 'paragraph', content: paragraph });
+        }
+
+        return blocks;
+      };
+
+      // Render content
+      const blocks = parseMarkdown(message.content);
+      yPosition = addHeader();
+
+      for (const block of blocks) {
+        switch (block.type) {
+          case 'header': {
+            checkNewPage(15);
+            const fontSize =
+              block.level === 1 ? 16 : block.level === 2 ? 14 : 12;
+            pdf.setFontSize(fontSize);
+            pdf.setFont('times', 'bold');
+            pdf.setTextColor(17, 24, 39);
+
+            const cleanText = stripMarkdown(block.content);
+            const lineCount = renderText(
+              cleanText,
+              margin,
+              yPosition,
+              contentWidth
+            );
+            yPosition += lineCount * (block.level === 1 ? 8 : 7) + 3;
+            break;
+          }
+
+          case 'paragraph': {
+            checkNewPage(10);
+            pdf.setFontSize(11);
+            pdf.setFont('times', 'normal');
+            pdf.setTextColor(55, 65, 81);
+
+            const cleanText = stripMarkdown(block.content);
+            const lineCount = renderText(
+              cleanText,
+              margin,
+              yPosition,
+              contentWidth
+            );
+            yPosition += lineCount * 6 + 2;
+            break;
+          }
+
+          case 'list': {
+            checkNewPage(10);
+            pdf.setFontSize(11);
+            pdf.setFont('times', 'normal');
+            pdf.setTextColor(55, 65, 81);
+
+            block.items?.forEach((item) => {
+              const cleanText = stripMarkdown(item);
+              const lines = pdf.splitTextToSize(cleanText, contentWidth - 6);
+              checkNewPage(6 * lines.length);
+
+              lines.forEach((line: string, idx: number) => {
+                if (idx === 0) {
+                  pdf.text('•', margin, yPosition);
+                }
+                pdf.text(line, margin + 6, yPosition);
+                yPosition += 6;
+              });
+            });
+            yPosition += 2;
+            break;
+          }
+
+          case 'code': {
+            const codeLines = block.content.split('\n');
+            const estimatedHeight = codeLines.length * 5 + 15;
+            checkNewPage(estimatedHeight);
+
+            // Code block header
+            pdf.setFillColor(249, 250, 251);
+            pdf.rect(margin, yPosition - 3, contentWidth, 8, 'F');
+            pdf.setFontSize(9);
+            pdf.setFont('times', 'bold');
+            pdf.setTextColor(75, 85, 99);
+            pdf.text(block.language || 'code', margin + 2, yPosition + 2);
+            yPosition += 8;
+
+            // Code content
+            pdf.setFillColor(249, 250, 251);
+            const codeBlockHeight = codeLines.length * 5 + 4;
+            pdf.rect(margin, yPosition - 2, contentWidth, codeBlockHeight, 'F');
+
+            pdf.setFontSize(9);
+            pdf.setFont('courier', 'normal');
+            pdf.setTextColor(17, 24, 39);
+
+            codeLines.forEach((codeLine) => {
+              checkNewPage(5);
+              const displayLine = codeLine.substring(0, 90);
+              renderText(displayLine, margin + 2, yPosition);
+              yPosition += 5;
+            });
+            yPosition += 6;
+            break;
+          }
+
+          case 'table': {
+            if (block.headers && block.rows) {
+              checkNewPage(20);
+
+              const tableData = block.rows.map((row) =>
+                row.map((cell) => stripMarkdown(cell))
+              );
+
+              autoTable(pdf, {
+                head: [block.headers.map((h) => stripMarkdown(h))],
+                body: tableData,
+                startY: yPosition,
+                margin: { left: margin, right: margin },
+                styles: {
+                  font: 'times',
+                  fontSize: 9,
+                  cellPadding: 2,
+                  lineColor: [229, 231, 235],
+                  lineWidth: 0.1,
+                },
+                headStyles: {
+                  fillColor: [243, 244, 246],
+                  textColor: [17, 24, 39],
+                  fontStyle: 'bold',
+                  halign: 'left',
+                },
+                bodyStyles: {
+                  textColor: [55, 65, 81],
+                },
+                alternateRowStyles: {
+                  fillColor: [249, 250, 251],
+                },
+                theme: 'grid',
+              });
+
+              yPosition = (pdf as any).lastAutoTable.finalY + 5;
+            }
+            break;
+          }
+        }
       }
 
-      // Trigger download
-      pdf.save('aeris-response.pdf');
+      // Add footer to last page
+      addFooter();
 
-      // Cleanup
-      if (document.body.contains(container))
-        document.body.removeChild(container);
+      // Save the PDF
+      pdf.save('aeris-response.pdf');
     } catch (err) {
       console.error('Failed to generate PDF:', err);
       // Fallback download as plain text

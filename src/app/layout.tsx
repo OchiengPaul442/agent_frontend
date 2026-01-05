@@ -20,25 +20,31 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const gaTrackingId = process.env.NEXT_PUBLIC_GA_TRACKING_ID;
+
   return (
     <html
       lang="en"
       className={cn(inter.className, 'dark')}
       suppressHydrationWarning
     >
-      <Script
-        async
-        src="https://www.googletagmanager.com/gtag/js?id=G-444B7CRNWX"
-        strategy="afterInteractive"
-      />
-      <Script id="google-analytics" strategy="afterInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-444B7CRNWX');
-        `}
-      </Script>
+      {gaTrackingId && (
+        <>
+          <Script
+            async
+            src={`https://www.googletagmanager.com/gtag/js?id=${gaTrackingId}`}
+            strategy="afterInteractive"
+          />
+          <Script id="google-analytics" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${gaTrackingId}');
+            `}
+          </Script>
+        </>
+      )}
       <body className="antialiased">{children}</body>
     </html>
   );

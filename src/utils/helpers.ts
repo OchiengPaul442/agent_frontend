@@ -204,3 +204,57 @@ function decodeHtmlEntities(text: string): string {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'");
 }
+
+// Strip markdown syntax for plain text rendering (e.g., PDF)
+export function stripMarkdown(content: string): string {
+  if (!content) return content;
+
+  let stripped = content;
+
+  // Remove code blocks
+  stripped = stripped.replace(/```[\s\S]*?```/g, '');
+
+  // Remove inline code
+  stripped = stripped.replace(/`([^`]+)`/g, '$1');
+
+  // Remove links, keep text
+  stripped = stripped.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+
+  // Remove images
+  stripped = stripped.replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1');
+
+  // Remove headers
+  stripped = stripped.replace(/^#{1,6}\s+/gm, '');
+
+  // Remove bold and italic
+  stripped = stripped.replace(/\*\*([^*]+)\*\*/g, '$1');
+  stripped = stripped.replace(/\*([^*]+)\*/g, '$1');
+  stripped = stripped.replace(/_([^_]+)_/g, '$1');
+
+  // Remove strikethrough
+  stripped = stripped.replace(/~~([^~]+)~~/g, '$1');
+
+  // Remove list markers
+  stripped = stripped.replace(/^[\s]*[-*+]\s+/gm, '');
+  stripped = stripped.replace(/^[\s]*\d+\.\s+/gm, '');
+
+  // Remove blockquotes
+  stripped = stripped.replace(/^>\s+/gm, '');
+
+  // Remove horizontal rules
+  stripped = stripped.replace(/^[-*_]{3,}$/gm, '');
+
+  // Clean up extra whitespace
+  stripped = stripped.replace(/\n{3,}/g, '\n\n');
+  stripped = stripped.trim();
+
+  // Normalize common unicode characters to ASCII for PDF compatibility
+  stripped = stripped
+    .replace(/[\u2018\u2019]/g, "'") // Smart quotes
+    .replace(/[\u201C\u201D]/g, '"') // Smart double quotes
+    .replace(/[\u2013\u2014]/g, '-') // Dashes
+    .replace(/\u2026/g, '...') // Ellipsis
+    .replace(/\u00A0/g, ' '); // Non-breaking space
+
+  return stripped;
+}
