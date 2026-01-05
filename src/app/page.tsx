@@ -148,20 +148,34 @@ export default function HomePage() {
           { enableHighAccuracy: true, timeout: 60000 }
         );
       });
-    } catch (err) {
+    } catch (err: unknown) {
+      // Safely extract message and code from unknown error
+      const errMessage =
+        err instanceof Error ? err.message : String(err ?? 'Unknown error');
+      const errObj =
+        typeof err === 'object' && err !== null
+          ? (err as Record<string, unknown>)
+          : null;
+      const errCode =
+        errObj && typeof errObj['code'] === 'number'
+          ? (errObj['code'] as number)
+          : undefined;
+
       console.warn(
         'Failed to send location query:',
-        (err as Error)?.message || (err as any)?.code || err
+        errMessage,
+        errCode ?? err
       );
+
       // Add specific error message to chat based on error type
       let errorMessage = 'Unable to retrieve your location.';
-      if ((err as any)?.code === 1) {
+      if (errCode === 1) {
         errorMessage +=
           ' Location permission was denied. Please allow location access in your browser settings.';
-      } else if ((err as any)?.code === 2) {
+      } else if (errCode === 2) {
         errorMessage +=
           ' Location information is unavailable. This may be due to network issues or disabled location services on your device. Please ensure location services are enabled and try again.';
-      } else if ((err as any)?.code === 3) {
+      } else if (errCode === 3) {
         errorMessage += ' Location request timed out. Please try again.';
       } else {
         errorMessage += ' Please check your browser permissions and try again.';

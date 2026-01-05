@@ -224,103 +224,50 @@ export function MessageBubble({
 
   const handleDownload = async () => {
     try {
-      // Create a temporary container for the content
+      // PDF layout constants
+      const pdfWidthMm = 210; // A4
+      const pdfHeightMm = 297; // A4
+      const marginMm = 15; // page margin
+      const headerMm = 12; // header height
+      const footerMm = 10; // footer height
+
+      // Convert mm to CSS pixels (assume 96 DPI)
+      const pxPerMm = 96 / 25.4;
+      const scale = window.devicePixelRatio || 2;
+
+      // Content width in mm and px
+      const contentWidthMm = pdfWidthMm - marginMm * 2;
+      const contentWidthPx = Math.round(contentWidthMm * pxPerMm);
+
+      // Create off-screen container sized to the PDF content width
       const container = document.createElement('div');
-      container.style.width = '800px'; // Fixed width for consistent rendering
-      container.style.padding = '40px';
+      container.style.width = `${contentWidthPx}px`;
+      container.style.padding = `${Math.round(8 * pxPerMm)}px`;
       container.style.background = '#ffffff';
       container.style.color = '#111827';
       container.style.fontFamily =
         'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-      container.style.fontSize = '14px';
+      container.style.fontSize = `${Math.round((12 * pxPerMm) / pxPerMm)}px`;
       container.style.lineHeight = '1.6';
+      container.style.boxSizing = 'border-box';
       container.style.position = 'absolute';
       container.style.left = '-9999px';
       container.style.top = '-9999px';
       container.style.zIndex = '-1';
 
-      // Add CSS styles for proper formatting
+      // Add minimal, print-friendly CSS
       const style = document.createElement('style');
       style.textContent = `
-        .pdf-content {
-          max-width: none;
-          margin: 0;
-          padding: 0;
-        }
-        .pdf-content h1 {
-          font-size: 24px;
-          font-weight: bold;
-          margin: 20px 0 12px 0;
-          color: #111827;
-        }
-        .pdf-content h2 {
-          font-size: 20px;
-          font-weight: bold;
-          margin: 16px 0 10px 0;
-          color: #111827;
-        }
-        .pdf-content h3 {
-          font-size: 16px;
-          font-weight: bold;
-          margin: 14px 0 8px 0;
-          color: #111827;
-        }
-        .pdf-content p {
-          margin: 8px 0;
-          text-align: justify;
-        }
-        .pdf-content ul, .pdf-content ol {
-          margin: 8px 0 8px 20px;
-          padding-left: 0;
-        }
-        .pdf-content li {
-          margin: 4px 0;
-        }
-        .pdf-content code {
-          background: #f3f4f6;
-          padding: 2px 4px;
-          border-radius: 3px;
-          font-family: 'Courier New', monospace;
-          font-size: 12px;
-        }
-        .pdf-content pre {
-          background: #f3f4f6;
-          padding: 10px;
-          border-radius: 6px;
-          overflow-wrap: break-word;
-          white-space: pre-wrap;
-          font-family: 'Courier New', monospace;
-          font-size: 12px;
-          margin: 10px 0;
-        }
-        .pdf-content blockquote {
-          border-left: 4px solid #e5e7eb;
-          padding-left: 12px;
-          margin: 12px 0;
-          font-style: italic;
-          color: #6b7280;
-        }
-        .pdf-content table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 12px 0;
-        }
-        .pdf-content th, .pdf-content td {
-          border: 1px solid #e5e7eb;
-          padding: 6px 8px;
-          text-align: left;
-        }
-        .pdf-content th {
-          background: #f9fafb;
-          font-weight: bold;
-        }
-        .pdf-content a {
-          color: #3b82f6;
-          text-decoration: underline;
-        }
+        .pdf-content { max-width: none; margin: 0; padding: 0; color: #111827; }
+        .pdf-content h1, .pdf-content h2, .pdf-content h3 { color: #111827; }
+        .pdf-content pre { white-space: pre-wrap; word-break: break-word; }
+        .pdf-content table { width: 100%; border-collapse: collapse; }
+        .pdf-content th, .pdf-content td { border: 1px solid #e5e7eb; padding: 6px 8px; }
+        .pdf-content img { max-width: 100%; height: auto; }
+        .no-break { page-break-inside: avoid; }
       `;
 
-      // Sanitize and parse markdown to HTML
+      // Render sanitized markdown into the container
       const safeMd = sanitizeMarkdown(message.content);
       const parsed = marked.parse(safeMd || '');
       const htmlContent = typeof parsed === 'string' ? parsed : await parsed;
@@ -329,60 +276,125 @@ export function MessageBubble({
       contentDiv.className = 'pdf-content';
       contentDiv.innerHTML = htmlContent;
 
+      // Try to mark large block elements to reduce awkward breaks
+      Array.from(
+        contentDiv.querySelectorAll('table, pre, blockquote, img')
+      ).forEach((el) => {
+        (el as HTMLElement).classList.add('no-break');
+      });
+
       container.appendChild(style);
       container.appendChild(contentDiv);
       document.body.appendChild(container);
 
-      // Wait for rendering
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Allow images and fonts to settle
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
-      // Use html2canvas to capture the content
+      // Capture the container at a high scale for crisp output
       const canvas = await html2canvas(container, {
-        scale: 2,
+        scale,
         useCORS: true,
         allowTaint: false,
         backgroundColor: '#ffffff',
-        width: 800,
-        height: container.scrollHeight,
         logging: false,
       });
 
-      // Create PDF
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
+      // Calculate page content height in pixels (excluding header/footer and margins)
+      const pageContentHeightMm =
+        pdfHeightMm - marginMm * 2 - headerMm - footerMm;
+      const pageContentHeightPx = Math.floor(
+        pageContentHeightMm * pxPerMm * scale
+      );
 
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
+      // Slice the canvas vertically into page-sized images with a small overlap to avoid seams
+      const overlapPx = Math.max(2, Math.round(2 * scale));
+      const slices: { dataUrl: string; heightMm: number }[] = [];
+      const totalWidthPx = canvas.width;
+      for (let y = 0; y < canvas.height; y += pageContentHeightPx - overlapPx) {
+        const sliceHeightPx = Math.min(pageContentHeightPx, canvas.height - y);
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = totalWidthPx;
+        sliceCanvas.height = sliceHeightPx;
+        const ctx = sliceCanvas.getContext('2d');
+        if (!ctx) throw new Error('Failed to create canvas context');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+        ctx.drawImage(
+          canvas,
+          0,
+          y,
+          totalWidthPx,
+          sliceHeightPx,
+          0,
+          0,
+          totalWidthPx,
+          sliceHeightPx
+        );
 
-      // Add first page
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      // Add additional pages if content is longer
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+        const dataUrl = sliceCanvas.toDataURL('image/png');
+        const heightMm = sliceHeightPx / (pxPerMm * scale);
+        slices.push({ dataUrl, heightMm });
       }
 
-      // Download the PDF
+      // Build PDF from slices
+      const pdf = new jsPDF({
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait',
+      });
+      const contentX = marginMm;
+      const contentWidth = contentWidthMm;
+
+      for (let i = 0; i < slices.length; i++) {
+        if (i > 0) pdf.addPage();
+
+        // Header
+        pdf.setFillColor('#ffffff');
+        pdf.rect(0, 0, pdfWidthMm, pdfHeightMm, 'F');
+        pdf.setFontSize(12);
+        pdf.setTextColor('#111827');
+        pdf.text('AI Response', contentX, marginMm - 4 + 8);
+        pdf.setFontSize(9);
+        pdf.setTextColor('#6b7280');
+        const now = new Date().toLocaleString();
+        pdf.text(now, pdfWidthMm - marginMm, marginMm - 4 + 8, {
+          align: 'right',
+        });
+
+        // Image content
+        const img = slices[i];
+        const imgHeight = img.heightMm;
+        pdf.addImage(
+          img.dataUrl,
+          'PNG',
+          contentX,
+          marginMm + headerMm,
+          contentWidth,
+          imgHeight
+        );
+
+        // Footer with page number
+        const pageNum = i + 1;
+        const totalPages = slices.length;
+        pdf.setFontSize(9);
+        pdf.setTextColor('#6b7280');
+        pdf.text(
+          `Page ${pageNum} of ${totalPages}`,
+          pdfWidthMm - marginMm,
+          pdfHeightMm - 6,
+          { align: 'right' }
+        );
+      }
+
+      // Trigger download
       pdf.save('aeris-response.pdf');
 
       // Cleanup
-      if (document.body.contains(container)) {
+      if (document.body.contains(container))
         document.body.removeChild(container);
-      }
     } catch (err) {
       console.error('Failed to generate PDF:', err);
-      // Fallback: try to download as text file
+      // Fallback download as plain text
       try {
         const blob = new Blob([message.content], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
