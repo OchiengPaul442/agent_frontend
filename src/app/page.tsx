@@ -73,13 +73,16 @@ export default function HomePage() {
 
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [isFilePreviewDrawerOpen, setIsFilePreviewDrawerOpen] = useState(false);
-  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [previewFile, setPreviewFile] = useState<
+    File | { name: string; size: number; type: string } | null
+  >(null);
   const [drawerWidth, setDrawerWidth] = useState(450);
   const [isMobile, setIsMobile] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [fileErrorMessage, setFileErrorMessage] = useState<string | null>(null);
   const [showDelayNotification, setShowDelayNotification] = useState(false);
+  const [storedFiles, setStoredFiles] = useState<Map<string, File>>(new Map());
   const dragCounterRef = useRef(0);
 
   // Geolocation hook
@@ -206,7 +209,7 @@ export default function HomePage() {
 
   // Create a safe sendMessage function that checks for session
   const safeSendMessage = useCallback(
-    (content: string, file?: File, role?: ResponseRole) => {
+    (content: string, file?: File, role?: ResponseRole, fileId?: string) => {
       if (!sessionId) {
         console.error('Cannot send message: Session not initialized');
         return;
@@ -216,7 +219,8 @@ export default function HomePage() {
         file,
         geolocation.latitude || undefined,
         geolocation.longitude || undefined,
-        role
+        role,
+        fileId
       );
     },
     [sessionId, sendMessage, geolocation.latitude, geolocation.longitude]
@@ -372,6 +376,11 @@ export default function HomePage() {
       setUploadedFile(null);
       return;
     }
+
+    // Clear previous files and preview
+    setStoredFiles(new Map());
+    setPreviewFile(null);
+    setIsFilePreviewDrawerOpen(false);
 
     setFileErrorMessage(null);
     setUploadedFile(file);
@@ -745,6 +754,16 @@ export default function HomePage() {
                   isLoading={isLoading}
                   onRetry={retry}
                   onEditMessage={editMessage}
+                  onFilePreview={(file) => {
+                    // Check if file has fileId and get the stored File object
+                    if (file.fileId && storedFiles.has(file.fileId)) {
+                      setPreviewFile(storedFiles.get(file.fileId)!);
+                    } else {
+                      // Fallback to metadata-only preview
+                      setPreviewFile(file);
+                    }
+                    setIsFilePreviewDrawerOpen(true);
+                  }}
                 />
               </motion.div>
             )}
@@ -769,7 +788,12 @@ export default function HomePage() {
           <div className="mx-auto max-w-3xl px-2 sm:px-4">
             <ChatInput
               onSend={(message, file, role) => {
-                safeSendMessage(message, file, role);
+                let fileId: string | undefined;
+                if (file) {
+                  fileId = `file_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+                  setStoredFiles((prev) => new Map(prev).set(fileId!, file));
+                }
+                safeSendMessage(message, file, role, fileId);
                 // Clear file after sending
                 if (uploadedFile) {
                   handleRemoveFile();

@@ -10,6 +10,12 @@ interface ChatMessagesProps {
   isLoading?: boolean;
   onRetry?: () => void;
   onEditMessage?: (messageIndex: number, newContent: string) => void;
+  onFilePreview?: (file: {
+    name: string;
+    size: number;
+    type: string;
+    fileId?: string;
+  }) => void;
 }
 
 export function ChatMessages({
@@ -17,6 +23,7 @@ export function ChatMessages({
   isLoading = false,
   onRetry,
   onEditMessage,
+  onFilePreview,
 }: ChatMessagesProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -54,6 +61,7 @@ export function ChatMessages({
                 onEdit={onEditMessage}
                 messageIndex={index}
                 onRetry={onRetry}
+                onFilePreview={onFilePreview}
               />
             );
           })}

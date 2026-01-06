@@ -113,7 +113,8 @@ export function useChat(options: UseChatOptions = {}) {
       file?: File,
       latitude?: number,
       longitude?: number,
-      role?: ResponseRole
+      role?: ResponseRole,
+      fileId?: string
     ): Promise<ChatResponse | null> => {
       if (!content.trim() && !file) return null;
       if (isLoadingRef.current) return null; // Prevent concurrent requests
@@ -136,6 +137,7 @@ export function useChat(options: UseChatOptions = {}) {
             name: file.name,
             size: file.size,
             type: file.type,
+            fileId: fileId,
           },
         }),
       };

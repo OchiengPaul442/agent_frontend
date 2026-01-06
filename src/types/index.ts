@@ -9,6 +9,7 @@ export interface Message {
     name: string;
     size: number;
     type: string;
+    fileId?: string; // Reference to stored File object
   };
 }
 

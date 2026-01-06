@@ -30,6 +30,12 @@ interface MessageBubbleProps {
   onEdit?: (messageIndex: number, newContent: string) => void;
   messageIndex?: number;
   onRetry?: () => void;
+  onFilePreview?: (file: {
+    name: string;
+    size: number;
+    type: string;
+    fileId?: string;
+  }) => void;
 }
 
 const CodeBlock = React.memo(function CodeBlock({
@@ -182,6 +188,7 @@ export function MessageBubble({
   onEdit,
   messageIndex,
   onRetry,
+  onFilePreview,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
@@ -657,10 +664,11 @@ export function MessageBubble({
             >
               <div
                 className={cn(
-                  'border-border flex items-center gap-3 rounded-2xl border p-3.5 shadow-sm',
+                  'border-border hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-2xl border p-3.5 shadow-sm transition-colors',
                   'file-preview',
                   isUser ? 'file-preview-user' : 'bg-card'
                 )}
+                onClick={() => onFilePreview && onFilePreview(message.file!)}
               >
                 <div className="bg-muted flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl">
                   <Image
