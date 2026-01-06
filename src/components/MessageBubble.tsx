@@ -22,6 +22,7 @@ import {
 } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { ThinkingDisplay } from './ThinkingDisplay';
 
 interface MessageBubbleProps {
   message: Message;
@@ -799,6 +800,21 @@ export function MessageBubble({
                 >
                   {sanitizeMarkdown(message.content)}
                 </ReactMarkdown>
+
+                {/* Display thinking steps if available */}
+                {!isUser &&
+                  message.thinking_steps &&
+                  message.thinking_steps.length > 0 && (
+                    <div className="mt-4">
+                      <ThinkingDisplay
+                        thinking={message.thinking_steps}
+                        isStreaming={message.isStreaming}
+                        duration={message.thinking_duration || 0}
+                        defaultExpanded={true}
+                      />
+                    </div>
+                  )}
+
                 {/* Streaming cursor indicator */}
                 {message.isStreaming && (
                   <span className="bg-foreground ml-0.5 inline-block h-5 w-0.5 animate-pulse align-middle" />

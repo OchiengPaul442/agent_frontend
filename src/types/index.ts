@@ -11,6 +11,9 @@ export interface Message {
     type: string;
     fileId?: string; // Reference to stored File object
   };
+  thinking_steps?: string[]; // AI reasoning steps for Chain-of-Thought
+  reasoning_content?: string; // Full reasoning content as string
+  thinking_duration?: number; // Duration of thinking process in milliseconds
 }
 
 export interface Session {
@@ -57,6 +60,8 @@ export interface ChatResponse {
   document_filename?: string;
   tokens_used: number;
   cached: boolean;
+  thinking_steps?: string[]; // AI reasoning steps for Chain-of-Thought
+  reasoning_content?: string; // Full reasoning content as string
 }
 
 export interface AirQualityQuery {

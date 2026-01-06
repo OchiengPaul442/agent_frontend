@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@airqo/icons-react": "^0.2.7",
+    "@microsoft/fetch-event-source": "^2.0.1",
     "@tailwindcss/typography": "^0.5.19",
     "@types/react-syntax-highlighter": "^15.5.13",
     "clsx": "^2.1.1",
