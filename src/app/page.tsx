@@ -22,7 +22,7 @@ const generateSessionId = () => {
 
 // Starter questions for air quality (professional / policy oriented)
 const STARTER_QUESTIONS = [
-  "What's the current air quality in New York City?",
+  "What's the current air quality in Kampala City?",
   'How does air pollution affect human health?',
   'What will the air quality be like tomorrow in London?',
   'Can you explain air quality standards and regulations?',
