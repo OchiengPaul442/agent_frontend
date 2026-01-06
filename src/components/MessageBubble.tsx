@@ -407,6 +407,13 @@ export function MessageBubble({
             continue;
           }
 
+          // Horizontal rules
+          if (line.match(/^[\s]*[-*_]{3,}[\s]*$/)) {
+            blocks.push({ type: 'hr', content: '' });
+            i++;
+            continue;
+          }
+
           // Lists
           if (line.match(/^[\s]*[-*+]\s+/) || line.match(/^[\s]*\d+\.\s+/)) {
             const listItems: string[] = [];
@@ -459,7 +466,10 @@ export function MessageBubble({
       for (const block of blocks) {
         switch (block.type) {
           case 'header': {
-            checkNewPage(15);
+            checkNewPage(20);
+            // Add spacing before header
+            yPosition += 3;
+
             const fontSize =
               block.level === 1 ? 16 : block.level === 2 ? 14 : 12;
             pdf.setFontSize(fontSize);
@@ -473,12 +483,15 @@ export function MessageBubble({
               yPosition,
               contentWidth
             );
-            yPosition += lineCount * (block.level === 1 ? 8 : 7) + 3;
+            yPosition += lineCount * (block.level === 1 ? 8 : 7) + 5;
             break;
           }
 
           case 'paragraph': {
-            checkNewPage(10);
+            checkNewPage(15);
+            // Add spacing before paragraph
+            yPosition += 2;
+
             pdf.setFontSize(11);
             pdf.setFont('times', 'normal');
             pdf.setTextColor(55, 65, 81);
@@ -490,12 +503,15 @@ export function MessageBubble({
               yPosition,
               contentWidth
             );
-            yPosition += lineCount * 6 + 2;
+            yPosition += lineCount * 6 + 4;
             break;
           }
 
           case 'list': {
-            checkNewPage(10);
+            checkNewPage(15);
+            // Add spacing before list
+            yPosition += 2;
+
             pdf.setFontSize(11);
             pdf.setFont('times', 'normal');
             pdf.setTextColor(55, 65, 81);
@@ -513,46 +529,78 @@ export function MessageBubble({
                 yPosition += 6;
               });
             });
-            yPosition += 2;
+            yPosition += 4;
             break;
           }
 
           case 'code': {
             const codeLines = block.content.split('\n');
-            const estimatedHeight = codeLines.length * 5 + 15;
+            const maxLineLength = Math.max(
+              ...codeLines.map((line) => line.length)
+            );
+            const estimatedHeight = codeLines.length * 5 + 20;
             checkNewPage(estimatedHeight);
 
-            // Code block header
-            pdf.setFillColor(249, 250, 251);
+            // Add spacing before code block
+            yPosition += 3;
+
+            // Code block header with language
+            pdf.setFillColor(249, 250, 251); // light gray background
             pdf.rect(margin, yPosition - 3, contentWidth, 8, 'F');
             pdf.setFontSize(9);
             pdf.setFont('times', 'bold');
-            pdf.setTextColor(75, 85, 99);
+            pdf.setTextColor(75, 85, 99); // gray-600
             pdf.text(block.language || 'code', margin + 2, yPosition + 2);
             yPosition += 8;
 
-            // Code content
+            // Code content background
             pdf.setFillColor(249, 250, 251);
             const codeBlockHeight = codeLines.length * 5 + 4;
             pdf.rect(margin, yPosition - 2, contentWidth, codeBlockHeight, 'F');
 
+            // Code border
+            pdf.setDrawColor(229, 231, 235); // gray-200
+            pdf.setLineWidth(0.3);
+            pdf.rect(margin, yPosition - 2, contentWidth, codeBlockHeight);
+
             pdf.setFontSize(9);
             pdf.setFont('courier', 'normal');
-            pdf.setTextColor(17, 24, 39);
+            pdf.setTextColor(17, 24, 39); // gray-900
 
-            codeLines.forEach((codeLine) => {
+            codeLines.forEach((codeLine, index) => {
               checkNewPage(5);
-              const displayLine = codeLine.substring(0, 90);
-              renderText(displayLine, margin + 2, yPosition);
-              yPosition += 5;
+              // Handle long lines by wrapping them
+              const wrappedLines = pdf.splitTextToSize(
+                codeLine,
+                contentWidth - 8
+              );
+              wrappedLines.forEach((wrappedLine: string) => {
+                checkNewPage(5);
+                pdf.text(wrappedLine, margin + 4, yPosition);
+                yPosition += 5;
+              });
             });
-            yPosition += 6;
+            yPosition += 10; // Extra spacing after code block
+            break;
+          }
+
+          case 'hr': {
+            checkNewPage(15);
+            // Add spacing before horizontal rule
+            yPosition += 5;
+            // Draw horizontal line
+            pdf.setDrawColor(209, 213, 219); // gray-300
+            pdf.setLineWidth(0.5);
+            pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+            yPosition += 10; // Add spacing after the line
             break;
           }
 
           case 'table': {
             if (block.headers && block.rows) {
-              checkNewPage(20);
+              checkNewPage(25);
+              // Add spacing before table
+              yPosition += 3;
 
               const tableData = block.rows.map((row) =>
                 row.map((cell) => stripMarkdown(cell))
@@ -585,7 +633,7 @@ export function MessageBubble({
                 theme: 'grid',
               });
 
-              yPosition = (pdf as any).lastAutoTable.finalY + 5;
+              yPosition = (pdf as any).lastAutoTable.finalY + 8;
             }
             break;
           }

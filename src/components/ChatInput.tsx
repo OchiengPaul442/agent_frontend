@@ -65,6 +65,26 @@ export function ChatInput({
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
+  const selectedRoleRef = useRef<ResponseRole>('general');
+
+  // Load selected role from sessionStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedRole = sessionStorage.getItem('selectedRole') as ResponseRole;
+      if (savedRole && roleOptions.some((opt) => opt.value === savedRole)) {
+        setSelectedRole(savedRole);
+        selectedRoleRef.current = savedRole;
+      }
+    }
+  }, []);
+
+  // Save selected role to sessionStorage when it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('selectedRole', selectedRole);
+    }
+    selectedRoleRef.current = selectedRole;
+  }, [selectedRole]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -138,6 +158,8 @@ export function ChatInput({
     )
       return;
 
+    const currentRole = selectedRoleRef.current;
+
     if (uploadedFile) {
       setIsUploading(true);
       // Simulate upload start
@@ -145,7 +167,7 @@ export function ChatInput({
         onSend(
           input.trim() || 'Analyze this document',
           uploadedFile || undefined,
-          selectedRole
+          currentRole
         );
         setInput('');
         if (onRemoveFile) {
@@ -159,7 +181,7 @@ export function ChatInput({
       onSend(
         input.trim() || 'Analyze this document',
         uploadedFile || undefined,
-        selectedRole
+        currentRole
       );
       setInput('');
     }
@@ -523,7 +545,9 @@ export function ChatInput({
                     {roleOptions.map((option) => (
                       <button
                         key={option.value}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           setSelectedRole(option.value);
                           setIsRoleDropdownOpen(false);
                         }}
