@@ -82,9 +82,8 @@ class ApiService {
     if (data.longitude !== undefined) {
       formData.append('longitude', data.longitude.toString());
     }
-    if (data.role) {
-      formData.append('role', data.role);
-    }
+    // Always append role, defaulting to 'general' if not provided
+    formData.append('role', data.role || 'general');
 
     return this.fetchWithError<ChatResponse>(`${API_BASE}/agent/chat`, {
       method: 'POST',

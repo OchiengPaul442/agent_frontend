@@ -213,6 +213,15 @@ export function MessageBubble({
     };
   }, []);
 
+  // Adjust textarea height when editing
+  React.useEffect(() => {
+    if (isEditing && editTextareaRef.current) {
+      const textarea = editTextareaRef.current;
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [isEditing, editContent]);
+
   const setOuterRef = (el: HTMLDivElement | null) => {
     outerRef.current = el;
     if (outerRefKey && registerRef) {

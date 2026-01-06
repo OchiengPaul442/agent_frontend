@@ -427,9 +427,7 @@ export default function HomePage() {
       // Delete the old session if it exists
       if (sessionId) {
         try {
-          console.log('Deleting old session:', sessionId);
           await apiService.deleteSession(sessionId);
-          console.log('Successfully deleted old session');
         } catch (err) {
           console.error('Failed to delete old session:', err);
           // Continue anyway - don't let deletion failure block new session creation
@@ -440,7 +438,6 @@ export default function HomePage() {
       clearMessages();
 
       // Create new session from backend
-      console.log('Creating new session...');
       const newSession = await apiService.createSession();
       console.log('New session created:', newSession.session_id);
 
