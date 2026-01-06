@@ -99,6 +99,14 @@ export default function HomePage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Cleanup stored files when session changes or component unmounts
+  useEffect(() => {
+    return () => {
+      // Clear stored files to prevent memory leaks
+      setStoredFiles(new Map());
+    };
+  }, [sessionId]);
+
   const {
     messages,
     isLoading,
@@ -790,6 +798,8 @@ export default function HomePage() {
               onSend={(message, file, role) => {
                 let fileId: string | undefined;
                 if (file) {
+                  // Clear old stored files before adding new one to prevent memory buildup
+                  setStoredFiles(new Map());
                   fileId = `file_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
                   setStoredFiles((prev) => new Map(prev).set(fileId!, file));
                 }

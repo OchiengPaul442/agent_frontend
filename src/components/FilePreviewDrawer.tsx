@@ -1,11 +1,23 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AqX, AqFile02 } from '@airqo/icons-react';
 import Image from 'next/image';
 import * as XLSX from 'xlsx';
 import { cn } from '@/utils/helpers';
+
+// Debounce utility function
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
 
 interface FilePreviewDrawerProps {
   isOpen: boolean;
@@ -30,6 +42,10 @@ export function FilePreviewDrawer({
   const resizeRef = useRef<HTMLDivElement>(null);
   const isResizingRef = useRef(false);
   const [isMobile, setIsMobile] = useState(false);
+  const fileRef = useRef<
+    File | { name: string; size: number; type: string } | null
+  >(null);
+  const blobUrlsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const checkMobile = () => {
@@ -40,6 +56,29 @@ export function FilePreviewDrawer({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Cleanup blob URLs when component unmounts or file changes
+  useEffect(() => {
+    return () => {
+      // Revoke all stored blob URLs to prevent memory leaks
+      blobUrlsRef.current.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+      blobUrlsRef.current.clear();
+    };
+  }, []);
+
+  // Cleanup when file changes
+  useEffect(() => {
+    if (file !== fileRef.current) {
+      // Revoke previous blob URLs
+      blobUrlsRef.current.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+      blobUrlsRef.current.clear();
+      fileRef.current = file;
+    }
+  }, [file]);
 
   // Expose sheet change function to window for HTML select
   useEffect(() => {
@@ -56,39 +95,44 @@ export function FilePreviewDrawer({
     };
   }, []);
 
-  // Update content when sheet changes
-  useEffect(() => {
+  // Optimized sheet rendering with useCallback
+  const renderSheet = useCallback((sheetIndex: number, workbook: any) => {
+    const sheetName = workbook.SheetNames[sheetIndex];
+    const worksheet = workbook.Sheets[sheetName];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+      header: 1,
+    }) as unknown[][];
+
+    const maxRows = 1000; // Limit rows to prevent UI freezing
+    const displayData = jsonData.slice(0, maxRows);
+    const hasMoreRows = jsonData.length > maxRows;
+
+    return `
+      <div class="overflow-x-auto">
+        <div class="mb-3 text-sm text-muted-foreground">
+          Sheet: ${sheetName} (${jsonData.length} rows${hasMoreRows ? `, showing first ${maxRows}` : ''})
+        </div>
+        <table class="w-full border-collapse border border-border text-xs sm:text-sm">
+          <tbody>
+            ${displayData
+              .map(
+                (row: unknown[], rowIndex: number) => `
+              <tr class="${rowIndex === 0 ? 'bg-muted font-medium' : 'hover:bg-muted/50'}">
+                ${row.map((cell: unknown) => `<td class="border border-border px-2 py-1 sm:px-3 sm:py-2 break-words max-w-32 sm:max-w-none text-foreground">${String(cell || '')}</td>`).join('')}
+              </tr>
+            `
+              )
+              .join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }, []);
+
+  // Update content when sheet changes - optimized with useCallback
+  const updateSheetContent = useCallback(() => {
     if (workbookData && content && content.includes('sheet-selector')) {
-      const renderSheet = (sheetIndex: number) => {
-        const sheetName = workbookData.SheetNames[sheetIndex];
-        const worksheet = workbookData.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, {
-          header: 1,
-        }) as unknown[][];
-
-        return `
-          <div class="overflow-x-auto">
-            <div class="mb-3 text-sm text-muted-foreground">
-              Sheet: ${sheetName} (${jsonData.length} rows)
-            </div>
-            <table class="w-full border-collapse border border-border text-xs sm:text-sm">
-              <tbody>
-                ${jsonData
-                  .map(
-                    (row: unknown[], rowIndex: number) => `
-                  <tr class="${rowIndex === 0 ? 'bg-muted font-medium' : 'hover:bg-muted/50'}">
-                    ${row.map((cell: unknown) => `<td class="border border-border px-2 py-1 sm:px-3 sm:py-2 break-words max-w-32 sm:max-w-none text-foreground">${String(cell || '')}</td>`).join('')}
-                  </tr>
-                `
-                  )
-                  .join('')}
-              </tbody>
-            </table>
-          </div>
-        `;
-      };
-
-      const newSheetContent = renderSheet(currentSheet);
+      const newSheetContent = renderSheet(currentSheet, workbookData);
       const sheetSelector =
         workbookData.SheetNames.length > 1
           ? `
@@ -112,7 +156,11 @@ export function FilePreviewDrawer({
 
       setContent(fullContent);
     }
-  }, [currentSheet, workbookData]);
+  }, [workbookData, content, currentSheet, renderSheet]);
+
+  useEffect(() => {
+    updateSheetContent();
+  }, [updateSheetContent]);
 
   useEffect(() => {
     return () => {
@@ -123,171 +171,158 @@ export function FilePreviewDrawer({
     };
   }, [content]);
 
-  useEffect(() => {
-    if (file && isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsLoading(true);
-      setError(null);
-      setContent(null);
-      setWorkbookData(null);
-      setCurrentSheet(0);
+  // Optimized file processing with useCallback to prevent unnecessary re-runs
+  const processFile = useCallback(async (fileToProcess: File) => {
+    setIsLoading(true);
+    setError(null);
+    setContent(null);
+    setWorkbookData(null);
+    setCurrentSheet(0);
 
-      // Check if we have a real File object or just metadata
-      if (file instanceof File) {
-        // We have a real file, proceed with reading
-        const reader = new FileReader();
+    try {
+      if (
+        fileToProcess.type === 'application/pdf' ||
+        fileToProcess.type.includes('pdf')
+      ) {
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error('Failed to read PDF file'));
+          reader.readAsDataURL(fileToProcess);
+        });
 
-        if (file.type === 'application/pdf' || file.type.includes('pdf')) {
-          reader.onload = () => {
-            const dataUrl = reader.result as string;
-            // Convert data URL to blob URL for better PDF parameter support
-            fetch(dataUrl)
-              .then((res) => res.blob())
-              .then((blob) => {
-                const blobUrl = URL.createObjectURL(blob);
-                setContent(
-                  `${blobUrl}#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&messages=0&view=Fit`
-                );
-                setIsLoading(false);
-              })
-              .catch(() => {
-                // Fallback to data URL if blob creation fails
-                setContent(
-                  `${dataUrl}#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&messages=0&view=Fit`
-                );
-                setIsLoading(false);
-              });
-          };
-          reader.readAsDataURL(file);
-        } else if (
-          file.type === 'text/csv' ||
-          file.name.toLowerCase().endsWith('.csv')
-        ) {
-          reader.onload = () => {
-            const text = reader.result as string;
-            const rows = text.split('\n').filter((row) => row.trim());
-            const tableHtml = `
-              <div class="overflow-x-auto">
-                <table class="w-full border-collapse border border-border text-xs sm:text-sm">
-                  <thead>
-                    <tr class="bg-muted">
-                      ${
-                        rows[0]
-                          ?.split(',')
-                          .map(
-                            (cell) =>
-                              `<th class="border border-border px-2 py-1 sm:px-3 sm:py-2 text-left font-medium text-foreground">${cell.trim()}</th>`
-                          )
-                          .join('') || ''
-                      }
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${rows
-                      .slice(1)
+        // Convert data URL to blob URL for better PDF parameter support
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        blobUrlsRef.current.add(blobUrl);
+
+        setContent(
+          `${blobUrl}#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&messages=0&view=Fit`
+        );
+      } else if (
+        fileToProcess.type === 'text/csv' ||
+        fileToProcess.name.toLowerCase().endsWith('.csv')
+      ) {
+        const text = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error('Failed to read CSV file'));
+          reader.readAsText(fileToProcess);
+        });
+
+        const rows = text.split('\n').filter((row) => row.trim());
+        const maxRows = 1000; // Limit rows to prevent UI freezing
+        const displayRows = rows.slice(0, maxRows);
+        const hasMoreRows = rows.length > maxRows;
+
+        const tableHtml = `
+          <div class="overflow-x-auto">
+            ${hasMoreRows ? `<div class="mb-2 text-sm text-muted-foreground">Showing first ${maxRows} rows of ${rows.length} total rows</div>` : ''}
+            <table class="w-full border-collapse border border-border text-xs sm:text-sm">
+              <thead>
+                <tr class="bg-muted">
+                  ${
+                    displayRows[0]
+                      ?.split(',')
                       .map(
-                        (row, index) => `
-                      <tr class="${index % 2 === 0 ? 'bg-background' : 'bg-muted/30'} hover:bg-muted/50">
-                        ${row
-                          .split(',')
-                          .map(
-                            (cell) =>
-                              `<td class="border border-border px-2 py-1 sm:px-3 sm:py-2 break-words max-w-32 sm:max-w-none text-foreground">${cell.trim()}</td>`
-                          )
-                          .join('')}
-                      </tr>
-                    `
+                        (cell) =>
+                          `<th class="border border-border px-2 py-1 sm:px-3 sm:py-2 text-left font-medium text-foreground">${cell.trim()}</th>`
+                      )
+                      .join('') || ''
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                ${displayRows
+                  .slice(1)
+                  .map(
+                    (row, index) => `
+                  <tr class="${index % 2 === 0 ? 'bg-background' : 'bg-muted/30'} hover:bg-muted/50">
+                    ${row
+                      .split(',')
+                      .map(
+                        (cell) =>
+                          `<td class="border border-border px-2 py-1 sm:px-3 sm:py-2 break-words max-w-32 sm:max-w-none text-foreground">${cell.trim()}</td>`
                       )
                       .join('')}
-                  </tbody>
-                </table>
-              </div>
-            `;
-            setContent(tableHtml);
-            setIsLoading(false);
-          };
-          reader.readAsText(file);
-        } else if (
-          file.type.includes('excel') ||
-          file.type.includes('spreadsheet') ||
-          file.name.toLowerCase().endsWith('.xlsx') ||
-          file.name.toLowerCase().endsWith('.xls')
-        ) {
-          reader.onload = () => {
-            try {
-              const data = new Uint8Array(reader.result as ArrayBuffer);
-              const workbook = XLSX.read(data, { type: 'array' });
-              setWorkbookData(workbook);
-              setCurrentSheet(0);
+                  </tr>
+                `
+                  )
+                  .join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        setContent(tableHtml);
+      } else if (
+        fileToProcess.type.includes('excel') ||
+        fileToProcess.type.includes('spreadsheet') ||
+        fileToProcess.name.toLowerCase().endsWith('.xlsx') ||
+        fileToProcess.name.toLowerCase().endsWith('.xls')
+      ) {
+        const arrayBuffer = await new Promise<ArrayBuffer>(
+          (resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as ArrayBuffer);
+            reader.onerror = () =>
+              reject(new Error('Failed to read Excel file'));
+            reader.readAsArrayBuffer(fileToProcess);
+          }
+        );
 
-              const renderSheet = (sheetIndex: number) => {
-                const sheetName = workbook.SheetNames[sheetIndex];
-                const worksheet = workbook.Sheets[sheetName];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, {
-                  header: 1,
-                }) as unknown[][];
+        const workbook = XLSX.read(new Uint8Array(arrayBuffer), {
+          type: 'array',
+        });
+        setWorkbookData(workbook);
+        setCurrentSheet(0);
 
-                return `
-                  <div class="overflow-x-auto">
-                    <div class="mb-3 text-sm text-muted-foreground">
-                      Sheet: ${sheetName} (${jsonData.length} rows)
-                    </div>
-                    <table class="w-full border-collapse border border-border text-xs sm:text-sm">
-                      <tbody>
-                        ${jsonData
-                          .map(
-                            (row: unknown[], rowIndex: number) => `
-                          <tr class="${rowIndex === 0 ? 'bg-muted font-medium' : 'hover:bg-muted/50'}">
-                            ${row.map((cell: unknown) => `<td class="border border-border px-2 py-1 sm:px-3 sm:py-2 break-words max-w-32 sm:max-w-none text-foreground">${String(cell || '')}</td>`).join('')}
-                          </tr>
-                        `
-                          )
-                          .join('')}
-                      </tbody>
-                    </table>
-                  </div>
-                `;
-              };
+        const sheetSelector =
+          workbook.SheetNames.length > 1
+            ? `
+          <div class="mb-4 p-3 bg-muted/30 rounded-lg">
+            <label class="block text-sm font-medium text-foreground mb-2">Select Sheet:</label>
+            <select id="sheet-selector" class="bg-background border border-border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-ring focus:outline-none w-full" onchange="window.changeSheet(this.value)">
+              ${workbook.SheetNames.map((name: string, index: number) => `<option value="${index}" ${index === 0 ? 'selected' : ''}>${name}</option>`).join('')}
+            </select>
+          </div>
+        `
+            : '';
 
-              const sheetSelector =
-                workbook.SheetNames.length > 1
-                  ? `
-                <div class="mb-4 p-3 bg-muted/30 rounded-lg">
-                  <label class="block text-sm font-medium text-foreground mb-2">Select Sheet:</label>
-                  <select id="sheet-selector" class="bg-background border border-border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-ring focus:outline-none w-full" onchange="window.changeSheet(this.value)">
-                    ${workbook.SheetNames.map((name, index) => `<option value="${index}" ${index === 0 ? 'selected' : ''}>${name}</option>`).join('')}
-                  </select>
-                </div>
-              `
-                  : '';
+        const initialContent = renderSheet(0, workbook);
+        const fullContent = `
+          <div class="space-y-4">
+            ${sheetSelector}
+            <div id="sheet-content">
+              ${initialContent}
+            </div>
+          </div>
+        `;
 
-              const initialContent = renderSheet(0);
+        setContent(fullContent);
+      } else {
+        setError('Unsupported file type for preview');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to process file');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-              const fullContent = `
-                <div class="space-y-4">
-                  ${sheetSelector}
-                  <div id="sheet-content">
-                    ${initialContent}
-                  </div>
-                </div>
-              `;
+  // Debounced file processing to prevent rapid re-processing
+  const debouncedProcessFile = useCallback(
+    debounce((fileToProcess: File) => {
+      processFile(fileToProcess);
+    }, 300),
+    [processFile]
+  );
 
-              setContent(fullContent);
-            } catch (err) {
-              setError('Failed to parse Excel file');
-            }
-            setIsLoading(false);
-          };
-          reader.readAsArrayBuffer(file);
-        } else {
-          setError('Unsupported file type for preview');
-          setIsLoading(false);
-        }
-
-        reader.onerror = () => {
-          setError('Failed to read file');
-          setIsLoading(false);
-        };
+  // Main file processing effect - only runs when file or isOpen changes
+  useEffect(() => {
+    if (file && isOpen) {
+      if (file instanceof File) {
+        debouncedProcessFile(file);
       } else {
         // We only have file metadata, show info view
         const fileInfo = file as { name: string; size: number; type: string };
@@ -310,7 +345,7 @@ export function FilePreviewDrawer({
         setIsLoading(false);
       }
     }
-  }, [file, isOpen]);
+  }, [file, isOpen, debouncedProcessFile]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
