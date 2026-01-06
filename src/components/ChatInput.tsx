@@ -35,6 +35,39 @@ interface ChatInputProps {
   onFilePreview?: (file: File) => void;
 }
 
+// Role options with professional names
+const roleOptions: {
+  value: ResponseRole;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: 'general',
+    label: 'Balanced',
+    description: 'Well-rounded responses for everyone',
+  },
+  {
+    value: 'executive',
+    label: 'Executive Summary',
+    description: 'High-level insights and key takeaways',
+  },
+  {
+    value: 'technical',
+    label: 'Technical Deep-Dive',
+    description: 'Detailed analysis with scientific data',
+  },
+  {
+    value: 'simple',
+    label: 'Simple & Clear',
+    description: 'Easy-to-understand explanations',
+  },
+  {
+    value: 'policy',
+    label: 'Policy & Compliance',
+    description: 'Regulatory and policy-focused insights',
+  },
+];
+
 export function ChatInput({
   onSend,
   onStop,
@@ -72,8 +105,14 @@ export function ChatInput({
     if (typeof window !== 'undefined') {
       const savedRole = sessionStorage.getItem('selectedRole') as ResponseRole;
       if (savedRole && roleOptions.some((opt) => opt.value === savedRole)) {
-        setSelectedRole(savedRole);
-        selectedRoleRef.current = savedRole;
+        setSelectedRole((prevRole) => {
+          // Only update if the value actually changed
+          if (prevRole !== savedRole) {
+            selectedRoleRef.current = savedRole;
+            return savedRole;
+          }
+          return prevRole; // Return previous value to avoid re-render
+        });
       }
     }
   }, []);
@@ -112,39 +151,6 @@ export function ChatInput({
     externalErrorMessage !== undefined
       ? externalErrorMessage
       : internalErrorMessage;
-
-  // Role options with professional names
-  const roleOptions: {
-    value: ResponseRole;
-    label: string;
-    description: string;
-  }[] = [
-    {
-      value: 'general',
-      label: 'Balanced',
-      description: 'Well-rounded responses for everyone',
-    },
-    {
-      value: 'executive',
-      label: 'Executive Summary',
-      description: 'High-level insights and key takeaways',
-    },
-    {
-      value: 'technical',
-      label: 'Technical Deep-Dive',
-      description: 'Detailed analysis with scientific data',
-    },
-    {
-      value: 'simple',
-      label: 'Simple & Clear',
-      description: 'Easy-to-understand explanations',
-    },
-    {
-      value: 'policy',
-      label: 'Policy & Compliance',
-      description: 'Regulatory and policy-focused insights',
-    },
-  ];
 
   const selectedRoleOption =
     roleOptions.find((opt) => opt.value === selectedRole) || roleOptions[0];
@@ -404,7 +410,7 @@ export function ChatInput({
       {/* Input Area */}
       <div
         className={cn(
-          'bg-background relative flex min-h-[120px] flex-col rounded-3xl border-2 transition-all',
+          'bg-background relative flex min-h-30 flex-col rounded-3xl border-2 bg-[#161616] transition-all',
           'border-muted-foreground/30',
           'shadow-sm'
         )}
@@ -430,7 +436,7 @@ export function ChatInput({
           rows={1}
           className={cn(
             'text-foreground placeholder:text-muted-foreground flex-1 resize-none border-0 bg-transparent px-4 py-3 text-sm focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:text-base',
-            'min-h-[60px]'
+            'min-h-15'
           )}
           style={{
             height: 'auto',
