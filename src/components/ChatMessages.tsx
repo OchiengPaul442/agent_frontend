@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface ChatMessagesProps {
   messages: Message[];
   isLoading?: boolean;
-  onRetry?: () => void;
+  onRetry?: (messageIndex: number) => void;
   onEditMessage?: (messageIndex: number, newContent: string) => void;
   onFilePreview?: (file: {
     name: string;
@@ -52,6 +52,13 @@ export function ChatMessages({
         {Array.isArray(messages) &&
           messages.map((message, index) => {
             const key = `${message.timestamp}-${index}`;
+            const nextMessage = messages[index + 1];
+            const hasNextMessage =
+              nextMessage && nextMessage.role === 'assistant';
+            const isCanceled =
+              message.isError ||
+              (message.role === 'user' && !nextMessage && !isLoading);
+
             return (
               <MessageBubble
                 key={key}
@@ -62,6 +69,8 @@ export function ChatMessages({
                 messageIndex={index}
                 onRetry={onRetry}
                 onFilePreview={onFilePreview}
+                hasNextMessage={hasNextMessage}
+                isCanceled={isCanceled}
               />
             );
           })}

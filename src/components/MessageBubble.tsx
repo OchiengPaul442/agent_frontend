@@ -29,13 +29,15 @@ interface MessageBubbleProps {
   registerRef?: (key: string, el: HTMLDivElement | null) => void;
   onEdit?: (messageIndex: number, newContent: string) => void;
   messageIndex?: number;
-  onRetry?: () => void;
+  onRetry?: (messageIndex: number) => void;
   onFilePreview?: (file: {
     name: string;
     size: number;
     type: string;
     fileId?: string;
   }) => void;
+  hasNextMessage?: boolean;
+  isCanceled?: boolean;
 }
 
 const CodeBlock = React.memo(function CodeBlock({
@@ -189,6 +191,8 @@ export function MessageBubble({
   messageIndex,
   onRetry,
   onFilePreview,
+  hasNextMessage = false,
+  isCanceled = false,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
@@ -266,7 +270,7 @@ export function MessageBubble({
         pdf.setFontSize(9);
         pdf.setFont('times', 'normal');
         pdf.setTextColor(107, 114, 128);
-        pdf.text('Aeris', margin, pageHeight - 10);
+        pdf.text('Aeris-AQ', margin, pageHeight - 10);
         pdf.text(`Page ${pageNumber}`, pageWidth - margin, pageHeight - 10, {
           align: 'right',
         });
@@ -582,7 +586,7 @@ export function MessageBubble({
       addFooter();
 
       // Save the PDF
-      pdf.save('aeris-response.pdf');
+      pdf.save('aeris-aq-response.pdf');
     } catch (err) {
       console.error('Failed to generate PDF:', err);
       // Fallback download as plain text
@@ -591,7 +595,7 @@ export function MessageBubble({
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'aeris-response.txt';
+        a.download = 'aeris-aq-response.txt';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -815,6 +819,15 @@ export function MessageBubble({
                   >
                     <AqEdit01 className="h-4 w-4" />
                   </button>
+                  {(hasNextMessage || isCanceled) && (
+                    <button
+                      onClick={() => onRetry?.(messageIndex!)}
+                      className="text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer rounded-lg p-2 transition-colors"
+                      title="Retry message"
+                    >
+                      <AqRefreshCw01 className="h-4 w-4" />
+                    </button>
+                  )}
                   <button
                     onClick={handleCopy}
                     className="text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer rounded-lg p-2 transition-colors"
@@ -831,7 +844,7 @@ export function MessageBubble({
               {!isUser && (
                 <>
                   <button
-                    onClick={onRetry}
+                    onClick={() => onRetry?.(messageIndex!)}
                     className="text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer rounded-lg p-2 transition-colors"
                     title="Retry response"
                   >

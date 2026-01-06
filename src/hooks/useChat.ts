@@ -148,6 +148,14 @@ export function useChat(options: UseChatOptions = {}) {
       isLoadingRef.current = true;
 
       try {
+        if (file) {
+          console.log('📤 Sending message with file:', {
+            message: content,
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type,
+          });
+        }
         const response = await apiService.sendMessage(
           {
             message: content,
@@ -321,21 +329,101 @@ export function useChat(options: UseChatOptions = {}) {
     [messages, options, animateTypewriter]
   );
 
-  const retry = useCallback(() => {
-    if (messages.length > 0 && !isLoadingRef.current) {
-      const lastUserMessage = [...messages]
-        .reverse()
-        .find((m) => m.role === 'user');
-      if (lastUserMessage) {
-        // Remove any error messages after the last user message
-        setMessages((prev) => {
-          const lastUserIndex = prev.lastIndexOf(lastUserMessage);
-          return prev.slice(0, lastUserIndex + 1);
-        });
-        sendMessage(lastUserMessage.content);
+  const retryMessage = useCallback(
+    async (messageIndex: number): Promise<ChatResponse | null> => {
+      const message = messages[messageIndex];
+      if (!message || isLoadingRef.current) return null;
+
+      // Cancel any ongoing request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
-    }
-  }, [messages, sendMessage]);
+
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      let targetMessageIndex = messageIndex;
+      let targetMessage = message;
+
+      // If this is an assistant message, find the preceding user message
+      if (message.role === 'assistant') {
+        // Find the user message that prompted this response
+        for (let i = messageIndex - 1; i >= 0; i--) {
+          if (messages[i].role === 'user') {
+            targetMessageIndex = i;
+            targetMessage = messages[i];
+            break;
+          }
+        }
+      }
+
+      // Remove all messages after the target message
+      setMessages((prev) => prev.slice(0, targetMessageIndex + 1));
+
+      setIsLoading(true);
+      setError(null);
+      isLoadingRef.current = true;
+
+      try {
+        // Get the conversation history up to the target message
+        const historyUpToMessage = messages.slice(0, targetMessageIndex);
+
+        const response = await apiService.sendMessage(
+          {
+            message: targetMessage.content,
+            session_id: options.sessionId,
+            history: historyUpToMessage,
+            save_to_db: false,
+            // Note: We don't pass the file when retrying as it's already been processed
+          },
+          { signal: controller.signal }
+        );
+
+        const sanitizedContent = sanitizeMarkdown(response.response);
+        const timestamp = new Date().toISOString();
+
+        // Add placeholder message for streaming effect
+        const placeholderMessage: Message = {
+          role: 'assistant',
+          content: '',
+          timestamp: timestamp,
+          tools_used: response.tools_used,
+          isStreaming: true,
+        };
+
+        setMessages((prev) => [...prev, placeholderMessage]);
+
+        // Start typewriter animation
+        animateTypewriter(sanitizedContent, timestamp, response.tools_used);
+
+        return response;
+      } catch (err) {
+        // Don't handle aborted requests as errors
+        if (err instanceof Error && err.name === 'AbortError') {
+          return null;
+        }
+
+        const error =
+          err instanceof Error ? err : new Error('Failed to retry message');
+        options.onError?.(error);
+
+        // Add error message instead of removing messages
+        const errorMessage: Message = {
+          role: 'assistant',
+          content: `Error: ${error.message}`,
+          timestamp: new Date().toISOString(),
+          isError: true,
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+        return null;
+      } finally {
+        setIsLoading(false);
+        isLoadingRef.current = false;
+        abortControllerRef.current = null;
+      }
+    },
+    [messages, options, animateTypewriter]
+  );
 
   // Function to add error messages to chat without sending to API
   const addErrorMessage = useCallback((content: string) => {
@@ -348,6 +436,40 @@ export function useChat(options: UseChatOptions = {}) {
     setMessages((prev) => [...prev, errorMessage]);
   }, []);
 
+  // Function to stop ongoing AI response
+  const stopResponse = useCallback(() => {
+    console.log('🛑 Stopping AI response');
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+
+    // Stop typewriter animation
+    if (typewriterRef.current !== null) {
+      cancelAnimationFrame(typewriterRef.current);
+      typewriterRef.current = null;
+    }
+
+    // Update loading state
+    setIsLoading(false);
+    isLoadingRef.current = false;
+
+    // Complete any streaming message
+    if (streamingMessageRef.current) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.isStreaming
+            ? {
+                ...msg,
+                content: streamingMessageRef.current,
+                isStreaming: false,
+              }
+            : msg
+        )
+      );
+    }
+  }, []);
+
   return {
     messages,
     isLoading,
@@ -355,8 +477,9 @@ export function useChat(options: UseChatOptions = {}) {
     sessionId: options.sessionId,
     sendMessage,
     clearMessages,
-    retry,
+    retryMessage,
     editMessage,
     addErrorMessage,
+    stopResponse,
   };
 }

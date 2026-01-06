@@ -112,9 +112,10 @@ export default function HomePage() {
     isLoading,
     sendMessage,
     clearMessages,
-    retry,
+    retryMessage,
     editMessage,
     addErrorMessage,
+    stopResponse,
   } = useChat({
     sessionId: sessionId || '',
     onError: (err) => console.error('Chat error:', err),
@@ -549,7 +550,7 @@ export default function HomePage() {
             <div className="flex items-center gap-2 sm:gap-3">
               {hasMessages && (
                 <motion.div
-                  layoutId="aeris-logo"
+                  layoutId="aeris-aq-logo"
                   transition={{
                     type: 'spring',
                     stiffness: 200,
@@ -560,7 +561,7 @@ export default function HomePage() {
                 >
                   <Image
                     src="/logo.png"
-                    alt="Aeris Logo"
+                    alt="Aeris-AQ Logo"
                     width={32}
                     height={32}
                     className="h-7 w-7 rounded-lg sm:h-8 sm:w-8"
@@ -576,7 +577,7 @@ export default function HomePage() {
                 transition={{ duration: 0.3, delay: hasMessages ? 0.4 : 0 }}
                 className="text-foreground text-base font-medium sm:text-lg"
               >
-                Aeris
+                Aeris-AQ
               </motion.h1>
             </div>
             {hasMessages && (
@@ -676,7 +677,7 @@ export default function HomePage() {
                   <div className="flex flex-col items-center text-center">
                     {/* Centered animated logo */}
                     <motion.div
-                      layoutId="aeris-logo"
+                      layoutId="aeris-aq-logo"
                       transition={{
                         type: 'spring',
                         stiffness: 200,
@@ -692,7 +693,7 @@ export default function HomePage() {
                       >
                         <Image
                           src="/logo.png"
-                          alt="Aeris Logo"
+                          alt="Aeris-AQ Logo"
                           width={80}
                           height={80}
                           className="h-20 w-20 rounded-2xl shadow-lg"
@@ -760,7 +761,7 @@ export default function HomePage() {
                 <ChatMessages
                   messages={messages}
                   isLoading={isLoading}
-                  onRetry={retry}
+                  onRetry={retryMessage}
                   onEditMessage={editMessage}
                   onFilePreview={(file) => {
                     // Check if file has fileId and get the stored File object
@@ -809,8 +810,9 @@ export default function HomePage() {
                   handleRemoveFile();
                 }
               }}
+              onStop={stopResponse}
               isLoading={isLoading}
-              placeholder="Ask Aeris..."
+              placeholder="Ask Aeris-AQ..."
               onFileSelect={handleFileSelect}
               uploadedFile={uploadedFile}
               onRemoveFile={handleRemoveFile}
@@ -832,7 +834,7 @@ export default function HomePage() {
           <footer className="bg-background/30 pb-1.5">
             <div className="mx-auto max-w-4xl px-3 sm:px-4">
               <p className="text-muted-foreground text-center text-[9px] leading-tight sm:text-[10px]">
-                Aeris may be incorrect. Verify critical details.
+                Aeris-AQ may be incorrect. Verify critical details.
               </p>
             </div>
           </footer>

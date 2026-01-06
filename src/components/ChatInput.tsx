@@ -12,11 +12,13 @@ import {
   AqSend01,
   AqLoading02,
   AqChevronDown,
+  AqStopSquare,
 } from '@airqo/icons-react';
 import type { ResponseRole } from '@/types';
 
 interface ChatInputProps {
   onSend: (message: string, file?: File, role?: ResponseRole) => void;
+  onStop?: () => void;
   isLoading?: boolean;
   placeholder?: string;
   disabled?: boolean;
@@ -35,6 +37,7 @@ interface ChatInputProps {
 
 export function ChatInput({
   onSend,
+  onStop,
   isLoading = false,
   placeholder = 'Ask about air quality...',
   disabled = false,
@@ -447,7 +450,7 @@ export function ChatInput({
               title={
                 hasLocation
                   ? 'Location enabled — click to send location'
-                  : 'Share my location with Aeris'
+                  : 'Share my location with Aeris-AQ'
               }
               data-tooltip={hasLocation ? 'Location enabled' : 'Share location'}
             >
@@ -546,27 +549,30 @@ export function ChatInput({
           </div>
 
           <button
-            onClick={handleSend}
+            onClick={isLoading && onStop ? onStop : handleSend}
             disabled={
-              (!input.trim() && !uploadedFile) ||
-              isLoading ||
               disabled ||
-              isUploading
+              isUploading ||
+              (!isLoading && !input.trim() && !uploadedFile)
             }
             className={cn(
               'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:h-9 sm:w-9',
-              (!input.trim() && !uploadedFile) ||
-                isLoading ||
-                disabled ||
-                isUploading
+              disabled ||
+                isUploading ||
+                (!isLoading && !input.trim() && !uploadedFile)
                 ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                : 'bg-primary text-primary-foreground cursor-pointer hover:opacity-95',
+                : isLoading && onStop
+                  ? 'bg-muted hover:bg-muted/80 cursor-pointer text-red-500 focus:ring-red-500'
+                  : 'bg-primary text-primary-foreground cursor-pointer hover:opacity-95',
               'disabled:cursor-not-allowed disabled:opacity-50'
             )}
-            aria-label="Send message"
+            aria-label={isLoading && onStop ? 'Stop response' : 'Send message'}
+            title={isLoading && onStop ? 'Stop AI response' : 'Send message'}
           >
-            {isLoading || isUploading ? (
-              <AqLoading02 className="text-primary h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
+            {isUploading ? (
+              <AqLoading02 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
+            ) : isLoading && onStop ? (
+              <AqStopSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             ) : (
               <AqSend01 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             )}
