@@ -10,7 +10,7 @@ import { useChat } from '@/hooks/useChat';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { apiService } from '@/services/api.service';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AqLoading02 } from '@airqo/icons-react';
+import { AqLoading02, AqChevronDown } from '@airqo/icons-react';
 import { cn } from '@/utils/helpers';
 
 import type { ResponseRole } from '@/types';
@@ -120,6 +120,10 @@ export default function HomePage() {
     sessionId: sessionId || '',
     onError: (err) => console.error('Chat error:', err),
   });
+
+  // Ref to control ChatMessages scrolling (exposes scrollToBottom)
+  const chatMessagesRef = useRef<null | { scrollToBottom: () => void }>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
 
   // Handle delay notification
   useEffect(() => {
@@ -756,10 +760,12 @@ export default function HomePage() {
                 className="flex-1 overflow-hidden"
               >
                 <ChatMessages
+                  ref={chatMessagesRef}
                   messages={messages}
                   isLoading={isLoading}
                   onRetry={retryMessage}
                   onEditMessage={editMessage}
+                  onViewportChange={(atBottom) => setIsAtBottom(atBottom)}
                   onFilePreview={(file) => {
                     // Check if file has fileId and get the stored File object
                     if (file.fileId && storedFiles.has(file.fileId)) {
@@ -791,7 +797,25 @@ export default function HomePage() {
           }}
           className="bg-background z-20 w-full"
         >
-          <div className="mx-auto max-w-3xl px-2 sm:px-4">
+          <div className="relative mx-auto max-w-3xl px-2 sm:px-4">
+            {/* Scroll to bottom button - positioned above input */}
+            <AnimatePresence>
+              {!isAtBottom && hasMessages && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.2 }}
+                  onClick={() => chatMessagesRef.current?.scrollToBottom()}
+                  title="Scroll to bottom"
+                  aria-label="Scroll to bottom"
+                  className="text-muted-foreground hover:text-foreground focus:ring-primary/50 border-border/50 absolute -top-14 right-8 z-30 flex h-10 w-10 items-center justify-center rounded-full border bg-[#161616] shadow-lg backdrop-blur-sm hover:bg-[#161616]/90 focus:ring-2 focus:outline-none"
+                >
+                  <AqChevronDown className="h-5 w-5" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+
             <ChatInput
               onSend={(message, file, role) => {
                 let fileId: string | undefined;
