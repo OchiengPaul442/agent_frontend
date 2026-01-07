@@ -33,11 +33,13 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
   const containerRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [isAtBottom, setIsAtBottom] = React.useState(true);
+  const lastManualScrollRef = useRef<number>(0);
 
   // Expose imperative methods so parent can request a scroll-to-bottom
   React.useImperativeHandle(ref, () => ({
     scrollToBottom: () => {
       if (containerRef.current) {
+        lastManualScrollRef.current = Date.now();
         containerRef.current.scrollTo({
           top: containerRef.current.scrollHeight,
           behavior: 'smooth',
@@ -105,19 +107,34 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
 
     // Small delay to ensure DOM has updated
     const timeoutId = setTimeout(() => {
-      // If the assistant started streaming, always scroll that message into view
-      if (last.role === 'assistant' && last.isStreaming) {
-        const el = messageRefs.current[lastKey];
-        if (el && containerRef.current) {
+      // Always auto-scroll for new user messages (when user enters a prompt)
+      if (last.role === 'user') {
+        if (containerRef.current) {
           containerRef.current.scrollTo({
-            top: el.offsetTop - 12,
+            top: containerRef.current.scrollHeight,
             behavior: 'smooth',
           });
-          return;
         }
+        return;
       }
 
-      // Otherwise, only auto-scroll if the user was already near the bottom
+      // For assistant messages, only auto-scroll if streaming and user hasn't manually scrolled recently
+      if (last.role === 'assistant' && last.isStreaming) {
+        const timeSinceManualScroll = Date.now() - lastManualScrollRef.current;
+        // Don't auto-scroll if user manually scrolled to bottom in the last 2 seconds
+        if (timeSinceManualScroll > 2000) {
+          const el = messageRefs.current[lastKey];
+          if (el && containerRef.current) {
+            containerRef.current.scrollTo({
+              top: el.offsetTop - 12,
+              behavior: 'smooth',
+            });
+          }
+        }
+        return;
+      }
+
+      // For other cases, only auto-scroll if the user was already near the bottom
       if (containerRef.current && isAtBottom) {
         containerRef.current.scrollTo({
           top: containerRef.current.scrollHeight,
