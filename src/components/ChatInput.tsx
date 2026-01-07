@@ -98,32 +98,6 @@ export function ChatInput({
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
-  const selectedRoleRef = useRef<ResponseRole>('general');
-
-  // Load selected role from sessionStorage on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedRole = sessionStorage.getItem('selectedRole') as ResponseRole;
-      if (savedRole && roleOptions.some((opt) => opt.value === savedRole)) {
-        setSelectedRole((prevRole) => {
-          // Only update if the value actually changed
-          if (prevRole !== savedRole) {
-            selectedRoleRef.current = savedRole;
-            return savedRole;
-          }
-          return prevRole; // Return previous value to avoid re-render
-        });
-      }
-    }
-  }, []);
-
-  // Save selected role to sessionStorage when it changes
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('selectedRole', selectedRole);
-    }
-    selectedRoleRef.current = selectedRole;
-  }, [selectedRole]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -164,7 +138,7 @@ export function ChatInput({
     )
       return;
 
-    const currentRole = selectedRoleRef.current;
+    const currentRole = selectedRole;
 
     if (uploadedFile) {
       setIsUploading(true);
