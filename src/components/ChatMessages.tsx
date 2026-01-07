@@ -147,7 +147,7 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
   }, [messages, isLoading, isAtBottom]);
 
   return (
-    <div ref={containerRef} className="h-full overflow-y-auto">
+    <div ref={containerRef} className="h-full overflow-y-auto pb-8">
       <AnimatePresence mode="popLayout">
         {Array.isArray(messages) &&
           messages.map((message, index) => {
