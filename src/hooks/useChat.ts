@@ -28,7 +28,7 @@ export function useChat(options: UseChatOptions = {}) {
     };
   }, []);
 
-  // Typewriter effect using requestAnimationFrame for smooth 60fps animation
+  // Typewriter effect using requestAnimationFrame for smooth animation
   const animateTypewriter = useCallback(
     (fullText: string, timestamp?: string, tools_used?: string[]) => {
       // Cancel any existing animation
@@ -39,20 +39,18 @@ export function useChat(options: UseChatOptions = {}) {
 
       streamingMessageRef.current = '';
       let charIndex = 0;
-      const charsPerFrame = 3; // Characters to add per frame (~180 chars/sec at 60fps)
       let lastTime = performance.now();
-      const targetFPS = 60;
-      const frameTime = 1000 / targetFPS;
+      const charDelay = 50; // Add one character every 50ms (~20 chars/sec, like ChatGPT)
 
       const animate = (currentTime: number) => {
         const elapsed = currentTime - lastTime;
 
-        // Maintain consistent frame rate
-        if (elapsed >= frameTime) {
-          lastTime = currentTime - (elapsed % frameTime);
+        // Add characters at controlled intervals
+        if (elapsed >= charDelay) {
+          lastTime = currentTime - (elapsed % charDelay);
 
-          // Add characters based on charsPerFrame
-          const endIndex = Math.min(charIndex + charsPerFrame, fullText.length);
+          // Add one character
+          const endIndex = Math.min(charIndex + 1, fullText.length);
           streamingMessageRef.current = fullText.slice(0, endIndex);
           charIndex = endIndex;
 
