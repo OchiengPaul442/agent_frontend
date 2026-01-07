@@ -30,12 +30,12 @@ The typewriter effect makes AI responses appear as if they're being typed in rea
 To change typing speed, edit `src/hooks/useChat.ts`:
 
 ```typescript
-const charsPerFrame = 2; // Current: 120 chars/sec
+const charsPerFrame = 3; // Current: 180 chars/sec
 
 // Options:
 // 1 = Slow (60 chars/sec)
-// 2 = Medium (120 chars/sec) ← Current
-// 3 = Fast (180 chars/sec)
+// 2 = Medium (120 chars/sec)
+// 3 = Fast (180 chars/sec) ← Current
 // 4 = Very fast (240 chars/sec)
 ```
 

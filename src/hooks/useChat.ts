@@ -39,7 +39,7 @@ export function useChat(options: UseChatOptions = {}) {
 
       streamingMessageRef.current = '';
       let charIndex = 0;
-      const charsPerFrame = 2; // Characters to add per frame (~120 chars/sec at 60fps)
+      const charsPerFrame = 3; // Characters to add per frame (~180 chars/sec at 60fps)
       let lastTime = performance.now();
       const targetFPS = 60;
       const frameTime = 1000 / targetFPS;
