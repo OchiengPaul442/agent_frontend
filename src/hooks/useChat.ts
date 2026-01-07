@@ -15,44 +15,36 @@ export function useChat(options: UseChatOptions = {}) {
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const isLoadingRef = useRef(false);
-  const typewriterRef = useRef<number | null>(null);
+  const typewriterRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const streamingMessageRef = useRef<string>('');
 
   // Cleanup typewriter animation on unmount
   useEffect(() => {
     return () => {
       if (typewriterRef.current !== null) {
-        cancelAnimationFrame(typewriterRef.current);
+        clearTimeout(typewriterRef.current);
         typewriterRef.current = null;
       }
     };
   }, []);
 
-  // Typewriter effect using requestAnimationFrame for smooth animation
+  // Typewriter effect using setTimeout for stable, ChatGPT-like animation
   const animateTypewriter = useCallback(
     (fullText: string, timestamp?: string, tools_used?: string[]) => {
       // Cancel any existing animation
       if (typewriterRef.current !== null) {
-        cancelAnimationFrame(typewriterRef.current);
+        clearTimeout(typewriterRef.current);
         typewriterRef.current = null;
       }
 
       streamingMessageRef.current = '';
       let charIndex = 0;
-      let lastTime = performance.now();
-      const charDelay = 50; // Add one character every 50ms (~20 chars/sec, like ChatGPT)
 
-      const animate = (currentTime: number) => {
-        const elapsed = currentTime - lastTime;
-
-        // Add characters at controlled intervals
-        if (elapsed >= charDelay) {
-          lastTime = currentTime - (elapsed % charDelay);
-
-          // Add one character
-          const endIndex = Math.min(charIndex + 1, fullText.length);
-          streamingMessageRef.current = fullText.slice(0, endIndex);
-          charIndex = endIndex;
+      const typeNextChar = () => {
+        if (charIndex < fullText.length) {
+          // Add one character at a time
+          streamingMessageRef.current = fullText.slice(0, charIndex + 1);
+          charIndex++;
 
           // Update the last message with streaming content
           setMessages((prev) => {
@@ -68,36 +60,32 @@ export function useChat(options: UseChatOptions = {}) {
             return updated;
           });
 
-          // Continue animation if not complete
-          if (charIndex < fullText.length) {
-            typewriterRef.current = requestAnimationFrame(animate);
-          } else {
-            // Animation complete - finalize message
-            typewriterRef.current = null;
-            streamingMessageRef.current = '';
-            setMessages((prev) => {
-              const updated = [...prev];
-              const lastIdx = updated.length - 1;
-              if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
-                updated[lastIdx] = {
-                  role: 'assistant',
-                  content: fullText,
-                  timestamp: timestamp || new Date().toISOString(),
-                  tools_used: tools_used,
-                  isStreaming: false,
-                };
-              }
-              return updated;
-            });
-          }
+          // Schedule next character with ultra-fast random delay
+          const randomDelay = Math.random() * 10 + 5; // 5-15ms range (~66-200 chars/sec)
+          typewriterRef.current = setTimeout(typeNextChar, randomDelay);
         } else {
-          // Not enough time elapsed, continue to next frame
-          typewriterRef.current = requestAnimationFrame(animate);
+          // Animation complete - finalize message
+          typewriterRef.current = null;
+          streamingMessageRef.current = '';
+          setMessages((prev) => {
+            const updated = [...prev];
+            const lastIdx = updated.length - 1;
+            if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+              updated[lastIdx] = {
+                role: 'assistant',
+                content: fullText,
+                timestamp: timestamp || new Date().toISOString(),
+                tools_used: tools_used,
+                isStreaming: false,
+              };
+            }
+            return updated;
+          });
         }
       };
 
-      // Start animation
-      typewriterRef.current = requestAnimationFrame(animate);
+      // Start the animation
+      typeNextChar();
     },
     []
   );
@@ -227,7 +215,7 @@ export function useChat(options: UseChatOptions = {}) {
     }
     // Cancel any ongoing typewriter animation
     if (typewriterRef.current !== null) {
-      cancelAnimationFrame(typewriterRef.current);
+      clearTimeout(typewriterRef.current);
       typewriterRef.current = null;
     }
     streamingMessageRef.current = '';
@@ -448,7 +436,7 @@ export function useChat(options: UseChatOptions = {}) {
 
     // Stop typewriter animation
     if (typewriterRef.current !== null) {
-      cancelAnimationFrame(typewriterRef.current);
+      clearTimeout(typewriterRef.current);
       typewriterRef.current = null;
     }
 
