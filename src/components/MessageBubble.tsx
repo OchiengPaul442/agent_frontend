@@ -824,6 +824,29 @@ export function MessageBubble({
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
+                    p: ({
+                      children,
+                      ...props
+                    }: React.HTMLAttributes<HTMLParagraphElement>) => {
+                      // Check if paragraph contains block-level elements (like code blocks)
+                      const hasBlockElements = React.Children.toArray(
+                        children
+                      ).some(
+                        (child) =>
+                          React.isValidElement(child) &&
+                          (child.type === 'div' ||
+                            child.type === 'pre' ||
+                            child.type === 'table')
+                      );
+
+                      // If it contains block elements, render as fragment instead of p
+                      if (hasBlockElements) {
+                        return <>{children}</>;
+                      }
+
+                      // Otherwise render as normal paragraph
+                      return <p {...props}>{children}</p>;
+                    },
                     a: ({
                       href,
                       children,

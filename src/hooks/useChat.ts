@@ -11,6 +11,7 @@ export interface UseChatOptions {
 export function useChat(options: UseChatOptions = {}) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -60,13 +61,36 @@ export function useChat(options: UseChatOptions = {}) {
             return updated;
           });
 
-          // Schedule next character with ultra-fast random delay
-          const randomDelay = Math.random() * 10 + 5; // 5-15ms range (~66-200 chars/sec)
-          typewriterRef.current = setTimeout(typeNextChar, randomDelay);
+          // Calculate delay based on character type for more natural typing rhythm
+          const currentChar = fullText[charIndex - 1];
+          let baseDelay: number;
+
+          if (currentChar === ' ') {
+            // Spaces appear very fast
+            baseDelay = 4 + Math.random() * 4; // 4-8ms
+          } else if (/[a-z]/.test(currentChar)) {
+            // Lowercase letters are fastest
+            baseDelay = 8 + Math.random() * 4; // 8-12ms
+          } else if (/[A-Z0-9]/.test(currentChar)) {
+            // Uppercase and numbers are medium speed
+            baseDelay = 12 + Math.random() * 4; // 12-16ms
+          } else if (/[.,!?;:]/.test(currentChar)) {
+            // Punctuation is slower for emphasis
+            baseDelay = 16 + Math.random() * 4; // 16-20ms
+          } else if (currentChar === '#') {
+            // Headings start slower for emphasis
+            baseDelay = 20 + Math.random() * 8; // 20-28ms
+          } else {
+            // Other characters (symbols, etc.) use medium speed
+            baseDelay = 12 + Math.random() * 4; // 12-16ms
+          }
+
+          typewriterRef.current = setTimeout(typeNextChar, baseDelay);
         } else {
           // Animation complete - finalize message
           typewriterRef.current = null;
           streamingMessageRef.current = '';
+          setIsTyping(false);
           setMessages((prev) => {
             const updated = [...prev];
             const lastIdx = updated.length - 1;
@@ -158,6 +182,9 @@ export function useChat(options: UseChatOptions = {}) {
 
         const sanitizedContent = sanitizeMarkdown(response.response);
         const timestamp = new Date().toISOString();
+
+        // Set typing state immediately when response is received to keep stop button visible
+        setIsTyping(true);
 
         // Add placeholder message for streaming effect
         const placeholderMessage: Message = {
@@ -273,6 +300,9 @@ export function useChat(options: UseChatOptions = {}) {
         const sanitizedContent = sanitizeMarkdown(response.response);
         const timestamp = new Date().toISOString();
 
+        // Set typing state immediately when response is received to keep stop button visible
+        setIsTyping(true);
+
         // Add placeholder message for streaming effect
         const placeholderMessage: Message = {
           role: 'assistant',
@@ -372,6 +402,9 @@ export function useChat(options: UseChatOptions = {}) {
         const sanitizedContent = sanitizeMarkdown(response.response);
         const timestamp = new Date().toISOString();
 
+        // Set typing state immediately when response is received to keep stop button visible
+        setIsTyping(true);
+
         // Add placeholder message for streaming effect
         const placeholderMessage: Message = {
           role: 'assistant',
@@ -443,6 +476,7 @@ export function useChat(options: UseChatOptions = {}) {
     // Update loading state
     setIsLoading(false);
     isLoadingRef.current = false;
+    setIsTyping(false);
 
     // Complete any streaming message
     if (streamingMessageRef.current) {
@@ -463,6 +497,7 @@ export function useChat(options: UseChatOptions = {}) {
   return {
     messages,
     isLoading,
+    isTyping,
     error,
     sessionId: options.sessionId,
     sendMessage,
