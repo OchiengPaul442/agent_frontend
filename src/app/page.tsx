@@ -809,9 +809,9 @@ export default function HomePage() {
                   onClick={() => chatMessagesRef.current?.scrollToBottom()}
                   title="Scroll to bottom"
                   aria-label="Scroll to bottom"
-                  className="text-muted-foreground hover:text-foreground focus:ring-primary/50 border-border/50 absolute -top-14 right-8 z-30 flex h-10 w-10 items-center justify-center rounded-full border bg-[#161616] shadow-lg backdrop-blur-sm hover:bg-[#161616]/90 focus:ring-2 focus:outline-none"
+                  className="text-muted-foreground hover:text-foreground focus:ring-primary/50 border-border/50 absolute -top-12 right-2 z-30 flex h-9 w-9 items-center justify-center rounded-full border bg-[#161616] shadow-lg backdrop-blur-sm hover:bg-[#161616]/90 focus:ring-2 focus:outline-none sm:-top-14 sm:right-8 sm:h-10 sm:w-10"
                 >
-                  <AqChevronDown className="h-5 w-5" />
+                  <AqChevronDown className="h-4 w-4 sm:h-5 sm:w-5" />
                 </motion.button>
               )}
             </AnimatePresence>
