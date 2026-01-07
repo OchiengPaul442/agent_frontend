@@ -122,6 +122,31 @@ export default function HomePage() {
     onError: (err) => console.error('Chat error:', err),
   });
 
+  // Additional cleanup for stored files - clear old files periodically
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      // Keep only files that are still referenced in current messages
+      const currentFileIds = new Set<string>();
+      messages.forEach((msg) => {
+        if (msg.file?.fileId) {
+          currentFileIds.add(msg.file.fileId);
+        }
+      });
+
+      setStoredFiles((prev) => {
+        const newMap = new Map();
+        for (const [fileId, file] of prev) {
+          if (currentFileIds.has(fileId)) {
+            newMap.set(fileId, file);
+          }
+        }
+        return newMap;
+      });
+    }, 30000); // Clean up every 30 seconds
+
+    return () => clearInterval(cleanupInterval);
+  }, [messages]);
+
   // Ref to control ChatMessages scrolling (exposes scrollToBottom)
   const chatMessagesRef = useRef<null | { scrollToBottom: () => void }>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -223,21 +248,54 @@ export default function HomePage() {
 
   // Create a safe sendMessage function that checks for session
   const safeSendMessage = useCallback(
-    (content: string, file?: File, role?: ResponseRole, fileId?: string) => {
+    async (
+      content: string,
+      file?: File,
+      role?: ResponseRole,
+      fileId?: string
+    ) => {
       if (!sessionId) {
         console.error('Cannot send message: Session not initialized');
         return;
       }
-      sendMessage(
-        content,
-        file,
-        geolocation.latitude || undefined,
-        geolocation.longitude || undefined,
-        role,
-        fileId
-      );
+
+      try {
+        const response = await sendMessage(
+          content,
+          file,
+          geolocation.latitude || undefined,
+          geolocation.longitude || undefined,
+          role,
+          fileId
+        );
+
+        // Clear uploaded file after successful send
+        if (file && uploadedFile) {
+          handleRemoveFile();
+        }
+
+        return response;
+      } catch (error) {
+        console.error('Failed to send message:', error);
+
+        // Show specific error message for file upload failures
+        if (file) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
+          setFileErrorMessage(`Failed to upload file: ${errorMessage}`);
+        }
+
+        // Don't clear file on error - let user retry
+        throw error;
+      }
     },
-    [sessionId, sendMessage, geolocation.latitude, geolocation.longitude]
+    [
+      sessionId,
+      sendMessage,
+      geolocation.latitude,
+      geolocation.longitude,
+      uploadedFile,
+    ]
   );
 
   const hasMessages = messages.length > 0 || isLoading;
@@ -771,8 +829,15 @@ export default function HomePage() {
                     // Check if file has fileId and get the stored File object
                     if (file.fileId && storedFiles.has(file.fileId)) {
                       setPreviewFile(storedFiles.get(file.fileId)!);
+                    } else if (file.fileId) {
+                      // fileId exists but not in storedFiles - this shouldn't happen but handle gracefully
+                      console.warn(
+                        'File preview requested but file not found in storedFiles:',
+                        file.fileId
+                      );
+                      setPreviewFile(file); // Fallback to metadata-only preview
                     } else {
-                      // Fallback to metadata-only preview
+                      // No fileId - use metadata-only preview
                       setPreviewFile(file);
                     }
                     setIsFilePreviewDrawerOpen(true);
@@ -827,10 +892,8 @@ export default function HomePage() {
                   setStoredFiles((prev) => new Map(prev).set(fileId!, file));
                 }
                 safeSendMessage(message, file, role, fileId);
-                // Clear file after sending
-                if (uploadedFile) {
-                  handleRemoveFile();
-                }
+                // Clear file after sending - this will be handled by the API response
+                // Don't clear here as it might cause UI flicker
               }}
               onStop={stopResponse}
               isLoading={isLoading || isTyping}

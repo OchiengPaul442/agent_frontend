@@ -54,7 +54,9 @@ class ApiService {
       throw new Error(errorMessage);
     }
 
-    return response.json();
+    const result = await response.json();
+
+    return result;
   }
 
   // Chat endpoints
@@ -69,11 +71,6 @@ class ApiService {
       formData.append('session_id', data.session_id);
     } // No else clause - require session_id to be provided
     if (data.file) {
-      console.log('📎 Sending file to API:', {
-        name: data.file.name,
-        size: data.file.size,
-        type: data.file.type,
-      });
       formData.append('file', data.file);
     }
     if (data.latitude !== undefined) {
