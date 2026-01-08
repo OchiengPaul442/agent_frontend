@@ -6,6 +6,7 @@ import { ChatMessages } from '@/components/ChatMessages';
 import { ChatInput } from '@/components/ChatInput';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { FilePreviewDrawer } from '@/components/FilePreviewDrawer';
+import { CostWarning } from '@/components/CostWarning';
 import { useChat } from '@/hooks/useChat';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { apiService } from '@/services/api.service';
@@ -818,6 +819,18 @@ export default function HomePage() {
                 transition={{ duration: 0.3 }}
                 className="flex-1 overflow-hidden"
               >
+                {/* Cost Warning - display if present in last message */}
+                {messages.length > 0 &&
+                  messages[messages.length - 1]?.cost_info &&
+                  messages[messages.length - 1]?.role === 'assistant' && (
+                    <div className="mx-auto max-w-3xl px-4 pt-4">
+                      <CostWarning
+                        costInfo={messages[messages.length - 1].cost_info!}
+                        onNewChat={handleNewSession}
+                      />
+                    </div>
+                  )}
+
                 <ChatMessages
                   ref={chatMessagesRef}
                   messages={messages}

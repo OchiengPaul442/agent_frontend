@@ -8,6 +8,8 @@ import type {
   AirQualityResponse,
   Message,
   CreateSessionResponse,
+  ModelCapabilities,
+  CostInfo,
 } from '@/types';
 
 const API_BASE = `${config.api.baseUrl}/api/${config.api.version}`;
@@ -73,6 +75,9 @@ class ApiService {
     if (data.file) {
       formData.append('file', data.file);
     }
+    if (data.image) {
+      formData.append('image', data.image);
+    }
     if (data.latitude !== undefined) {
       formData.append('latitude', data.latitude.toString());
     }
@@ -87,6 +92,88 @@ class ApiService {
       body: formData,
       signal: options?.signal,
     });
+  }
+
+  // Streaming chat
+  async *streamMessage(
+    data: ChatRequest,
+    options?: { signal?: AbortSignal }
+  ): AsyncGenerator<{
+    event: 'start' | 'thinking' | 'content' | 'tools' | 'done' | 'error';
+    content?: string;
+    data?: Partial<ChatResponse>;
+  }> {
+    const formData = new FormData();
+    formData.append('message', data.message);
+    if (data.session_id) {
+      formData.append('session_id', data.session_id);
+    }
+    if (data.file) {
+      formData.append('file', data.file);
+    }
+    if (data.image) {
+      formData.append('image', data.image);
+    }
+    if (data.latitude !== undefined) {
+      formData.append('latitude', data.latitude.toString());
+    }
+    if (data.longitude !== undefined) {
+      formData.append('longitude', data.longitude.toString());
+    }
+    formData.append('role', data.role || 'general');
+
+    const response = await fetch(`${API_BASE}/agent/chat/stream`, {
+      method: 'POST',
+      body: formData,
+      signal: options?.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+
+    if (!reader) {
+      throw new Error('No response body');
+    }
+
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim() || !line.startsWith('data: ')) continue;
+
+          const data = line.slice(6);
+          if (data === '[DONE]') continue;
+
+          try {
+            const parsed = JSON.parse(data);
+            yield parsed;
+          } catch (e) {
+            console.error('Failed to parse SSE data:', e);
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  }
+
+  // Check model capabilities
+  async getCapabilities(): Promise<ModelCapabilities> {
+    return this.fetchWithError<ModelCapabilities>(
+      `${API_BASE}/agent/capabilities`
+    );
   }
 
   // Session endpoints

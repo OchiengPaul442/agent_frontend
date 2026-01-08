@@ -228,9 +228,11 @@ export function useChat(options: UseChatOptions = {}) {
       latitude?: number,
       longitude?: number,
       role?: ResponseRole,
-      fileId?: string
+      fileId?: string,
+      image?: File,
+      imageId?: string
     ): Promise<ChatResponse | null> => {
-      if (!content.trim() && !file) return null;
+      if (!content.trim() && !file && !image) return null;
       if (isLoadingRef.current) return null; // Prevent concurrent requests
       if (!options.sessionId) return null; // Ensure session ID is available
 
@@ -244,7 +246,7 @@ export function useChat(options: UseChatOptions = {}) {
 
       const userMessage: Message = {
         role: 'user',
-        content: file ? content : content,
+        content: file || image ? content : content,
         timestamp: new Date().toISOString(),
         ...(file && {
           file: {
@@ -252,6 +254,14 @@ export function useChat(options: UseChatOptions = {}) {
             size: file.size,
             type: file.type,
             fileId: fileId,
+          },
+        }),
+        ...(image && {
+          image: {
+            name: image.name,
+            size: image.size,
+            type: image.type,
+            imageId: imageId,
           },
         }),
       };
@@ -270,6 +280,14 @@ export function useChat(options: UseChatOptions = {}) {
             fileType: file.type,
           });
         }
+        if (image) {
+          console.log('📤 Sending message with image:', {
+            message: content,
+            imageName: image.name,
+            imageSize: image.size,
+            imageType: image.type,
+          });
+        }
         const response = await apiService.sendMessage(
           {
             message: content,
@@ -277,6 +295,7 @@ export function useChat(options: UseChatOptions = {}) {
             history: messages,
             save_to_db: false,
             file,
+            image,
             latitude: latitude,
             longitude: longitude,
             role: role,

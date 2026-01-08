@@ -11,9 +11,17 @@ export interface Message {
     type: string;
     fileId?: string; // Reference to stored File object
   };
+  image?: {
+    name: string;
+    size: number;
+    type: string;
+    imageId?: string; // Reference to stored File object
+    preview?: string; // Data URL for preview
+  };
   thinking_steps?: string[]; // AI reasoning steps for Chain-of-Thought
   reasoning_content?: string; // Full reasoning content as string
   thinking_duration?: number; // Duration of thinking process in milliseconds
+  cost_info?: CostInfo;
 }
 
 export interface Session {
@@ -47,9 +55,32 @@ export interface ChatRequest {
   history?: Message[];
   save_to_db?: boolean;
   file?: File;
+  image?: File;
   latitude?: number;
   longitude?: number;
   role?: ResponseRole;
+}
+
+export interface CostInfo {
+  session_id: string;
+  tokens_used: number;
+  total_tokens: number;
+  max_tokens: number;
+  usage_percentage: number;
+  total_cost_usd: number;
+  warning?: string;
+  recommendation?: string;
+}
+
+export interface ModelCapabilities {
+  provider: string;
+  model: string;
+  supports_vision: boolean;
+  supports_reasoning: boolean;
+  max_image_size_mb: number;
+  allowed_image_formats: string[];
+  cost_optimization_enabled: boolean;
+  cache_hit_rate_pct: number;
 }
 
 export interface ChatResponse {
@@ -58,10 +89,14 @@ export interface ChatResponse {
   tools_used: string[];
   document_processed?: boolean;
   document_filename?: string;
+  image_processed?: boolean;
+  vision_capable?: boolean;
   tokens_used: number;
   cached: boolean;
+  message_count?: number;
   thinking_steps?: string[]; // AI reasoning steps for Chain-of-Thought
   reasoning_content?: string; // Full reasoning content as string
+  cost_info?: CostInfo;
 }
 
 export interface AirQualityQuery {
