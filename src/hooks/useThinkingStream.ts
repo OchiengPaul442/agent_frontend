@@ -89,6 +89,11 @@ export function useThinkingStream() {
   });
 
   const bufferRef = useRef<string>('');
+  const visibilityRef = useRef<boolean>(
+    typeof document !== 'undefined'
+      ? document.visibilityState === 'visible'
+      : true
+  );
   const abortRef = useRef<AbortController | null>(null);
   const startTimeRef = useRef<number>(0);
   const updateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -121,6 +126,27 @@ export function useThinkingStream() {
       }
     };
   }, [state.isStreaming]);
+
+  // Track document visibility and flush buffer when tab becomes visible
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const handleVisibility = () => {
+      visibilityRef.current = document.visibilityState === 'visible';
+      if (visibilityRef.current && bufferRef.current) {
+        // Flush any buffered content immediately when the user returns
+        setState((prev) => ({
+          ...prev,
+          thinking: [...prev.thinking, bufferRef.current],
+          duration: Date.now() - startTimeRef.current,
+        }));
+        bufferRef.current = '';
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () =>
+      document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -191,8 +217,21 @@ export function useThinkingStream() {
             // Stream started
             console.log('Stream started');
           } else if (ev.event === 'thinking') {
-            // AI thinking step - buffer for performance
-            bufferRef.current += data.content || '';
+            // AI thinking step - buffer for performance when visible.
+            // If the page is hidden, apply immediately so rendering doesn't pause
+            // while the browser throttles timers.
+            if (
+              typeof document !== 'undefined' &&
+              document.visibilityState === 'visible'
+            ) {
+              bufferRef.current += data.content || '';
+            } else {
+              setState((prev) => ({
+                ...prev,
+                thinking: [...prev.thinking, data.content || ''],
+                duration: Date.now() - startTimeRef.current,
+              }));
+            }
           } else if (ev.event === 'content') {
             // Response content chunk
             setState((prev) => ({

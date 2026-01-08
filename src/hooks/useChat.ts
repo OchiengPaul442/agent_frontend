@@ -3,6 +3,13 @@ import { apiService } from '@/services/api.service';
 import type { Message, ChatResponse, ResponseRole } from '@/types';
 import { sanitizeMarkdown } from '@/utils/helpers';
 
+// Typing mode for the typewriter animation:
+// - 'normal': original timing
+// - 'fast': reduced per-char delays for snappier typing
+// - 'instant': render full response immediately (no per-char delays)
+// - 'chunked': type in sentence groups for ultra-fast, formatted reveal
+const TYPEWRITER_MODE: 'normal' | 'fast' | 'instant' | 'chunked' = 'chunked';
+
 export interface UseChatOptions {
   sessionId?: string;
   onError?: (error: Error) => void;
@@ -41,6 +48,90 @@ export function useChat(options: UseChatOptions = {}) {
       streamingMessageRef.current = '';
       let charIndex = 0;
 
+      // If instant mode is enabled, render the full response immediately
+      if (TYPEWRITER_MODE === 'instant') {
+        // Clear any pending timeouts
+        if (typewriterRef.current !== null) {
+          clearTimeout(typewriterRef.current);
+          typewriterRef.current = null;
+        }
+        streamingMessageRef.current = '';
+        setIsTyping(false);
+        setMessages((prev) => {
+          const updated = [...prev];
+          const lastIdx = updated.length - 1;
+          if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+            updated[lastIdx] = {
+              role: 'assistant',
+              content: fullText,
+              timestamp: timestamp || new Date().toISOString(),
+              tools_used: tools_used,
+              isStreaming: false,
+            };
+          }
+          return updated;
+        });
+        return;
+      }
+
+      // Chunked mode: Type in sentence groups for ultra-fast, formatted reveal
+      if (TYPEWRITER_MODE === 'chunked') {
+        // Split by sentences for better formatting reveal
+        const sentences = fullText.split(/(?<=[.!?])\s+/);
+        let sentenceIndex = 0;
+
+        const typeNextChunk = () => {
+          if (sentenceIndex < sentences.length) {
+            const sentence =
+              sentences[sentenceIndex] +
+              (sentenceIndex < sentences.length - 1 ? ' ' : '');
+            streamingMessageRef.current += sentence;
+            sentenceIndex++;
+
+            // Update the last message with streaming content
+            setMessages((prev) => {
+              const updated = [...prev];
+              const lastIdx = updated.length - 1;
+              if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+                updated[lastIdx] = {
+                  ...updated[lastIdx],
+                  content: streamingMessageRef.current,
+                  isStreaming: sentenceIndex < sentences.length,
+                };
+              }
+              return updated;
+            });
+
+            // Ultra-short delay between sentences for near-instant animation
+            const chunkDelay = 10 + Math.random() * 10; // 10-20ms
+            typewriterRef.current = setTimeout(typeNextChunk, chunkDelay);
+          } else {
+            // Animation complete - finalize message
+            typewriterRef.current = null;
+            streamingMessageRef.current = '';
+            setIsTyping(false);
+            setMessages((prev) => {
+              const updated = [...prev];
+              const lastIdx = updated.length - 1;
+              if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+                updated[lastIdx] = {
+                  role: 'assistant',
+                  content: fullText,
+                  timestamp: timestamp || new Date().toISOString(),
+                  tools_used: tools_used,
+                  isStreaming: false,
+                };
+              }
+              return updated;
+            });
+          }
+        };
+
+        // Start the chunked animation
+        typeNextChunk();
+        return;
+      }
+
       const typeNextChar = () => {
         if (charIndex < fullText.length) {
           // Add one character at a time
@@ -61,28 +152,41 @@ export function useChat(options: UseChatOptions = {}) {
             return updated;
           });
 
-          // Calculate delay based on character type for more natural typing rhythm
+          // Calculate delay based on character type for natural rhythm,
+          // but allow 'fast' mode to reduce timings significantly.
           const currentChar = fullText[charIndex - 1];
           let baseDelay: number;
 
           if (currentChar === ' ') {
-            // Spaces appear very fast
-            baseDelay = 4 + Math.random() * 4; // 4-8ms
+            baseDelay =
+              TYPEWRITER_MODE === 'fast'
+                ? 1 + Math.random() * 2
+                : 4 + Math.random() * 4;
           } else if (/[a-z]/.test(currentChar)) {
-            // Lowercase letters are fastest
-            baseDelay = 8 + Math.random() * 4; // 8-12ms
+            baseDelay =
+              TYPEWRITER_MODE === 'fast'
+                ? 2 + Math.random() * 3
+                : 8 + Math.random() * 4;
           } else if (/[A-Z0-9]/.test(currentChar)) {
-            // Uppercase and numbers are medium speed
-            baseDelay = 12 + Math.random() * 4; // 12-16ms
+            baseDelay =
+              TYPEWRITER_MODE === 'fast'
+                ? 3 + Math.random() * 3
+                : 12 + Math.random() * 4;
           } else if (/[.,!?;:]/.test(currentChar)) {
-            // Punctuation is slower for emphasis
-            baseDelay = 16 + Math.random() * 4; // 16-20ms
+            baseDelay =
+              TYPEWRITER_MODE === 'fast'
+                ? 6 + Math.random() * 4
+                : 16 + Math.random() * 4;
           } else if (currentChar === '#') {
-            // Headings start slower for emphasis
-            baseDelay = 20 + Math.random() * 8; // 20-28ms
+            baseDelay =
+              TYPEWRITER_MODE === 'fast'
+                ? 8 + Math.random() * 6
+                : 20 + Math.random() * 8;
           } else {
-            // Other characters (symbols, etc.) use medium speed
-            baseDelay = 12 + Math.random() * 4; // 12-16ms
+            baseDelay =
+              TYPEWRITER_MODE === 'fast'
+                ? 3 + Math.random() * 3
+                : 12 + Math.random() * 4;
           }
 
           typewriterRef.current = setTimeout(typeNextChar, baseDelay);
