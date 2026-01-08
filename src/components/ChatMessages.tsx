@@ -34,6 +34,7 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [isAtBottom, setIsAtBottom] = React.useState(true);
   const lastManualScrollRef = useRef<number>(0);
+  const isAutoScrolling = useRef(false);
 
   // Expose imperative methods so parent can request a scroll-to-bottom
   React.useImperativeHandle(ref, () => ({
@@ -49,6 +50,7 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
     scrollToMessageKey: (key: string) => {
       const el = messageRefs.current[key];
       if (el && containerRef.current) {
+        lastManualScrollRef.current = Date.now();
         containerRef.current.scrollTo({
           top: el.offsetTop - 12,
           behavior: 'smooth',
@@ -69,6 +71,9 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
       if (nowAtBottom !== isAtBottom) {
         setIsAtBottom(nowAtBottom);
         onViewportChange?.(nowAtBottom);
+      }
+      if (!isAutoScrolling.current) {
+        lastManualScrollRef.current = Date.now();
       }
     };
 
@@ -110,25 +115,29 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
       // Always auto-scroll for new user messages (when user enters a prompt)
       if (last.role === 'user') {
         if (containerRef.current) {
+          isAutoScrolling.current = true;
           containerRef.current.scrollTo({
             top: containerRef.current.scrollHeight,
             behavior: 'smooth',
           });
+          setTimeout(() => (isAutoScrolling.current = false), 1000);
         }
         return;
       }
 
-      // For assistant messages, only auto-scroll if streaming and user hasn't manually scrolled recently
+      // For assistant messages, only auto-scroll if streaming and user hasn't manually scrolled recently and is at bottom
       if (last.role === 'assistant' && last.isStreaming) {
         const timeSinceManualScroll = Date.now() - lastManualScrollRef.current;
-        // Don't auto-scroll if user manually scrolled to bottom in the last 2 seconds
-        if (timeSinceManualScroll > 2000) {
+        // Don't auto-scroll if user manually scrolled in the last 2 seconds or not at bottom
+        if (timeSinceManualScroll > 2000 && isAtBottom) {
           const el = messageRefs.current[lastKey];
           if (el && containerRef.current) {
+            isAutoScrolling.current = true;
             containerRef.current.scrollTo({
               top: el.offsetTop - 12,
               behavior: 'smooth',
             });
+            setTimeout(() => (isAutoScrolling.current = false), 1000);
           }
         }
         return;
@@ -136,10 +145,12 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
 
       // For other cases, only auto-scroll if the user was already near the bottom
       if (containerRef.current && isAtBottom) {
+        isAutoScrolling.current = true;
         containerRef.current.scrollTo({
           top: containerRef.current.scrollHeight,
           behavior: 'smooth',
         });
+        setTimeout(() => (isAutoScrolling.current = false), 1000);
       }
     }, 50);
 
