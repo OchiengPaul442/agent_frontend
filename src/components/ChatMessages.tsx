@@ -130,12 +130,11 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
         const timeSinceManualScroll = Date.now() - lastManualScrollRef.current;
         // Don't auto-scroll if user manually scrolled in the last 2 seconds or not at bottom
         if (timeSinceManualScroll > 2000 && isAtBottom) {
-          const el = messageRefs.current[lastKey];
-          if (el && containerRef.current) {
+          if (containerRef.current) {
             isAutoScrolling.current = true;
             containerRef.current.scrollTo({
-              top: el.offsetTop - 12,
-              behavior: 'smooth',
+              top: containerRef.current.scrollHeight,
+              behavior: 'smooth', // Smooth scroll during streaming
             });
             setTimeout(() => (isAutoScrolling.current = false), 1000);
           }
@@ -148,11 +147,11 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
         isAutoScrolling.current = true;
         containerRef.current.scrollTo({
           top: containerRef.current.scrollHeight,
-          behavior: 'smooth',
+          behavior: 'smooth', // Use 'smooth' for final scroll
         });
         setTimeout(() => (isAutoScrolling.current = false), 1000);
       }
-    }, 50);
+    }, 10); // Reduced delay for faster response
 
     return () => clearTimeout(timeoutId);
   }, [messages, isLoading, isAtBottom]);

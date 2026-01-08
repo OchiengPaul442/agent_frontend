@@ -8,7 +8,7 @@ import { sanitizeMarkdown } from '@/utils/helpers';
 // - 'fast': reduced per-char delays for snappier typing
 // - 'instant': render full response immediately (no per-char delays)
 // - 'chunked': type in sentence groups for ultra-fast, formatted reveal
-const TYPEWRITER_MODE: 'normal' | 'fast' | 'instant' | 'chunked' = 'chunked';
+const TYPEWRITER_MODE: 'normal' | 'fast' | 'instant' | 'chunked' = 'fast';
 
 export interface UseChatOptions {
   sessionId?: string;
