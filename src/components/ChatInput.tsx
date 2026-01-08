@@ -158,11 +158,7 @@ export function ChatInput({
         setIsUploading(false);
       }, 100);
     } else {
-      onSend(
-        input.trim() || 'Analyze this document',
-        uploadedFile || undefined,
-        currentRole
-      );
+      onSend(input.trim(), undefined, currentRole);
       setInput('');
     }
   };
@@ -552,13 +548,25 @@ export function ChatInput({
             </AnimatePresence>
           </div>
 
-          <button
+          <motion.button
             onClick={isLoading && onStop ? onStop : handleSend}
             disabled={
               disabled ||
               isUploading ||
               (!isLoading && !input.trim() && !uploadedFile)
             }
+            animate={
+              input.trim() && !isLoading
+                ? {
+                    scale: [1, 1.05, 1],
+                  }
+                : {}
+            }
+            transition={{
+              duration: 0.8,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
             className={cn(
               'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:h-9 sm:w-9',
               disabled ||
@@ -580,7 +588,7 @@ export function ChatInput({
             ) : (
               <AqSend01 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             )}
-          </button>
+          </motion.button>
         </div>
       </div>
     </div>

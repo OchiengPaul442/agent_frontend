@@ -382,7 +382,7 @@ export default function HomePage() {
       console.error('Session not initialized yet');
       return;
     }
-    safeSendMessage(question);
+    safeSendMessage(question, undefined, 'general');
   };
 
   // Drag and drop handlers
@@ -899,14 +899,18 @@ export default function HomePage() {
               onSend={(message, file, role) => {
                 let fileId: string | undefined;
                 if (file) {
-                  // Clear old stored files before adding new one to prevent memory buildup
-                  setStoredFiles(new Map());
                   fileId = `file_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-                  setStoredFiles((prev) => new Map(prev).set(fileId!, file));
+                  setStoredFiles((prev) => {
+                    const newMap = new Map(prev);
+                    if (newMap.size > 5) {
+                      const firstKey = newMap.keys().next().value;
+                      if (firstKey) newMap.delete(firstKey);
+                    }
+                    newMap.set(fileId!, file);
+                    return newMap;
+                  });
                 }
                 safeSendMessage(message, file, role, fileId);
-                // Clear file after sending - this will be handled by the API response
-                // Don't clear here as it might cause UI flicker
               }}
               onStop={stopResponse}
               isLoading={isLoading || isTyping}

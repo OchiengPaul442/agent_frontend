@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useImperativeHandle } from 'react';
 import { MessageBubble } from './MessageBubble';
+import { TypingIndicator } from './TypingIndicator';
 import { Message } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -194,24 +195,7 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
           className="w-full py-4 sm:py-8"
         >
           <div className="mx-auto max-w-3xl px-2 sm:px-4 lg:px-6">
-            <div className="flex items-center gap-2">
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  className="bg-primary h-2 w-2 rounded-full"
-                  animate={{
-                    scale: [1, 1.3, 1],
-                    opacity: [0.4, 1, 0.4],
-                  }}
-                  transition={{
-                    duration: 1.2,
-                    repeat: Infinity,
-                    delay: i * 0.15,
-                    ease: 'easeInOut',
-                  }}
-                />
-              ))}
-            </div>
+            <TypingIndicator />
           </div>
         </motion.div>
       )}

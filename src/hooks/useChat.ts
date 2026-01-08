@@ -134,9 +134,35 @@ export function useChat(options: UseChatOptions = {}) {
 
       const typeNextChar = () => {
         if (charIndex < fullText.length) {
-          // Add one character at a time
-          streamingMessageRef.current = fullText.slice(0, charIndex + 1);
-          charIndex++;
+          const remainingText = fullText.substring(charIndex);
+          let skipLength = 1; // Default: one character
+
+          // Detect and skip code blocks (```)
+          if (remainingText.startsWith('```')) {
+            const codeBlockEnd = remainingText.indexOf('```', 3);
+            if (codeBlockEnd !== -1) {
+              skipLength = codeBlockEnd + 3;
+            }
+          }
+          // Detect and skip inline code (`)
+          else if (
+            remainingText.startsWith('`') &&
+            !remainingText.startsWith('``')
+          ) {
+            const inlineCodeEnd = remainingText.indexOf('`', 1);
+            if (inlineCodeEnd !== -1) {
+              skipLength = inlineCodeEnd + 1;
+            }
+          }
+          // Detect and skip table rows (|...|)
+          else if (remainingText.match(/^\|[^\n]+\|/)) {
+            const lineEnd = remainingText.indexOf('\n');
+            skipLength = lineEnd !== -1 ? lineEnd + 1 : remainingText.length;
+          }
+
+          // Update index
+          charIndex += skipLength;
+          streamingMessageRef.current = fullText.slice(0, charIndex);
 
           // Update the last message with streaming content
           setMessages((prev) => {
@@ -152,41 +178,47 @@ export function useChat(options: UseChatOptions = {}) {
             return updated;
           });
 
-          // Calculate delay based on character type for natural rhythm,
-          // but allow 'fast' mode to reduce timings significantly.
-          const currentChar = fullText[charIndex - 1];
+          // Calculate delay: instant for structured content, natural for text
           let baseDelay: number;
 
-          if (currentChar === ' ') {
-            baseDelay =
-              TYPEWRITER_MODE === 'fast'
-                ? 1 + Math.random() * 2
-                : 4 + Math.random() * 4;
-          } else if (/[a-z]/.test(currentChar)) {
-            baseDelay =
-              TYPEWRITER_MODE === 'fast'
-                ? 2 + Math.random() * 3
-                : 8 + Math.random() * 4;
-          } else if (/[A-Z0-9]/.test(currentChar)) {
-            baseDelay =
-              TYPEWRITER_MODE === 'fast'
-                ? 3 + Math.random() * 3
-                : 12 + Math.random() * 4;
-          } else if (/[.,!?;:]/.test(currentChar)) {
-            baseDelay =
-              TYPEWRITER_MODE === 'fast'
-                ? 6 + Math.random() * 4
-                : 16 + Math.random() * 4;
-          } else if (currentChar === '#') {
-            baseDelay =
-              TYPEWRITER_MODE === 'fast'
-                ? 8 + Math.random() * 6
-                : 20 + Math.random() * 8;
+          if (skipLength > 1) {
+            // Structured content (code/tables) - minimal delay
+            baseDelay = 1;
           } else {
-            baseDelay =
-              TYPEWRITER_MODE === 'fast'
-                ? 3 + Math.random() * 3
-                : 12 + Math.random() * 4;
+            // Natural typing rhythm for regular text
+            const currentChar = fullText[charIndex - 1];
+
+            if (currentChar === ' ') {
+              baseDelay =
+                TYPEWRITER_MODE === 'fast'
+                  ? 1 + Math.random() * 2
+                  : 4 + Math.random() * 4;
+            } else if (/[a-z]/.test(currentChar)) {
+              baseDelay =
+                TYPEWRITER_MODE === 'fast'
+                  ? 2 + Math.random() * 3
+                  : 8 + Math.random() * 4;
+            } else if (/[A-Z0-9]/.test(currentChar)) {
+              baseDelay =
+                TYPEWRITER_MODE === 'fast'
+                  ? 3 + Math.random() * 3
+                  : 12 + Math.random() * 4;
+            } else if (/[.,!?;:]/.test(currentChar)) {
+              baseDelay =
+                TYPEWRITER_MODE === 'fast'
+                  ? 6 + Math.random() * 4
+                  : 16 + Math.random() * 4;
+            } else if (currentChar === '#') {
+              baseDelay =
+                TYPEWRITER_MODE === 'fast'
+                  ? 8 + Math.random() * 6
+                  : 20 + Math.random() * 8;
+            } else {
+              baseDelay =
+                TYPEWRITER_MODE === 'fast'
+                  ? 3 + Math.random() * 3
+                  : 12 + Math.random() * 4;
+            }
           }
 
           typewriterRef.current = setTimeout(typeNextChar, baseDelay);
@@ -217,9 +249,6 @@ export function useChat(options: UseChatOptions = {}) {
     },
     []
   );
-
-  // Don't load messages from API - keep them in local state only
-  // This prevents loops and keeps the session stable
 
   const sendMessage = useCallback(
     async (
