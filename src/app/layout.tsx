@@ -45,7 +45,7 @@ export default function RootLayout({
           </Script>
         </>
       )}
-      <body className="antialiased">{children}</body>
+      <body className="antialiased" suppressHydrationWarning={true}>{children}</body>
     </html>
   );
 }
