@@ -22,7 +22,6 @@ import {
 } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { ThinkingDisplay } from './ThinkingDisplay';
 
 interface MessageBubbleProps {
   message: Message;
@@ -529,7 +528,7 @@ export function MessageBubble({
             pdf.setFont('helvetica', 'normal');
             pdf.setTextColor(31, 41, 55);
 
-            block.items?.forEach((item, index) => {
+            block.items?.forEach((item) => {
               const cleanText = stripMarkdown(item);
               const lines = pdf.splitTextToSize(cleanText, contentWidth - 8);
               checkNewPage(5.5 * lines.length + 2);
@@ -645,7 +644,9 @@ export function MessageBubble({
                 theme: 'striped',
               });
 
-              yPosition = (pdf as any).lastAutoTable.finalY + 8;
+              yPosition =
+                (pdf as jsPDF & { lastAutoTable: { finalY: number } })
+                  .lastAutoTable.finalY + 8;
             }
             break;
           }
@@ -892,25 +893,6 @@ export function MessageBubble({
                 >
                   {sanitizeMarkdown(message.content)}
                 </ReactMarkdown>
-
-                {/* Display thinking steps if available */}
-                {!isUser &&
-                  message.thinking_steps &&
-                  message.thinking_steps.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, ease: 'easeOut' }}
-                      className="mt-4"
-                    >
-                      <ThinkingDisplay
-                        thinking={message.thinking_steps}
-                        isStreaming={message.isStreaming}
-                        duration={message.thinking_duration || 0}
-                        defaultExpanded={true}
-                      />
-                    </motion.div>
-                  )}
 
                 {/* Streaming cursor indicator */}
                 {message.isStreaming && (

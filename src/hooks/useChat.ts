@@ -345,8 +345,6 @@ export function useChat(options: UseChatOptions = {}) {
           timestamp: timestamp,
           tools_used: response.tools_used,
           isStreaming: true,
-          thinking_steps: response.thinking_steps,
-          reasoning_content: response.reasoning_content,
         };
 
         setMessages((prev) => [...prev, placeholderMessage]);
@@ -462,8 +460,6 @@ export function useChat(options: UseChatOptions = {}) {
           timestamp: timestamp,
           tools_used: response.tools_used,
           isStreaming: true,
-          thinking_steps: response.thinking_steps,
-          reasoning_content: response.reasoning_content,
         };
 
         setMessages((prev) => [...prev, placeholderMessage]);

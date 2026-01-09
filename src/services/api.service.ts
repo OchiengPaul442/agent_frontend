@@ -9,7 +9,6 @@ import type {
   Message,
   CreateSessionResponse,
   ModelCapabilities,
-  CostInfo,
 } from '@/types';
 
 const API_BASE = `${config.api.baseUrl}/api/${config.api.version}`;

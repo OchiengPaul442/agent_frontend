@@ -51,7 +51,7 @@ export default function Error({
           transition={{ delay: 0.2 }}
           className="text-muted-foreground mt-4 text-base"
         >
-          An unexpected error occurred. Don't worry, you can try again.
+          An unexpected error occurred. Don&apos;t worry, you can try again.
         </motion.p>
 
         {/* Error Details (dev mode) */}

@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AqX, AqFile02 } from '@airqo/icons-react';
 import Image from 'next/image';
 import * as XLSX from 'xlsx';
+import type { WorkBook } from 'xlsx';
 import { cn } from '@/utils/helpers';
 
 // Debounce utility function
-function debounce<T extends (...args: any[]) => any>(
+function debounce<T extends (...args: never[]) => void>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -38,7 +39,7 @@ export function FilePreviewDrawer({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentSheet, setCurrentSheet] = useState(0);
-  const [workbookData, setWorkbookData] = useState<any>(null);
+  const [workbookData, setWorkbookData] = useState<WorkBook | null>(null);
   const resizeRef = useRef<HTMLDivElement>(null);
   const isResizingRef = useRef(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -61,10 +62,11 @@ export function FilePreviewDrawer({
   useEffect(() => {
     return () => {
       // Revoke all stored blob URLs to prevent memory leaks
-      blobUrlsRef.current.forEach((url) => {
+      const currentUrls = blobUrlsRef.current;
+      currentUrls.forEach((url) => {
         URL.revokeObjectURL(url);
       });
-      blobUrlsRef.current.clear();
+      currentUrls.clear();
     };
   }, []);
 
@@ -72,10 +74,11 @@ export function FilePreviewDrawer({
   useEffect(() => {
     if (file !== fileRef.current) {
       // Revoke previous blob URLs
-      blobUrlsRef.current.forEach((url) => {
+      const currentUrls = blobUrlsRef.current;
+      currentUrls.forEach((url) => {
         URL.revokeObjectURL(url);
       });
-      blobUrlsRef.current.clear();
+      currentUrls.clear();
       fileRef.current = file;
     }
   }, [file]);
@@ -83,20 +86,24 @@ export function FilePreviewDrawer({
   // Expose sheet change function to window for HTML select
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any).changeSheet = (sheetIndex: string) => {
+      (
+        window as Window & { changeSheet?: (sheetIndex: string) => void }
+      ).changeSheet = (sheetIndex: string) => {
         const index = parseInt(sheetIndex);
         setCurrentSheet(index);
       };
     }
     return () => {
       if (typeof window !== 'undefined') {
-        delete (window as any).changeSheet;
+        delete (
+          window as Window & { changeSheet?: (sheetIndex: string) => void }
+        ).changeSheet;
       }
     };
   }, []);
 
   // Optimized sheet rendering with useCallback
-  const renderSheet = useCallback((sheetIndex: number, workbook: any) => {
+  const renderSheet = useCallback((sheetIndex: number, workbook: WorkBook) => {
     const sheetName = workbook.SheetNames[sheetIndex];
     const worksheet = workbook.Sheets[sheetName];
     const jsonData = XLSX.utils.sheet_to_json(worksheet, {
@@ -311,10 +318,11 @@ export function FilePreviewDrawer({
   }, []);
 
   // Debounced file processing to prevent rapid re-processing
-  const debouncedProcessFile = useCallback(
-    debounce((fileToProcess: File) => {
-      processFile(fileToProcess);
-    }, 300),
+  const debouncedProcessFile = useMemo(
+    () =>
+      debounce((fileToProcess: File) => {
+        processFile(fileToProcess);
+      }, 300),
     [processFile]
   );
 
@@ -345,7 +353,7 @@ export function FilePreviewDrawer({
         setIsLoading(false);
       }
     }
-  }, [file, isOpen, debouncedProcessFile]);
+  }, [file, isOpen, debouncedProcessFile, renderSheet]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {

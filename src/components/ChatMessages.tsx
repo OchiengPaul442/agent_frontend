@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useImperativeHandle } from 'react';
 import { MessageBubble } from './MessageBubble';
-import { TypingIndicator } from './TypingIndicator';
 import { Message } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -109,7 +108,6 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
 
     const lastIdx = messages.length - 1;
     const last = messages[lastIdx];
-    const lastKey = `${last.timestamp}-${lastIdx}`;
 
     // Small delay to ensure DOM has updated
     const timeoutId = setTimeout(() => {
@@ -195,7 +193,7 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
           className="w-full py-4 sm:py-8"
         >
           <div className="mx-auto max-w-3xl px-2 sm:px-4 lg:px-6">
-            <TypingIndicator />
+            <div className="text-muted-foreground text-center">Thinking...</div>
           </div>
         </motion.div>
       )}

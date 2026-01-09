@@ -18,9 +18,6 @@ export interface Message {
     imageId?: string; // Reference to stored File object
     preview?: string; // Data URL for preview
   };
-  thinking_steps?: string[]; // AI reasoning steps for Chain-of-Thought
-  reasoning_content?: string; // Full reasoning content as string
-  thinking_duration?: number; // Duration of thinking process in milliseconds
   cost_info?: CostInfo;
 }
 
@@ -94,8 +91,6 @@ export interface ChatResponse {
   tokens_used: number;
   cached: boolean;
   message_count?: number;
-  thinking_steps?: string[]; // AI reasoning steps for Chain-of-Thought
-  reasoning_content?: string; // Full reasoning content as string
   cost_info?: CostInfo;
 }
 

@@ -41,7 +41,7 @@ export default function NotFound() {
           transition={{ delay: 0.4 }}
           className="text-muted-foreground mt-4 text-lg"
         >
-          Oops! This page doesn't exist
+          Oops! This page doesn&apos;t exist
         </motion.p>
 
         <motion.p
@@ -50,7 +50,8 @@ export default function NotFound() {
           transition={{ delay: 0.5 }}
           className="text-muted-foreground mt-2 text-sm"
         >
-          The page you're looking for might have been moved or doesn't exist.
+          The page you&apos;re looking for might have been moved or doesn&apos;t
+          exist.
         </motion.p>
 
         {/* Go Home Button */}
