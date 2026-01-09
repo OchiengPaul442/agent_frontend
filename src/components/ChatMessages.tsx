@@ -192,8 +192,57 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
           transition={{ duration: 0.3, ease: 'easeOut' }}
           className="w-full py-4 sm:py-8"
         >
-          <div className="mx-auto max-w-3xl px-2 sm:px-4 lg:px-6">
-            <div className="text-muted-foreground text-center">Thinking...</div>
+          <div className="mx-auto flex max-w-3xl gap-1 px-2 sm:gap-2 sm:px-4 lg:px-6">
+            {/* Animated Avatar */}
+            <div className="shrink-0">
+              <motion.div
+                className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              >
+                A
+              </motion.div>
+            </div>
+
+            {/* Loading Animation */}
+            <div className="flex items-center space-x-1">
+              <div className="flex space-x-1">
+                <motion.div
+                  className="bg-primary h-2 w-2 rounded-full"
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{
+                    duration: 0.6,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                    delay: 0,
+                  }}
+                />
+                <motion.div
+                  className="bg-primary h-2 w-2 rounded-full"
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{
+                    duration: 0.6,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                    delay: 0.2,
+                  }}
+                />
+                <motion.div
+                  className="bg-primary h-2 w-2 rounded-full"
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{
+                    duration: 0.6,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                    delay: 0.4,
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </motion.div>
       )}

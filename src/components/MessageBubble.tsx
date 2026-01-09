@@ -138,7 +138,7 @@ const CodeBlock = React.memo(function CodeBlock({
             style={isDark ? oneDark : oneLight}
             language={language}
             PreTag="div"
-            className="!mt-0 !mb-0"
+            className="mt-0! mb-0!"
             customStyle={{
               margin: 0,
               padding: '1rem',
@@ -723,7 +723,16 @@ export function MessageBubble({
       ref={setOuterRef}
       className="group relative w-full py-4 sm:py-8"
     >
-      <div className="mx-auto flex max-w-3xl gap-3 px-2 sm:gap-6 sm:px-4 lg:px-6">
+      <div className="mx-auto flex max-w-3xl gap-1 px-2 sm:gap-2 sm:px-4 lg:px-6">
+        {/* Avatar for assistant messages */}
+        {!isUser && (
+          <div className="shrink-0">
+            <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold">
+              A
+            </div>
+          </div>
+        )}
+
         <div
           className={cn(
             'min-w-0 flex-1 space-y-3', // min-w-0 allows flex item to shrink
@@ -793,9 +802,9 @@ export function MessageBubble({
               message.isError && 'text-red-600! dark:text-red-400!',
               isUser
                 ? isEditing
-                  ? 'w-full rounded-3xl bg-[var(--bg-tertiary)] px-5 py-3 text-[var(--text-primary)]'
-                  : 'inline-block max-w-[85%] rounded-3xl bg-[var(--bg-tertiary)] px-5 py-3 text-[var(--text-primary)]'
-                : 'w-full rounded-3xl px-5 py-3 text-[var(--text-primary)]'
+                  ? 'w-full rounded-3xl bg-(--bg-tertiary) px-5 py-3 text-(--text-primary)'
+                  : 'inline-block max-w-[85%] rounded-3xl bg-(--bg-tertiary) px-5 py-3 text-(--text-primary)'
+                : 'w-full rounded-3xl px-5 py-3 text-(--text-primary)'
             )}
           >
             {isEditing ? (
@@ -805,7 +814,7 @@ export function MessageBubble({
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="w-full resize-none border-0 bg-transparent p-0 text-base break-words whitespace-pre-wrap focus:outline-none"
+                  className="w-full resize-none border-0 bg-transparent p-0 text-base wrap-break-word whitespace-pre-wrap focus:outline-none"
                   rows={Math.max(1, editContent.split('\n').length)}
                   style={{ minHeight: '24px', height: 'auto', width: '100%' }}
                   onInput={(e) => {
