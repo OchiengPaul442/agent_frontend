@@ -8,7 +8,7 @@ import { sanitizeMarkdown } from '@/utils/helpers';
 // - 'fast': reduced per-char delays for snappier typing
 // - 'instant': render full response immediately (no per-char delays)
 // - 'chunked': type in sentence groups for ultra-fast, formatted reveal
-const TYPEWRITER_MODE: 'normal' | 'fast' | 'instant' | 'chunked' = 'fast';
+const TYPEWRITER_MODE: 'normal' | 'fast' | 'instant' | 'chunked' = 'chunked';
 
 export interface UseChatOptions {
   sessionId?: string;
@@ -103,7 +103,7 @@ export function useChat(options: UseChatOptions = {}) {
             });
 
             // Ultra-short delay between sentences for near-instant animation
-            const chunkDelay = 10 + Math.random() * 10; // 10-20ms
+            const chunkDelay = 1 + Math.random() * 2; // 1-3ms
             typewriterRef.current = setTimeout(typeNextChunk, chunkDelay);
           } else {
             // Animation complete - finalize message
@@ -183,7 +183,7 @@ export function useChat(options: UseChatOptions = {}) {
 
           if (skipLength > 1) {
             // Structured content (code/tables) - minimal delay
-            baseDelay = 1;
+            baseDelay = 0.5;
           } else {
             // Natural typing rhythm for regular text
             const currentChar = fullText[charIndex - 1];
@@ -191,32 +191,32 @@ export function useChat(options: UseChatOptions = {}) {
             if (currentChar === ' ') {
               baseDelay =
                 TYPEWRITER_MODE === 'fast'
-                  ? 1 + Math.random() * 2
+                  ? 0.5 + Math.random() * 1
                   : 4 + Math.random() * 4;
             } else if (/[a-z]/.test(currentChar)) {
               baseDelay =
                 TYPEWRITER_MODE === 'fast'
-                  ? 2 + Math.random() * 3
+                  ? 1 + Math.random() * 2
                   : 8 + Math.random() * 4;
             } else if (/[A-Z0-9]/.test(currentChar)) {
               baseDelay =
                 TYPEWRITER_MODE === 'fast'
-                  ? 3 + Math.random() * 3
+                  ? 1.5 + Math.random() * 2
                   : 12 + Math.random() * 4;
             } else if (/[.,!?;:]/.test(currentChar)) {
               baseDelay =
                 TYPEWRITER_MODE === 'fast'
-                  ? 6 + Math.random() * 4
+                  ? 3 + Math.random() * 3
                   : 16 + Math.random() * 4;
             } else if (currentChar === '#') {
               baseDelay =
                 TYPEWRITER_MODE === 'fast'
-                  ? 8 + Math.random() * 6
+                  ? 4 + Math.random() * 4
                   : 20 + Math.random() * 8;
             } else {
               baseDelay =
                 TYPEWRITER_MODE === 'fast'
-                  ? 3 + Math.random() * 3
+                  ? 1.5 + Math.random() * 2
                   : 12 + Math.random() * 4;
             }
           }
