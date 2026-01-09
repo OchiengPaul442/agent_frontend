@@ -616,3 +616,25 @@
 .info-toast {
   animation: slide-in-up 0.3s ease-out;
 }
+
+/* Enhanced chart and image display */
+.prose img {
+  margin: 1.5rem auto;
+  border-radius: 1rem;
+  transition: opacity 0.2s ease;
+}
+
+.prose img:hover {
+  opacity: 0.95;
+}
+
+/* Smooth scroll behavior for chat container */
+.chat-messages-container {
+  scroll-behavior: smooth;
+}
+
+/* Image container styling for charts */
+.prose span:has(> span > span > img) {
+  display: block;
+  margin: 2rem 0;
+}

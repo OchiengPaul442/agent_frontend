@@ -940,6 +940,35 @@ export function MessageBubble({
                         {children}
                       </a>
                     ),
+                    img: ({
+                      src,
+                      alt,
+                      ...props
+                    }: React.ImgHTMLAttributes<HTMLImageElement>) => (
+                      <span className="my-6 block">
+                        <span className="bg-muted/20 border-border relative block overflow-hidden rounded-2xl border">
+                          <span className="bg-muted/5 block p-4">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={src}
+                              alt={alt || 'Chart visualization'}
+                              className="mx-auto w-full max-w-full rounded-lg object-contain"
+                              style={{
+                                maxHeight: '600px',
+                                height: 'auto',
+                              }}
+                              loading="lazy"
+                              {...props}
+                            />
+                          </span>
+                          {alt && (
+                            <span className="border-border bg-muted/50 text-muted-foreground block border-t px-4 py-2 text-center text-xs">
+                              {alt}
+                            </span>
+                          )}
+                        </span>
+                      </span>
+                    ),
                     code: CodeBlock,
                     table: ({
                       children,

@@ -37,6 +37,7 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
   const [isAtBottom, setIsAtBottom] = React.useState(true);
   const lastManualScrollRef = useRef<number>(0);
   const isAutoScrolling = useRef(false);
+  const wasLoadingRef = useRef(false);
 
   // Expose imperative methods so parent can request a scroll-to-bottom
   React.useImperativeHandle(ref, () => ({
@@ -157,8 +158,42 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
     return () => clearTimeout(timeoutId);
   }, [messages, isLoading, isAtBottom]);
 
+  // Auto-scroll when API response completes (loading finishes and streaming stops)
+  useEffect(() => {
+    // Track when loading state changes from true to false
+    if (wasLoadingRef.current && !isLoading) {
+      // Loading just completed
+      const lastMessage = messages[messages.length - 1];
+
+      // Check if the last message has finished streaming
+      if (
+        lastMessage &&
+        lastMessage.role === 'assistant' &&
+        !lastMessage.isStreaming
+      ) {
+        // API response is complete and typewriter animation finished
+        setTimeout(() => {
+          if (containerRef.current && isAtBottom) {
+            isAutoScrolling.current = true;
+            containerRef.current.scrollTo({
+              top: containerRef.current.scrollHeight,
+              behavior: 'smooth',
+            });
+            setTimeout(() => (isAutoScrolling.current = false), 800);
+          }
+        }, 100); // Small delay to ensure DOM has updated with any images/charts
+      }
+    }
+
+    // Update the ref for next comparison
+    wasLoadingRef.current = isLoading;
+  }, [isLoading, messages, isAtBottom]);
+
   return (
-    <div ref={containerRef} className="h-full overflow-y-auto pb-8">
+    <div
+      ref={containerRef}
+      className="chat-messages-container h-full overflow-y-auto pb-8"
+    >
       <AnimatePresence mode="popLayout">
         {Array.isArray(messages) &&
           messages.map((message, index) => {
