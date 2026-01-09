@@ -33,6 +33,9 @@ export default function HomePage() {
   // Initialize session ID once and keep it stable
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isInitializingSession, setIsInitializingSession] = useState(true);
+  const [borderGlowActive, setBorderGlowActive] = useState(false);
+  const [showAiInfo, setShowAiInfo] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Initialize session on mount
   useEffect(() => {
@@ -107,6 +110,18 @@ export default function HomePage() {
       setStoredFiles(new Map());
     };
   }, [sessionId]);
+
+  // Handle avatar click - trigger border animation and show AI info
+  const handleAvatarClick = useCallback(() => {
+    setBorderGlowActive(true);
+    setShowAiInfo(true);
+
+    // Stop border animation after 2s
+    setTimeout(() => setBorderGlowActive(false), 2000);
+
+    // Hide info after 4s
+    setTimeout(() => setShowAiInfo(false), 4000);
+  }, []);
 
   const {
     messages,
@@ -538,11 +553,13 @@ export default function HomePage() {
   return (
     <div className="bg-muted/30 flex h-screen items-center justify-center p-2">
       <div
+        ref={containerRef}
         className={cn(
           'bg-background border-border relative flex h-full w-full flex-col overflow-hidden rounded-lg shadow-xl transition-all duration-200',
           isDragging
             ? 'border-primary border-2 border-dashed'
-            : 'border border-solid'
+            : 'border border-solid',
+          borderGlowActive && 'border-glow-active'
         )}
         style={{
           marginRight:
@@ -589,6 +606,30 @@ export default function HomePage() {
                   </p>
                 </div>
               </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* AI Info Toast */}
+        <AnimatePresence>
+          {showAiInfo && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-4 left-1/2 z-50 -translate-x-1/2"
+            >
+              <div className="bg-primary text-primary-foreground info-toast flex items-center gap-3 rounded-xl px-6 py-3 shadow-2xl backdrop-blur-md">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 font-bold">
+                  🌟
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold">Hello from Aeris-AQ!</p>
+                  <p className="text-xs opacity-90">
+                    Your air quality companion
+                  </p>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -838,6 +879,7 @@ export default function HomePage() {
                   onRetry={retryMessage}
                   onEditMessage={editMessage}
                   onViewportChange={(atBottom) => setIsAtBottom(atBottom)}
+                  onAvatarClick={handleAvatarClick}
                   onFilePreview={(file) => {
                     // Check if file has fileId and get the stored File object
                     if (file.fileId && storedFiles.has(file.fileId)) {

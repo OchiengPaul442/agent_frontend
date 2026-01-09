@@ -16,6 +16,7 @@ interface ChatMessagesProps {
     type: string;
     fileId?: string;
   }) => void;
+  onAvatarClick?: () => void;
 }
 
 export const ChatMessages = React.forwardRef(function ChatMessages(
@@ -26,6 +27,7 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
     onEditMessage,
     onFilePreview,
     onViewportChange,
+    onAvatarClick,
   }: ChatMessagesProps & { onViewportChange?: (isAtBottom: boolean) => void },
   ref
 ) {
@@ -180,6 +182,7 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
                 onFilePreview={onFilePreview}
                 hasNextMessage={hasNextMessage}
                 isCanceled={isCanceled}
+                onAvatarClick={onAvatarClick}
               />
             );
           })}
@@ -196,13 +199,15 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
             {/* Animated Avatar */}
             <div className="shrink-0">
               <motion.div
-                className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold"
+                className="bg-primary text-primary-foreground flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-sm font-semibold transition-transform hover:scale-110"
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{
                   duration: 1.5,
                   repeat: Infinity,
                   ease: 'easeInOut',
                 }}
+                onClick={onAvatarClick}
+                title="Click for AI info"
               >
                 A
               </motion.div>

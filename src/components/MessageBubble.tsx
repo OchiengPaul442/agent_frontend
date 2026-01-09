@@ -38,6 +38,7 @@ interface MessageBubbleProps {
   }) => void;
   hasNextMessage?: boolean;
   isCanceled?: boolean;
+  onAvatarClick?: () => void;
 }
 
 const CodeBlock = React.memo(function CodeBlock({
@@ -193,10 +194,12 @@ export function MessageBubble({
   onFilePreview,
   hasNextMessage = false,
   isCanceled = false,
+  onAvatarClick,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [avatarClicked, setAvatarClicked] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
 
   const outerRef = useRef<HTMLDivElement | null>(null);
@@ -726,8 +729,19 @@ export function MessageBubble({
       <div className="mx-auto flex max-w-3xl gap-1 px-2 sm:gap-2 sm:px-4 lg:px-6">
         {/* Avatar for assistant messages */}
         {!isUser && (
-          <div className="shrink-0">
-            <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold">
+          <div className="relative shrink-0">
+            <div
+              className={cn(
+                'bg-primary text-primary-foreground flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-sm font-semibold transition-transform hover:scale-110',
+                avatarClicked && 'avatar-clicked'
+              )}
+              onClick={() => {
+                setAvatarClicked(true);
+                setTimeout(() => setAvatarClicked(false), 600);
+                onAvatarClick?.();
+              }}
+              title="Click for AI info"
+            >
               A
             </div>
           </div>
