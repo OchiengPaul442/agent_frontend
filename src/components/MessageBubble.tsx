@@ -946,13 +946,13 @@ export function MessageBubble({
                       ...props
                     }: React.ImgHTMLAttributes<HTMLImageElement>) => (
                       <span className="my-6 block">
-                        <span className="bg-muted/20 border-border relative block overflow-hidden rounded-2xl border">
-                          <span className="bg-muted/5 block p-4">
+                        <span className="border-border relative block overflow-hidden rounded-2xl border bg-[#161616]">
+                          <span className="block bg-[#0f0f0f] p-4">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={src}
                               alt={alt || 'Chart visualization'}
-                              className="mx-auto w-full max-w-full rounded-lg object-contain"
+                              className="mx-auto w-full max-w-full rounded-lg object-contain invert filter"
                               style={{
                                 maxHeight: '600px',
                                 height: 'auto',
