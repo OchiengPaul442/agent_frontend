@@ -914,7 +914,8 @@ export function MessageBubble({
                           React.isValidElement(child) &&
                           (child.type === 'div' ||
                             child.type === 'pre' ||
-                            child.type === 'table')
+                            child.type === 'table' ||
+                            child.type === CodeBlock)
                       );
 
                       // If it contains block elements, render as fragment instead of p
