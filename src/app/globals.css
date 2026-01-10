@@ -638,3 +638,11 @@
   display: block;
   margin: 2rem 0;
 }
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-shine,
+  .animate-bounce {
+    animation: none !important;
+  }
+}
