@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useImperativeHandle } from 'react';
 import { MessageBubble } from './MessageBubble';
 import { Message } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
+import ShimmerLoader from './ShimmerLoader';
 
 interface ChatMessagesProps {
   messages: Message[];
@@ -249,40 +250,7 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
             </div>
 
             {/* Loading Animation */}
-            <div className="flex items-center space-x-1">
-              <div className="flex space-x-1">
-                <motion.div
-                  className="bg-primary h-2 w-2 rounded-full"
-                  animate={{ y: [0, -6, 0] }}
-                  transition={{
-                    duration: 0.6,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                    delay: 0,
-                  }}
-                />
-                <motion.div
-                  className="bg-primary h-2 w-2 rounded-full"
-                  animate={{ y: [0, -6, 0] }}
-                  transition={{
-                    duration: 0.6,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                    delay: 0.2,
-                  }}
-                />
-                <motion.div
-                  className="bg-primary h-2 w-2 rounded-full"
-                  animate={{ y: [0, -6, 0] }}
-                  transition={{
-                    duration: 0.6,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                    delay: 0.4,
-                  }}
-                />
-              </div>
-            </div>
+            <ShimmerLoader />
           </div>
         </motion.div>
       )}
