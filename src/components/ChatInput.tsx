@@ -21,6 +21,8 @@ interface ChatInputProps {
   onStop?: () => void;
   isLoading?: boolean;
   placeholder?: string;
+  ghostPlaceholder?: string;
+  onGhostClear?: () => void;
   disabled?: boolean;
   onFileSelect?: (file: File) => void;
   uploadedFile?: File | null;
@@ -73,6 +75,8 @@ export function ChatInput({
   onStop,
   isLoading = false,
   placeholder = 'Ask about air quality...',
+  ghostPlaceholder,
+  onGhostClear,
   disabled = false,
   onFileSelect,
   uploadedFile: externalUploadedFile,
@@ -389,7 +393,11 @@ export function ChatInput({
         <textarea
           value={input}
           onChange={(e) => {
-            setInput(e.target.value);
+            const newValue = e.target.value;
+            setInput(newValue);
+            if (ghostPlaceholder && newValue !== '' && onGhostClear) {
+              onGhostClear();
+            }
             if (errorMessage) {
               if (onClearError) {
                 onClearError();
@@ -400,13 +408,20 @@ export function ChatInput({
           }}
           onKeyDown={handleKeyDown}
           placeholder={
-            uploadedFile ? 'Add a message (optional)...' : placeholder
+            uploadedFile
+              ? 'Add a message (optional)...'
+              : ghostPlaceholder && input === ''
+                ? ghostPlaceholder
+                : placeholder
           }
           disabled={disabled || isLoading}
           rows={1}
           className={cn(
-            'text-foreground placeholder:text-muted-foreground flex-1 resize-none border-0 bg-transparent px-4 py-3 text-sm focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:text-base',
-            'min-h-15'
+            'text-foreground flex-1 resize-none border-0 bg-transparent px-4 py-3 text-sm focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:text-base',
+            'min-h-15',
+            ghostPlaceholder && input === ''
+              ? 'placeholder:text-muted-foreground/60'
+              : 'placeholder:text-muted-foreground'
           )}
           style={{
             height: 'auto',

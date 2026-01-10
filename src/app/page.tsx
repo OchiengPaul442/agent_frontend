@@ -87,6 +87,10 @@ export default function HomePage() {
   const [fileErrorMessage, setFileErrorMessage] = useState<string | null>(null);
   const [showDelayNotification, setShowDelayNotification] = useState(false);
   const [storedFiles, setStoredFiles] = useState<Map<string, File>>(new Map());
+  const [ghostPlaceholder, setGhostPlaceholder] = useState<
+    string | undefined
+  >();
+  const [hasSelectedStarter, setHasSelectedStarter] = useState(false);
   const dragCounterRef = useRef(0);
 
   // Geolocation hook
@@ -397,6 +401,8 @@ export default function HomePage() {
       console.error('Session not initialized yet');
       return;
     }
+    setGhostPlaceholder(undefined);
+    setHasSelectedStarter(true);
     safeSendMessage(question, undefined, 'general');
   };
 
@@ -821,6 +827,10 @@ export default function HomePage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: 0.1 + index * 0.1 }}
                         onClick={() => handleStarterQuestion(question)}
+                        onMouseEnter={() =>
+                          !hasSelectedStarter && setGhostPlaceholder(question)
+                        }
+                        onMouseLeave={() => setGhostPlaceholder(undefined)}
                         className="group border-border bg-card hover:border-border focus:ring-ring cursor-pointer rounded-xl border p-4 text-left shadow-sm transition-all hover:shadow-md focus:ring-2 focus:outline-none sm:p-5 md:p-4"
                       >
                         <div className="flex items-start gap-3">
@@ -957,6 +967,13 @@ export default function HomePage() {
               onStop={stopResponse}
               isLoading={isLoading || isTyping}
               placeholder="Ask Aeris-AQ..."
+              ghostPlaceholder={
+                hasSelectedStarter ? undefined : ghostPlaceholder
+              }
+              onGhostClear={() => {
+                setGhostPlaceholder(undefined);
+                setHasSelectedStarter(false);
+              }}
               onFileSelect={handleFileSelect}
               uploadedFile={uploadedFile}
               onRemoveFile={handleRemoveFile}
