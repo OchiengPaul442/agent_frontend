@@ -14,12 +14,17 @@ module.exports = {
         'primary-light': 'hsl(var(--primary-light) / <alpha-value>)',
       },
       animation: {
-        shine: 'shine 2s linear infinite',
+        shine: 'shine 4s ease-in-out infinite',
+        shimmer: 'shimmer 2s linear infinite',
       },
       keyframes: {
         shine: {
-          '0%': { backgroundPosition: '200% 0%' },
-          '100%': { backgroundPosition: '-200% 0%' },
+          '0%': { backgroundPosition: '-200% center' },
+          '100%': { backgroundPosition: '200% center' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
         },
       },
     },
