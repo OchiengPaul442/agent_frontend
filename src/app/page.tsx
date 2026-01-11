@@ -23,10 +23,31 @@ const generateSessionId = () => {
 
 // Starter questions for air quality (professional / policy oriented)
 const STARTER_QUESTIONS = [
-  "What's the current air quality in Kampala City?",
-  'How does air pollution affect human health?',
-  'What will the air quality be like tomorrow in London?',
-  'Can you explain air quality standards and regulations?',
+  {
+    id: 1,
+    question: "What's the current air quality in my city?",
+    category: 'real-time',
+    description:
+      'Get instant AQI data and health recommendations for your location',
+  },
+  {
+    id: 2,
+    question: 'How do PM2.5 and PM10 affect human health?',
+    category: 'health',
+    description: 'Learn about particulate matter and its health impacts',
+  },
+  {
+    id: 3,
+    question: 'Compare air quality between London and Paris',
+    category: 'comparison',
+    description: 'See side-by-side air quality data for multiple cities',
+  },
+  {
+    id: 4,
+    question: 'Show me air quality trends for the past week',
+    category: 'trends',
+    description: 'Visualize historical patterns and forecast future conditions',
+  },
 ];
 
 export default function HomePage() {
@@ -822,13 +843,14 @@ export default function HomePage() {
                   <div className="grid gap-3 sm:grid-cols-2 md:gap-4">
                     {STARTER_QUESTIONS.map((question, index) => (
                       <motion.button
-                        key={index}
+                        key={question.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: 0.1 + index * 0.1 }}
-                        onClick={() => handleStarterQuestion(question)}
+                        onClick={() => handleStarterQuestion(question.question)}
                         onMouseEnter={() =>
-                          !hasSelectedStarter && setGhostPlaceholder(question)
+                          !hasSelectedStarter &&
+                          setGhostPlaceholder(question.question)
                         }
                         onMouseLeave={() => setGhostPlaceholder(undefined)}
                         className="group border-border bg-card hover:border-border focus:ring-ring cursor-pointer rounded-xl border p-4 text-left shadow-sm transition-all hover:shadow-md focus:ring-2 focus:outline-none sm:p-5 md:p-4"
@@ -849,9 +871,14 @@ export default function HomePage() {
                               />
                             </svg>
                           </div>
-                          <span className="text-card-foreground group-hover:text-primary text-sm leading-relaxed font-medium">
-                            {question}
-                          </span>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-card-foreground group-hover:text-primary text-sm leading-relaxed font-medium">
+                              {question.question}
+                            </span>
+                            <span className="text-muted-foreground text-xs">
+                              {question.description}
+                            </span>
+                          </div>
                         </div>
                       </motion.button>
                     ))}
