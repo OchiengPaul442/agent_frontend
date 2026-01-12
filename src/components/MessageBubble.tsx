@@ -908,7 +908,7 @@ export function MessageBubble({
                       children,
                       ...props
                     }: React.HTMLAttributes<HTMLParagraphElement>) => {
-                      // Check if paragraph contains block-level elements (like code blocks)
+                      // Check if paragraph contains block-level elements (like code blocks, tables, or complex images)
                       const hasBlockElements = React.Children.toArray(
                         children
                       ).some(
@@ -917,7 +917,9 @@ export function MessageBubble({
                           (child.type === 'div' ||
                             child.type === 'pre' ||
                             child.type === 'table' ||
-                            child.type === CodeBlock)
+                            child.type === CodeBlock ||
+                            (child.props &&
+                              typeof child.props.src === 'string')) // Detect img components
                       );
 
                       // If it contains block elements, render as fragment instead of p
@@ -947,31 +949,77 @@ export function MessageBubble({
                       src,
                       alt,
                       ...props
-                    }: React.ImgHTMLAttributes<HTMLImageElement>) => (
-                      <span className="my-6 block">
-                        <span className="border-border relative block overflow-hidden rounded-2xl border bg-[#161616]">
-                          <span className="block bg-[#0f0f0f] p-4">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={src}
-                              alt={alt || 'Chart visualization'}
-                              className="mx-auto w-full max-w-full rounded-lg object-contain invert filter"
-                              style={{
-                                maxHeight: '600px',
-                                height: 'auto',
-                              }}
-                              loading="lazy"
-                              {...props}
-                            />
-                          </span>
-                          {alt && (
-                            <span className="border-border bg-muted/50 text-muted-foreground block border-t px-4 py-2 text-center text-xs">
-                              {alt}
+                    }: React.ImgHTMLAttributes<HTMLImageElement>) => {
+                      const [imageError, setImageError] = React.useState(false);
+                      const [imageLoading, setImageLoading] =
+                        React.useState(true);
+
+                      // Don't invert images with chart-related alt text
+                      const shouldInvert = !alt
+                        ?.toLowerCase()
+                        .includes('chart');
+
+                      React.useEffect(() => {
+                        setImageError(false);
+                        setImageLoading(true);
+                      }, [src]);
+
+                      return (
+                        <span className="my-6 block">
+                          <span className="border-border relative block overflow-hidden rounded-2xl border bg-[#161616]">
+                            <span className="block bg-[#0f0f0f] p-4">
+                              {imageError ? (
+                                <div className="text-muted-foreground py-8 text-center">
+                                  <div className="mb-2 text-sm">
+                                    Failed to load image
+                                  </div>
+                                  <div className="text-xs">
+                                    The image could not be displayed. Please
+                                    check your connection and try again.
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  {imageLoading && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-[#0f0f0f]">
+                                      <div className="text-muted-foreground text-sm">
+                                        Loading image...
+                                      </div>
+                                    </div>
+                                  )}
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={src}
+                                    alt={alt || 'Visualization'}
+                                    className={cn(
+                                      'mx-auto w-full max-w-full rounded-lg object-contain transition-opacity duration-300',
+                                      shouldInvert && 'invert filter',
+                                      imageLoading ? 'opacity-0' : 'opacity-100'
+                                    )}
+                                    style={{
+                                      maxHeight: '600px',
+                                      height: 'auto',
+                                    }}
+                                    loading="lazy"
+                                    onLoad={() => setImageLoading(false)}
+                                    onError={() => {
+                                      setImageError(true);
+                                      setImageLoading(false);
+                                    }}
+                                    {...props}
+                                  />
+                                </>
+                              )}
                             </span>
-                          )}
+                            {alt && (
+                              <span className="border-border bg-muted/50 text-muted-foreground block border-t px-4 py-2 text-center text-xs">
+                                {alt}
+                              </span>
+                            )}
+                          </span>
                         </span>
-                      </span>
-                    ),
+                      );
+                    },
                     code: CodeBlock,
                     table: ({
                       children,
