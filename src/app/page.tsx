@@ -21,35 +21,32 @@ const generateSessionId = () => {
   return `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 };
 
-// Starter questions for air quality (professional / policy oriented)
+// Starter questions for air quality (general)
 const STARTER_QUESTIONS = [
   {
     id: 1,
-    question: 'Analyze air quality trends in major cities over the past month',
-    category: 'analysis',
+    question: "What's the air quality like in my city right now?",
+    category: 'current',
     description:
-      'Get comprehensive data analysis with charts and insights on urban air quality patterns',
+      'Check current air quality levels and health recommendations for your location',
   },
   {
     id: 2,
-    question: 'What are the main sources of air pollution in my area?',
-    category: 'sources',
-    description:
-      'Identify pollution contributors and their environmental impact',
+    question: 'How does air pollution affect my health?',
+    category: 'health',
+    description: 'Learn about the health impacts of different air pollutants',
   },
   {
     id: 3,
-    question: 'Create a health risk assessment for outdoor activities today',
-    category: 'health',
-    description:
-      'Personalized recommendations based on current air quality conditions',
+    question: 'What are the main causes of poor air quality?',
+    category: 'causes',
+    description: 'Understand common sources of air pollution and their effects',
   },
   {
     id: 4,
-    question: 'Compare air quality policies between different countries',
-    category: 'policy',
-    description:
-      'Explore global approaches to air quality management and regulations',
+    question: 'How can I improve indoor air quality?',
+    category: 'indoor',
+    description: 'Get tips for better air quality in your home and workplace',
   },
 ];
 
