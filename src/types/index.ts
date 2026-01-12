@@ -19,6 +19,9 @@ export interface Message {
     preview?: string; // Data URL for preview
   };
   cost_info?: CostInfo;
+  requires_continuation?: boolean;
+  finish_reason?: string | null;
+  truncated?: boolean;
 }
 
 export interface Session {
@@ -92,6 +95,9 @@ export interface ChatResponse {
   cached: boolean;
   message_count?: number;
   cost_info?: CostInfo;
+  requires_continuation?: boolean;
+  finish_reason?: string | null;
+  truncated?: boolean;
 }
 
 export interface AirQualityQuery {

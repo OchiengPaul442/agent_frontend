@@ -30,6 +30,7 @@ interface MessageBubbleProps {
   onEdit?: (messageIndex: number, newContent: string) => void;
   messageIndex?: number;
   onRetry?: (messageIndex: number) => void;
+  onContinue?: () => void;
   onFilePreview?: (file: {
     name: string;
     size: number;
@@ -191,6 +192,7 @@ export function MessageBubble({
   onEdit,
   messageIndex,
   onRetry,
+  onContinue,
   onFilePreview,
   hasNextMessage = false,
   isCanceled = false,
@@ -1058,6 +1060,15 @@ export function MessageBubble({
                   >
                     <AqDownload01 className="h-4 w-4" />
                   </button>
+                  {message.requires_continuation && (
+                    <button
+                      onClick={onContinue}
+                      className="text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer rounded-lg p-2 transition-colors"
+                      title="Continue response"
+                    >
+                      ▶
+                    </button>
+                  )}
                 </>
               )}
             </div>

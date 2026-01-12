@@ -11,6 +11,7 @@ interface ChatMessagesProps {
   isLoading?: boolean;
   onRetry?: (messageIndex: number) => void;
   onEditMessage?: (messageIndex: number, newContent: string) => void;
+  onContinue?: () => void;
   onFilePreview?: (file: {
     name: string;
     size: number;
@@ -26,6 +27,7 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
     isLoading = false,
     onRetry,
     onEditMessage,
+    onContinue,
     onFilePreview,
     onViewportChange,
     onAvatarClick,
@@ -215,6 +217,7 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
                 onEdit={onEditMessage}
                 messageIndex={index}
                 onRetry={onRetry}
+                onContinue={onContinue}
                 onFilePreview={onFilePreview}
                 hasNextMessage={hasNextMessage}
                 isCanceled={isCanceled}

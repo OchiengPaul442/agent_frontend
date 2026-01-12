@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { apiService } from '@/services/api.service';
-import type { Message, ChatResponse, ResponseRole } from '@/types';
+import type { Message, ChatResponse, ResponseRole, CostInfo } from '@/types';
 import { sanitizeMarkdown } from '@/utils/helpers';
 
 // Typing mode for the typewriter animation:
@@ -38,7 +38,15 @@ export function useChat(options: UseChatOptions = {}) {
 
   // Typewriter effect using setTimeout for stable, ChatGPT-like animation
   const animateTypewriter = useCallback(
-    (fullText: string, timestamp?: string, tools_used?: string[]) => {
+    (
+      fullText: string,
+      timestamp?: string,
+      tools_used?: string[],
+      requires_continuation?: boolean,
+      finish_reason?: string | null,
+      truncated?: boolean,
+      cost_info?: CostInfo
+    ) => {
       // Cancel any existing animation
       if (typewriterRef.current !== null) {
         clearTimeout(typewriterRef.current);
@@ -237,6 +245,10 @@ export function useChat(options: UseChatOptions = {}) {
                 timestamp: timestamp || new Date().toISOString(),
                 tools_used: tools_used,
                 isStreaming: false,
+                requires_continuation: requires_continuation,
+                finish_reason: finish_reason,
+                truncated: truncated,
+                cost_info: cost_info,
               };
             }
             return updated;
@@ -345,12 +357,24 @@ export function useChat(options: UseChatOptions = {}) {
           timestamp: timestamp,
           tools_used: response.tools_used,
           isStreaming: true,
+          requires_continuation: response.requires_continuation,
+          finish_reason: response.finish_reason,
+          truncated: response.truncated,
+          cost_info: response.cost_info,
         };
 
         setMessages((prev) => [...prev, placeholderMessage]);
 
         // Start typewriter animation
-        animateTypewriter(sanitizedContent, timestamp, response.tools_used);
+        animateTypewriter(
+          sanitizedContent,
+          timestamp,
+          response.tools_used,
+          response.requires_continuation,
+          response.finish_reason,
+          response.truncated,
+          response.cost_info
+        );
 
         return response;
       } catch (err) {
@@ -460,12 +484,24 @@ export function useChat(options: UseChatOptions = {}) {
           timestamp: timestamp,
           tools_used: response.tools_used,
           isStreaming: true,
+          requires_continuation: response.requires_continuation,
+          finish_reason: response.finish_reason,
+          truncated: response.truncated,
+          cost_info: response.cost_info,
         };
 
         setMessages((prev) => [...prev, placeholderMessage]);
 
         // Start typewriter animation
-        animateTypewriter(sanitizedContent, timestamp, response.tools_used);
+        animateTypewriter(
+          sanitizedContent,
+          timestamp,
+          response.tools_used,
+          response.requires_continuation,
+          response.finish_reason,
+          response.truncated,
+          response.cost_info
+        );
 
         return response;
       } catch (err) {
@@ -560,12 +596,24 @@ export function useChat(options: UseChatOptions = {}) {
           timestamp: timestamp,
           tools_used: response.tools_used,
           isStreaming: true,
+          requires_continuation: response.requires_continuation,
+          finish_reason: response.finish_reason,
+          truncated: response.truncated,
+          cost_info: response.cost_info,
         };
 
         setMessages((prev) => [...prev, placeholderMessage]);
 
         // Start typewriter animation
-        animateTypewriter(sanitizedContent, timestamp, response.tools_used);
+        animateTypewriter(
+          sanitizedContent,
+          timestamp,
+          response.tools_used,
+          response.requires_continuation,
+          response.finish_reason,
+          response.truncated,
+          response.cost_info
+        );
 
         return response;
       } catch (err) {
@@ -606,6 +654,100 @@ export function useChat(options: UseChatOptions = {}) {
     };
     setMessages((prev) => [...prev, errorMessage]);
   }, []);
+
+  const continueMessage =
+    useCallback(async (): Promise<ChatResponse | null> => {
+      if (isLoadingRef.current) return null; // Prevent concurrent requests
+      if (!options.sessionId) return null; // Ensure session ID is available
+
+      // Cancel any ongoing request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      const userMessage: Message = {
+        role: 'user',
+        content: 'Please continue',
+        timestamp: new Date().toISOString(),
+      };
+
+      setMessages((prev) => [...prev, userMessage]);
+      setIsLoading(true);
+      setError(null);
+      isLoadingRef.current = true;
+
+      try {
+        const response = await apiService.sendMessage(
+          {
+            message: 'Please continue',
+            session_id: options.sessionId,
+            history: messages,
+            save_to_db: false,
+          },
+          { signal: controller.signal }
+        );
+
+        const sanitizedContent = sanitizeMarkdown(response.response);
+        const timestamp = new Date().toISOString();
+
+        // Set typing state immediately when response is received to keep stop button visible
+        setIsTyping(true);
+
+        // Add placeholder message for streaming effect
+        const placeholderMessage: Message = {
+          role: 'assistant',
+          content: '',
+          timestamp: timestamp,
+          tools_used: response.tools_used,
+          isStreaming: true,
+          requires_continuation: response.requires_continuation,
+          finish_reason: response.finish_reason,
+          truncated: response.truncated,
+          cost_info: response.cost_info,
+        };
+
+        setMessages((prev) => [...prev, placeholderMessage]);
+
+        // Start typewriter animation
+        animateTypewriter(
+          sanitizedContent,
+          timestamp,
+          response.tools_used,
+          response.requires_continuation,
+          response.finish_reason,
+          response.truncated,
+          response.cost_info
+        );
+
+        return response;
+      } catch (err) {
+        // Don't handle aborted requests as errors
+        if (err instanceof Error && err.name === 'AbortError') {
+          return null;
+        }
+
+        const error =
+          err instanceof Error ? err : new Error('Failed to continue message');
+        options.onError?.(error);
+
+        // Add error message instead of removing user message
+        const errorMessage: Message = {
+          role: 'assistant',
+          content: `Error: ${error.message}`,
+          timestamp: new Date().toISOString(),
+          isError: true,
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+        return null;
+      } finally {
+        setIsLoading(false);
+        isLoadingRef.current = false;
+        abortControllerRef.current = null;
+      }
+    }, [messages, options, animateTypewriter]);
 
   // Function to stop ongoing AI response
   const stopResponse = useCallback(() => {
@@ -652,6 +794,7 @@ export function useChat(options: UseChatOptions = {}) {
     clearMessages,
     retryMessage,
     editMessage,
+    continueMessage,
     addErrorMessage,
     stopResponse,
   };

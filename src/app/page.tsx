@@ -156,6 +156,7 @@ export default function HomePage() {
     clearMessages,
     retryMessage,
     editMessage,
+    continueMessage,
     addErrorMessage,
     stopResponse,
   } = useChat({
@@ -915,6 +916,7 @@ export default function HomePage() {
                   isLoading={isLoading}
                   onRetry={retryMessage}
                   onEditMessage={editMessage}
+                  onContinue={continueMessage}
                   onViewportChange={(atBottom) => setIsAtBottom(atBottom)}
                   onAvatarClick={handleAvatarClick}
                   onFilePreview={(file) => {
