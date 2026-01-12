@@ -919,6 +919,7 @@ export function MessageBubble({
                             child.type === 'table' ||
                             child.type === CodeBlock ||
                             (child.props &&
+                              'src' in child.props &&
                               typeof child.props.src === 'string')) // Detect img components
                       );
 

@@ -25,28 +25,31 @@ const generateSessionId = () => {
 const STARTER_QUESTIONS = [
   {
     id: 1,
-    question: "What's the current air quality in my city?",
-    category: 'real-time',
+    question: 'Analyze air quality trends in major cities over the past month',
+    category: 'analysis',
     description:
-      'Get instant AQI data and health recommendations for your location',
+      'Get comprehensive data analysis with charts and insights on urban air quality patterns',
   },
   {
     id: 2,
-    question: 'How do PM2.5 and PM10 affect human health?',
-    category: 'health',
-    description: 'Learn about particulate matter and its health impacts',
+    question: 'What are the main sources of air pollution in my area?',
+    category: 'sources',
+    description:
+      'Identify pollution contributors and their environmental impact',
   },
   {
     id: 3,
-    question: 'Compare air quality between London and Paris',
-    category: 'comparison',
-    description: 'See side-by-side air quality data for multiple cities',
+    question: 'Create a health risk assessment for outdoor activities today',
+    category: 'health',
+    description:
+      'Personalized recommendations based on current air quality conditions',
   },
   {
     id: 4,
-    question: 'Show me air quality trends for the past week',
-    category: 'trends',
-    description: 'Visualize historical patterns and forecast future conditions',
+    question: 'Compare air quality policies between different countries',
+    category: 'policy',
+    description:
+      'Explore global approaches to air quality management and regulations',
   },
 ];
 
