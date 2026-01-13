@@ -34,7 +34,6 @@ const ShimmerLoader: React.FC = () => {
             key={currentIndex}
             className="text-sm font-medium tracking-wide sm:text-base"
             duration={durationSec}
-            spread={0.45}
           >
             {statuses[currentIndex]}
           </ShimmerText>
