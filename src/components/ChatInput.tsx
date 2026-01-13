@@ -263,347 +263,401 @@ export function ChatInput({
 
   return (
     <div className="p-2 sm:p-4">
-      {/* File Upload Preview */}
-      <AnimatePresence>
-        {uploadedFile && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className={cn('mb-3', onFilePreview && 'cursor-pointer')}
-            onClick={() => onFilePreview && onFilePreview(uploadedFile)}
-          >
-            <div className="border-border flex items-center gap-3 rounded-xl border bg-[#161616] p-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg">
-                {isUploading ? (
-                  <AqLoading02 className="text-primary h-5 w-5 animate-spin" />
-                ) : (
-                  (() => {
-                    const type = uploadedFile.type;
-                    if (
-                      type.includes('pdf') ||
-                      uploadedFile.name.toLowerCase().endsWith('.pdf')
-                    )
-                      return (
-                        <Image
-                          src="/file-pdf.svg"
-                          alt="PDF"
-                          width={40}
-                          height={40}
-                          className="h-10 w-10 object-cover"
-                        />
-                      );
-                    if (
-                      type.includes('sheet') ||
-                      type.includes('excel') ||
-                      uploadedFile.name.toLowerCase().endsWith('.xlsx') ||
-                      uploadedFile.name.toLowerCase().endsWith('.xls')
-                    )
-                      return (
-                        <Image
-                          src="/file-xlsx.svg"
-                          alt="Excel"
-                          width={40}
-                          height={40}
-                          className="h-10 w-10 object-cover"
-                        />
-                      );
-                    if (
-                      type.includes('csv') ||
-                      uploadedFile.name.toLowerCase().endsWith('.csv')
-                    )
-                      return (
-                        <Image
-                          src="/file-csv.svg"
-                          alt="CSV"
-                          width={40}
-                          height={40}
-                          className="h-10 w-10 object-cover"
-                        />
-                      );
-                    return <AqFile02 className="text-primary h-5 w-5" />;
-                  })()
+      {/* Attachments Section */}
+      <div className="chat-input-attachments">
+        <AnimatePresence>
+          {uploadedFile && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className={cn('mb-3', onFilePreview && 'cursor-pointer')}
+              onClick={() => onFilePreview && onFilePreview(uploadedFile)}
+            >
+              <div className="border-border flex items-center gap-3 rounded-xl border bg-[#161616] p-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg">
+                  {isUploading ? (
+                    <AqLoading02 className="text-primary h-5 w-5 animate-spin" />
+                  ) : (
+                    (() => {
+                      const type = uploadedFile.type;
+                      if (
+                        type.includes('pdf') ||
+                        uploadedFile.name.toLowerCase().endsWith('.pdf')
+                      )
+                        return (
+                          <Image
+                            src="/file-pdf.svg"
+                            alt="PDF"
+                            width={40}
+                            height={40}
+                            className="h-10 w-10 object-cover"
+                          />
+                        );
+                      if (
+                        type.includes('sheet') ||
+                        type.includes('excel') ||
+                        uploadedFile.name.toLowerCase().endsWith('.xlsx') ||
+                        uploadedFile.name.toLowerCase().endsWith('.xls')
+                      )
+                        return (
+                          <Image
+                            src="/file-xlsx.svg"
+                            alt="Excel"
+                            width={40}
+                            height={40}
+                            className="h-10 w-10 object-cover"
+                          />
+                        );
+                      if (
+                        type.includes('csv') ||
+                        uploadedFile.name.toLowerCase().endsWith('.csv')
+                      )
+                        return (
+                          <Image
+                            src="/file-csv.svg"
+                            alt="CSV"
+                            width={40}
+                            height={40}
+                            className="h-10 w-10 object-cover"
+                          />
+                        );
+                      return <AqFile02 className="text-primary h-5 w-5" />;
+                    })()
+                  )}
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <p className="text-foreground truncate text-sm font-medium">
+                    {uploadedFile.name}
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    {isUploading
+                      ? 'Uploading...'
+                      : formatFileSize(uploadedFile.size)}
+                  </p>
+                </div>
+                {!isUploading && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFile();
+                    }}
+                    className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus:ring-destructive flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors focus:ring-2 focus:outline-none"
+                    aria-label="Remove file"
+                  >
+                    <AqX className="h-4 w-4" />
+                  </button>
                 )}
               </div>
-              <div className="flex-1 overflow-hidden">
-                <p className="text-foreground truncate text-sm font-medium">
-                  {uploadedFile.name}
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  {isUploading
-                    ? 'Uploading...'
-                    : formatFileSize(uploadedFile.size)}
-                </p>
-              </div>
-              {!isUploading && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeFile();
-                  }}
-                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus:ring-destructive flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors focus:ring-2 focus:outline-none"
-                  aria-label="Remove file"
-                >
-                  <AqX className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* Error Message */}
-      <AnimatePresence>
-        {errorMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="mb-3"
-          >
-            <div className="text-foreground flex items-center gap-2 rounded-xl border border-gray-200 p-3 text-sm">
-              <span className="flex-1">{errorMessage}</span>
-              <button
-                onClick={() => {
-                  if (onClearError) {
-                    onClearError();
-                  } else if (externalErrorMessage === undefined) {
-                    setInternalErrorMessage(null);
-                  }
-                }}
-                className="text-muted-foreground flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-gray-200 focus:ring-2 focus:ring-gray-300 focus:outline-none"
-                aria-label="Close error message"
-              >
-                <AqX className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        {/* Error Message */}
+        <AnimatePresence>
+          {errorMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-3"
+            >
+              <div className="text-foreground flex items-center gap-2 rounded-xl border border-gray-200 p-3 text-sm">
+                <span className="flex-1">{errorMessage}</span>
+                <button
+                  onClick={() => {
+                    if (onClearError) {
+                      onClearError();
+                    } else if (externalErrorMessage === undefined) {
+                      setInternalErrorMessage(null);
+                    }
+                  }}
+                  className="text-muted-foreground flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-gray-200 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+                  aria-label="Close error message"
+                >
+                  <AqX className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* Input Area */}
       <div
         className={cn(
-          'bg-background relative flex min-h-30 flex-col rounded-3xl border-2 bg-[#161616] transition-all',
+          'bg-background relative flex min-h-30 w-full flex-col rounded-3xl border-2 bg-[#161616] transition-all',
           'border-muted-foreground/30',
           'shadow-sm'
         )}
       >
-        {/* Textarea */}
-        <textarea
-          value={input}
-          onChange={(e) => {
-            const newValue = e.target.value;
-            setInput(newValue);
-            if (ghostPlaceholder && newValue !== '' && onGhostClear) {
-              onGhostClear();
-            }
-            if (errorMessage) {
-              if (onClearError) {
-                onClearError();
-              } else if (externalErrorMessage === undefined) {
-                setInternalErrorMessage(null);
-              }
-            }
-          }}
-          onKeyDown={handleKeyDown}
-          placeholder={
-            uploadedFile
-              ? 'Add a message (optional)...'
-              : ghostPlaceholder && input === ''
-                ? ghostPlaceholder
-                : placeholder
-          }
-          disabled={disabled || isLoading}
-          rows={1}
-          className={cn(
-            'text-foreground flex-1 resize-none border-0 bg-transparent px-4 py-3 text-sm focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:text-base',
-            'min-h-15',
-            ghostPlaceholder && input === ''
-              ? 'placeholder:text-muted-foreground/60'
-              : 'placeholder:text-muted-foreground'
-          )}
-          style={{
-            height: 'auto',
-          }}
-          onInput={(e) => {
-            const target = e.target as HTMLTextAreaElement;
-            target.style.height = 'auto';
-            target.style.height = `${target.scrollHeight}px`;
-          }}
-        />
-
-        {/* Buttons Row */}
-        <div className="flex items-center gap-1 px-3 pb-3">
-          {/* File Upload Button */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.csv,.xlsx,.xls"
+        {/* Body Section */}
+        <div className="chat-input-body">
+          <textarea
+            value={input}
             onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleFileSelect(file);
+              const newValue = e.target.value;
+              setInput(newValue);
+              if (ghostPlaceholder && newValue !== '' && onGhostClear) {
+                onGhostClear();
+              }
+              if (errorMessage) {
+                if (onClearError) {
+                  onClearError();
+                } else if (externalErrorMessage === undefined) {
+                  setInternalErrorMessage(null);
+                }
+              }
             }}
-            className="hidden"
+            onPaste={(e) => {
+              const clipboardText = e.clipboardData?.getData('text') || '';
+              if (!clipboardText) return;
+              e.preventDefault();
+              // Normalize line endings and tabs, preserve markdown formatting
+              let normalized = clipboardText
+                .replace(/\r\n/g, '\n')
+                .replace(/\r/g, '\n')
+                .replace(/\t/g, '  ');
+              // Trim only leading/trailing blank lines
+              normalized = normalized.replace(/^\n+/, '').replace(/\n+$/, '');
+              // Insert soft breaks for very long single-line content (e.g., minified code)
+              const cleaned =
+                normalized.length > 1200 && !normalized.includes('\n')
+                  ? normalized.replace(/(.{120,}?)(\s|$)/g, '$1\n')
+                  : normalized;
+              const el = e.target as HTMLTextAreaElement;
+              const start = el.selectionStart || 0;
+              const end = el.selectionEnd || 0;
+              const before = input.slice(0, start);
+              const after = input.slice(end);
+              const newValue = before + cleaned + after;
+              setInput(newValue);
+              // place cursor after pasted text
+              requestAnimationFrame(() => {
+                const pos = start + cleaned.length;
+                el.selectionStart = el.selectionEnd = pos;
+                el.style.height = 'auto';
+                const newHeight = Math.min(el.scrollHeight, 208);
+                el.style.height = `${newHeight}px`;
+              });
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder={
+              uploadedFile
+                ? 'Add a message (optional)...'
+                : ghostPlaceholder && input === ''
+                  ? ghostPlaceholder
+                  : placeholder
+            }
+            disabled={disabled || isLoading}
+            rows={1}
+            className={cn(
+              'text-foreground w-full resize-none border-0 bg-transparent px-4 py-3 text-sm transition-all duration-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:text-base',
+              'max-h-52 min-h-15 overflow-y-auto',
+              'break-words whitespace-pre-wrap',
+              ghostPlaceholder && input === ''
+                ? 'placeholder:text-muted-foreground/60'
+                : 'placeholder:text-muted-foreground'
+            )}
+            style={{
+              height: 'auto',
+              boxSizing: 'border-box',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              overflowWrap: 'anywhere',
+              width: '100%',
+            }}
+            onInput={(e) => {
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = 'auto';
+              const newHeight = Math.min(target.scrollHeight, 208); // 52 * 4px = 208px
+              target.style.height = `${newHeight}px`;
+            }}
           />
+        </div>
 
-          {/* Location Button */}
-          {onLocationRequest && (
+        {/* Footer Section */}
+        <div className="chat-input-footer flex items-center justify-between px-3 pb-3">
+          {/* Tools */}
+          <div className="chat-input-tools flex items-center gap-1">
+            {/* File Upload Button */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.csv,.xlsx,.xls"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFileSelect(file);
+              }}
+              className="hidden"
+            />
+
+            {/* Location Button */}
+            {onLocationRequest && (
+              <button
+                onClick={onLocationRequest}
+                disabled={disabled || isLoading || locationLoading}
+                className={cn(
+                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none',
+                  hasLocation
+                    ? 'cursor-pointer text-green-600 hover:bg-green-50'
+                    : 'text-muted-foreground hover:bg-muted cursor-pointer',
+                  'disabled:cursor-not-allowed disabled:opacity-50'
+                )}
+                aria-label="Share location"
+                title={
+                  hasLocation
+                    ? 'Location enabled — click to send location'
+                    : 'Share my location with Aeris-AQ'
+                }
+                data-tooltip={
+                  hasLocation ? 'Location enabled' : 'Share location'
+                }
+              >
+                {locationLoading ? (
+                  <AqLoading02 className="text-primary h-4 w-4 animate-spin" />
+                ) : (
+                  <AqMarkerPin01 className="h-4 w-4" />
+                )}
+              </button>
+            )}
+
+            {/* File Upload Button */}
             <button
-              onClick={onLocationRequest}
-              disabled={disabled || isLoading || locationLoading}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={disabled || isLoading || !!uploadedFile}
               className={cn(
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none',
-                hasLocation
-                  ? 'cursor-pointer text-green-600 hover:bg-green-50'
+                uploadedFile
+                  ? 'text-muted-foreground cursor-not-allowed'
                   : 'text-muted-foreground hover:bg-muted cursor-pointer',
                 'disabled:cursor-not-allowed disabled:opacity-50'
               )}
-              aria-label="Share location"
-              title={
-                hasLocation
-                  ? 'Location enabled — click to send location'
-                  : 'Share my location with Aeris-AQ'
-              }
-              data-tooltip={hasLocation ? 'Location enabled' : 'Share location'}
+              aria-label="Upload file"
+              title="Upload a document for analysis"
             >
-              {locationLoading ? (
-                <AqLoading02 className="text-primary h-4 w-4 animate-spin" />
-              ) : (
-                <AqMarkerPin01 className="h-4 w-4" />
-              )}
+              <AqPaperclip className="h-4 w-4" />
             </button>
-          )}
-
-          {/* File Upload Button */}
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={disabled || isLoading || !!uploadedFile}
-            className={cn(
-              'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none',
-              uploadedFile
-                ? 'text-muted-foreground cursor-not-allowed'
-                : 'text-muted-foreground hover:bg-muted cursor-pointer',
-              'disabled:cursor-not-allowed disabled:opacity-50'
-            )}
-            aria-label="Upload file"
-            title="Upload a document for analysis"
-          >
-            <AqPaperclip className="h-4 w-4" />
-          </button>
-
-          {/* Role Selector Dropdown */}
-          <div className="relative ml-auto" ref={roleDropdownRef}>
-            <button
-              onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-              disabled={disabled || isLoading}
-              className={cn(
-                'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none',
-                'bg-muted/80 text-muted-foreground hover:bg-muted cursor-pointer',
-                'disabled:cursor-not-allowed disabled:opacity-50',
-                'border-border/50 border'
-              )}
-              aria-label="Select response style"
-            >
-              <span className="hidden sm:inline">
-                {selectedRoleOption.label}
-              </span>
-              <span className="sm:hidden">
-                {selectedRoleOption.label.split(' ')[0]}
-              </span>
-              <AqChevronDown
-                className={cn(
-                  'h-3 w-3 transition-transform',
-                  isRoleDropdownOpen && 'rotate-180'
-                )}
-              />
-            </button>
-
-            {/* Dropdown Menu */}
-            <AnimatePresence>
-              {isRoleDropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  className="border-border absolute right-0 bottom-full z-50 mb-2 w-72 overflow-hidden rounded-xl border bg-[#161616] shadow-lg"
-                >
-                  <div className="p-2">
-                    <div className="text-muted-foreground px-3 py-2 text-xs font-semibold">
-                      Response Style
-                    </div>
-                    {roleOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setSelectedRole(option.value);
-                          setIsRoleDropdownOpen(false);
-                        }}
-                        className={cn(
-                          'w-full cursor-pointer rounded-lg px-3 py-2.5 text-left transition-colors',
-                          'hover:bg-muted',
-                          selectedRole === option.value &&
-                            'bg-primary/10 text-primary'
-                        )}
-                      >
-                        <div className="text-sm font-medium">
-                          {option.label}
-                        </div>
-                        <div className="text-muted-foreground mt-0.5 text-xs">
-                          {option.description}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
 
-          <motion.button
-            onClick={isLoading && onStop ? onStop : handleSend}
-            disabled={
-              disabled ||
-              isUploading ||
-              (!isLoading && !input.trim() && !uploadedFile)
-            }
-            animate={
-              input.trim() && !isLoading
-                ? {
-                    scale: [1, 1.05, 1],
-                  }
-                : {}
-            }
-            transition={{
-              duration: 0.8,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            className={cn(
-              'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:h-9 sm:w-9',
-              disabled ||
+          {/* Right-aligned controls */}
+          <div className="flex items-center gap-1">
+            {/* Role Selector Dropdown */}
+            <div className="relative" ref={roleDropdownRef}>
+              <button
+                onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+                disabled={disabled || isLoading}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none',
+                  'bg-muted/80 text-muted-foreground hover:bg-muted cursor-pointer',
+                  'disabled:cursor-not-allowed disabled:opacity-50',
+                  'border-border/50 border'
+                )}
+                aria-label="Select response style"
+              >
+                <span className="hidden sm:inline">
+                  {selectedRoleOption.label}
+                </span>
+                <span className="sm:hidden">
+                  {selectedRoleOption.label.split(' ')[0]}
+                </span>
+                <AqChevronDown
+                  className={cn(
+                    'h-3 w-3 transition-transform',
+                    isRoleDropdownOpen && 'rotate-180'
+                  )}
+                />
+              </button>
+
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {isRoleDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="border-border absolute right-0 bottom-full z-50 mb-2 w-72 overflow-hidden rounded-xl border bg-[#161616] shadow-lg"
+                  >
+                    <div className="p-2">
+                      <div className="text-muted-foreground px-3 py-2 text-xs font-semibold">
+                        Response Style
+                      </div>
+                      {roleOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedRole(option.value);
+                            setIsRoleDropdownOpen(false);
+                          }}
+                          className={cn(
+                            'w-full cursor-pointer rounded-lg px-3 py-2.5 text-left transition-colors',
+                            'hover:bg-muted',
+                            selectedRole === option.value &&
+                              'bg-primary/10 text-primary'
+                          )}
+                        >
+                          <div className="text-sm font-medium">
+                            {option.label}
+                          </div>
+                          <div className="text-muted-foreground mt-0.5 text-xs">
+                            {option.description}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Submit Button */}
+            <motion.button
+              onClick={isLoading && onStop ? onStop : handleSend}
+              disabled={
+                disabled ||
                 isUploading ||
                 (!isLoading && !input.trim() && !uploadedFile)
-                ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                : isLoading && onStop
-                  ? 'bg-muted hover:bg-muted/80 cursor-pointer text-red-500 focus:ring-red-500'
-                  : 'bg-primary text-primary-foreground cursor-pointer hover:opacity-95',
-              'disabled:cursor-not-allowed disabled:opacity-50'
-            )}
-            aria-label={isLoading && onStop ? 'Stop response' : 'Send message'}
-            title={isLoading && onStop ? 'Stop AI response' : 'Send message'}
-          >
-            {isUploading ? (
-              <AqLoading02 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
-            ) : isLoading && onStop ? (
-              <AqStopSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            ) : (
-              <AqSend01 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            )}
-          </motion.button>
+              }
+              animate={
+                input.trim() && !isLoading
+                  ? {
+                      scale: [1, 1.05, 1],
+                    }
+                  : {}
+              }
+              transition={{
+                duration: 0.8,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+              className={cn(
+                'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all focus:ring-2 focus:ring-offset-0 focus:outline-none sm:h-9 sm:w-9',
+                disabled ||
+                  isUploading ||
+                  (!isLoading && !input.trim() && !uploadedFile)
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                  : isLoading && onStop
+                    ? 'bg-muted hover:bg-muted/80 cursor-pointer text-red-500 focus:ring-red-500'
+                    : 'bg-primary text-primary-foreground cursor-pointer hover:opacity-95',
+                'disabled:cursor-not-allowed disabled:opacity-50'
+              )}
+              aria-label={
+                isLoading && onStop ? 'Stop response' : 'Send message'
+              }
+              title={isLoading && onStop ? 'Stop AI response' : 'Send message'}
+            >
+              {isUploading ? (
+                <AqLoading02 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
+              ) : isLoading && onStop ? (
+                <AqStopSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              ) : (
+                <AqSend01 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              )}
+            </motion.button>
+          </div>
         </div>
       </div>
     </div>

@@ -45,13 +45,7 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
   // Expose imperative methods so parent can request a scroll-to-bottom
   React.useImperativeHandle(ref, () => ({
     scrollToBottom: () => {
-      if (containerRef.current) {
-        lastManualScrollRef.current = Date.now();
-        containerRef.current.scrollTo({
-          top: containerRef.current.scrollHeight,
-          behavior: 'smooth',
-        });
-      }
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     },
     scrollToMessageKey: (key: string) => {
       const el = messageRefs.current[key];
@@ -119,47 +113,39 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
     const timeoutId = setTimeout(() => {
       // Always auto-scroll for new user messages (when user enters a prompt)
       if (last.role === 'user') {
-        if (containerRef.current) {
+        isAutoScrolling.current = true;
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => (isAutoScrolling.current = false), 1000);
+        return;
+      }
+
+      // For assistant messages, only auto-scroll if streaming and user hasn't manually scrolled recently
+      if (last.role === 'assistant' && last.isStreaming) {
+        const timeSinceManualScroll = Date.now() - lastManualScrollRef.current;
+        // Don't auto-scroll if user manually scrolled in the last 2 seconds
+        if (timeSinceManualScroll > 2000) {
           isAutoScrolling.current = true;
-          containerRef.current.scrollTo({
-            top: containerRef.current.scrollHeight,
-            behavior: 'smooth',
-          });
+          bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
           setTimeout(() => (isAutoScrolling.current = false), 1000);
         }
         return;
       }
 
-      // For assistant messages, only auto-scroll if streaming and user hasn't manually scrolled recently and is at bottom
-      if (last.role === 'assistant' && last.isStreaming) {
-        const timeSinceManualScroll = Date.now() - lastManualScrollRef.current;
-        // Don't auto-scroll if user manually scrolled in the last 2 seconds or not at bottom
-        if (timeSinceManualScroll > 2000 && isAtBottom) {
-          if (containerRef.current) {
-            isAutoScrolling.current = true;
-            containerRef.current.scrollTo({
-              top: containerRef.current.scrollHeight,
-              behavior: 'smooth', // Smooth scroll during streaming
-            });
-            setTimeout(() => (isAutoScrolling.current = false), 1000);
-          }
-        }
-        return;
-      }
-
       // For other cases, only auto-scroll if the user was already near the bottom
-      if (containerRef.current && isAtBottom) {
+      if (isAtBottom) {
         isAutoScrolling.current = true;
-        containerRef.current.scrollTo({
-          top: containerRef.current.scrollHeight,
-          behavior: 'smooth', // Use 'smooth' for final scroll
-        });
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
         setTimeout(() => (isAutoScrolling.current = false), 1000);
       }
-    }, 10); // Reduced delay for faster response
+    }, 50); // Delay for DOM update
 
     return () => clearTimeout(timeoutId);
-  }, [messages, isLoading, isAtBottom]);
+  }, [
+    messages,
+    isLoading,
+    isAtBottom,
+    messages[messages.length - 1]?.content?.length || 0,
+  ]);
 
   // Auto-scroll when API response completes (loading finishes and streaming stops)
   useEffect(() => {
@@ -176,12 +162,9 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
       ) {
         // API response is complete and typewriter animation finished
         setTimeout(() => {
-          if (containerRef.current && isAtBottom) {
+          if (isAtBottom) {
             isAutoScrolling.current = true;
-            containerRef.current.scrollTo({
-              top: containerRef.current.scrollHeight,
-              behavior: 'smooth',
-            });
+            bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
             setTimeout(() => (isAutoScrolling.current = false), 800);
           }
         }, 100); // Small delay to ensure DOM has updated with any images/charts
