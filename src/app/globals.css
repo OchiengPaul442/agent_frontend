@@ -639,6 +639,37 @@
   margin: 2rem 0;
 }
 
+/* Fix chart glitching with GPU acceleration and proper layering */
+.chart-image-container {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
+.chart-image {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Prevent layout shifts during image loading */
+.chart-image-container img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Smooth transitions for chart interactions */
+.chart-image-container:hover {
+  transform: translateZ(0) scale(1.0);
+}
+
 /* Respect user's motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .animate-shine,

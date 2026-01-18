@@ -579,7 +579,14 @@ export default function HomePage() {
   }
 
   return (
-    <div className="bg-muted/30 flex h-screen items-center justify-center p-2">
+    <div className="flex h-screen items-center justify-center p-2 bg-black relative overflow-hidden">
+      {/* Subtle animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black opacity-90 animate-pulse-subtle" />
+      {/* Radial glow effect */}
+      <div className="absolute inset-0" style={{ 
+        background: 'radial-gradient(ellipse at center, rgba(255,95,31,0.08) 0%, transparent 70%)',
+        pointerEvents: 'none'
+      }} />
       <div
         ref={containerRef}
         className={cn(

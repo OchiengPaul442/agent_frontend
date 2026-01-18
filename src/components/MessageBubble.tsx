@@ -962,14 +962,38 @@ export function MessageBubble({
                         ?.toLowerCase()
                         .includes('chart');
 
+                      const [showDownloadBtn, setShowDownloadBtn] = React.useState(false);
+
                       React.useEffect(() => {
                         setImageError(false);
                         setImageLoading(true);
                       }, [src]);
 
+                      const handleImageDownload = async () => {
+                        if (!src) return;
+                        try {
+                          const response = await fetch(src);
+                          const blob = await response.blob();
+                          const url = window.URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `aeris-aq-chart-${Date.now()}.png`;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          window.URL.revokeObjectURL(url);
+                        } catch (error) {
+                          console.error('Failed to download image:', error);
+                        }
+                      };
+
                       return (
                         <span className="my-6 block">
-                          <span className="border-border relative block overflow-hidden rounded-2xl border bg-[#161616]">
+                          <span 
+                            className="border-border chart-image-container relative block overflow-hidden rounded-2xl border bg-[#161616]"
+                            onMouseEnter={() => setShowDownloadBtn(true)}
+                            onMouseLeave={() => setShowDownloadBtn(false)}
+                          >
                             <span className="block bg-[#0f0f0f] p-4">
                               {imageError ? (
                                 <div className="text-muted-foreground py-8 text-center">
@@ -995,7 +1019,7 @@ export function MessageBubble({
                                     src={src}
                                     alt={alt || 'Visualization'}
                                     className={cn(
-                                      'mx-auto w-full max-w-full rounded-lg object-contain transition-opacity duration-300',
+                                      'chart-image mx-auto w-full max-w-full rounded-lg object-contain transition-opacity duration-300',
                                       shouldInvert && 'invert filter',
                                       imageLoading ? 'opacity-0' : 'opacity-100'
                                     )}
@@ -1011,6 +1035,21 @@ export function MessageBubble({
                                     }}
                                     {...props}
                                   />
+                                  {/* Download Button Overlay */}
+                                  {!imageLoading && showDownloadBtn && (
+                                    <motion.button
+                                      initial={{ opacity: 0, scale: 0.9 }}
+                                      animate={{ opacity: 1, scale: 1 }}
+                                      exit={{ opacity: 0, scale: 0.9 }}
+                                      transition={{ duration: 0.2 }}
+                                      onClick={handleImageDownload}
+                                      className="absolute top-6 right-6 z-10 flex items-center gap-2 rounded-lg bg-black/80 px-4 py-2 text-sm font-medium text-white shadow-lg backdrop-blur-sm transition-all hover:bg-black/90 hover:scale-105 active:scale-95"
+                                      title="Download chart"
+                                    >
+                                      <AqDownload01 className="h-4 w-4" />
+                                      <span>Download</span>
+                                    </motion.button>
+                                  )}
                                 </>
                               )}
                             </span>
