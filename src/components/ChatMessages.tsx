@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { MessageBubble } from './MessageBubble';
 import { Message } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -43,138 +43,179 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const [isAtBottom, setIsAtBottom] = React.useState(true);
-  const lastManualScrollRef = useRef<number>(0);
-  const isAutoScrolling = useRef(false);
+  const isAtBottomRef = useRef(true);
+  const lastManualScrollTimeRef = useRef<number>(0);
+  const isAutoScrollingRef = useRef(false);
   const wasLoadingRef = useRef(false);
+  const scrollTimeoutRef = useRef<number | null>(null);
+  const prevMessagesLengthRef = useRef(0);
+
+  // Check if we're at the bottom (without triggering re-renders)
+  const checkIfAtBottom = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return false;
+
+    const distanceToBottom = el.scrollHeight - (el.scrollTop + el.clientHeight);
+    return distanceToBottom < 150; // More forgiving threshold
+  }, []);
+
+  // Smooth scroll to bottom
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    if (isAutoScrollingRef.current) return; // Prevent overlapping auto-scrolls
+
+    isAutoScrollingRef.current = true;
+    bottomRef.current?.scrollIntoView({ behavior, block: 'end' });
+
+    setTimeout(
+      () => {
+        isAutoScrollingRef.current = false;
+      },
+      behavior === 'smooth' ? 1000 : 100
+    );
+  }, []);
 
   // Expose imperative methods so parent can request a scroll-to-bottom
-  React.useImperativeHandle(ref, () => ({
-    scrollToBottom: () => {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    },
-    scrollToMessageKey: (key: string) => {
-      const el = messageRefs.current[key];
-      if (el && containerRef.current) {
-        lastManualScrollRef.current = Date.now();
-        containerRef.current.scrollTo({
-          top: el.offsetTop - 12,
-          behavior: 'smooth',
-        });
-      }
-    },
-  }));
+  React.useImperativeHandle(
+    ref,
+    () => ({
+      scrollToBottom: () => {
+        scrollToBottom('smooth');
+      },
+      scrollToMessageKey: (key: string) => {
+        const el = messageRefs.current[key];
+        if (el && containerRef.current) {
+          lastManualScrollTimeRef.current = Date.now();
+          containerRef.current.scrollTo({
+            top: el.offsetTop - 12,
+            behavior: 'smooth',
+          });
+        }
+      },
+    }),
+    [scrollToBottom]
+  );
 
-  // Notify parent when scroll position changes (near bottom or not)
+  // Debounced scroll handler - only updates parent, no state changes
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    const handler = () => {
-      const distanceToBottom =
-        el.scrollHeight - (el.scrollTop + el.clientHeight);
-      const nowAtBottom = distanceToBottom < 100; // increased threshold
-      if (nowAtBottom !== isAtBottom) {
-        setIsAtBottom(nowAtBottom);
-        onViewportChange?.(nowAtBottom);
+    const handleScroll = () => {
+      // Clear any pending timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
       }
-      if (!isAutoScrolling.current) {
-        lastManualScrollRef.current = Date.now();
-      }
+
+      // Don't process scroll events during auto-scroll
+      if (isAutoScrollingRef.current) return;
+
+      // Mark as manual scroll
+      lastManualScrollTimeRef.current = Date.now();
+
+      // Debounce the check
+      scrollTimeoutRef.current = window.setTimeout(() => {
+        const wasAtBottom = isAtBottomRef.current;
+        const nowAtBottom = checkIfAtBottom();
+
+        // Only notify parent if state actually changed
+        if (nowAtBottom !== wasAtBottom) {
+          isAtBottomRef.current = nowAtBottom;
+          onViewportChange?.(nowAtBottom);
+        }
+      }, 150); // Debounce for 150ms
     };
 
-    el.addEventListener('scroll', handler, { passive: true });
-    // initialize immediately
-    handler();
-    return () => el.removeEventListener('scroll', handler as EventListener);
-  }, [isAtBottom, onViewportChange]);
+    el.addEventListener('scroll', handleScroll, { passive: true });
 
-  // Also check scroll position when messages change
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
+    // Initial check
+    const initialCheck = () => {
+      isAtBottomRef.current = checkIfAtBottom();
+      onViewportChange?.(isAtBottomRef.current);
+    };
+    initialCheck();
 
-    // Small delay to ensure DOM has updated
-    const timeoutId = setTimeout(() => {
-      const distanceToBottom =
-        el.scrollHeight - (el.scrollTop + el.clientHeight);
-      const nowAtBottom = distanceToBottom < 100;
-      if (nowAtBottom !== isAtBottom) {
-        setIsAtBottom(nowAtBottom);
-        onViewportChange?.(nowAtBottom);
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
       }
-    }, 50);
+    };
+  }, [checkIfAtBottom, onViewportChange]);
 
-    return () => clearTimeout(timeoutId);
-  }, [messages.length, isAtBottom, onViewportChange]);
-
+  // Smart auto-scroll for new messages
   useEffect(() => {
-    // Scroll behavior when new messages are added
     if (!Array.isArray(messages) || messages.length === 0) return;
 
-    const lastIdx = messages.length - 1;
-    const last = messages[lastIdx];
+    // Only process when new messages are added
+    const messagesAdded = messages.length > prevMessagesLengthRef.current;
+    prevMessagesLengthRef.current = messages.length;
 
-    // Small delay to ensure DOM has updated
+    if (!messagesAdded) return;
+
+    const lastMessage = messages[messages.length - 1];
+    const timeSinceManualScroll = Date.now() - lastManualScrollTimeRef.current;
+
+    // Wait for DOM to update, especially for charts/images
     const timeoutId = setTimeout(() => {
-      // Always auto-scroll for new user messages (when user enters a prompt)
-      if (last.role === 'user') {
-        isAutoScrolling.current = true;
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-        setTimeout(() => (isAutoScrolling.current = false), 1000);
+      // RULE 1: Always scroll for new user messages
+      if (lastMessage.role === 'user') {
+        scrollToBottom('smooth');
         return;
       }
 
-      // For assistant messages, only auto-scroll if streaming and user hasn't manually scrolled recently
-      if (last.role === 'assistant' && last.isStreaming) {
-        const timeSinceManualScroll = Date.now() - lastManualScrollRef.current;
-        // Don't auto-scroll if user manually scrolled in the last 2 seconds
-        if (timeSinceManualScroll > 2000) {
-          isAutoScrolling.current = true;
-          bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-          setTimeout(() => (isAutoScrolling.current = false), 1000);
+      // RULE 2: For assistant messages while streaming
+      if (lastMessage.role === 'assistant' && lastMessage.isStreaming) {
+        // Only if user hasn't scrolled manually in last 3 seconds AND was at bottom
+        if (timeSinceManualScroll > 3000 && isAtBottomRef.current) {
+          scrollToBottom('smooth');
         }
         return;
       }
 
-      // For other cases, only auto-scroll if the user was already near the bottom
-      if (isAtBottom) {
-        isAutoScrolling.current = true;
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-        setTimeout(() => (isAutoScrolling.current = false), 1000);
+      // RULE 3: For completed assistant messages (not streaming)
+      if (lastMessage.role === 'assistant' && !lastMessage.isStreaming) {
+        // Only if user was at bottom when message completed
+        if (isAtBottomRef.current) {
+          // Longer delay for charts/images to load
+          setTimeout(() => {
+            if (isAtBottomRef.current) {
+              scrollToBottom('smooth');
+            }
+          }, 200);
+        }
       }
-    }, 50); // Delay for DOM update
+    }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [messages, isLoading, isAtBottom]);
+  }, [messages, scrollToBottom]);
 
-  // Auto-scroll when API response completes (loading finishes and streaming stops)
+  // Handle loading completion (for charts/images that load after streaming)
   useEffect(() => {
-    // Track when loading state changes from true to false
-    if (wasLoadingRef.current && !isLoading) {
-      // Loading just completed
+    // Only trigger when loading changes from true to false
+    if (!wasLoadingRef.current || isLoading) {
+      wasLoadingRef.current = isLoading;
+      return;
+    }
+
+    wasLoadingRef.current = isLoading;
+
+    // Give extra time for charts/images to render
+    const timeoutId = setTimeout(() => {
       const lastMessage = messages[messages.length - 1];
 
-      // Check if the last message has finished streaming
+      // Only scroll if we have a completed assistant message and user is still at bottom
       if (
         lastMessage &&
         lastMessage.role === 'assistant' &&
-        !lastMessage.isStreaming
+        !lastMessage.isStreaming &&
+        isAtBottomRef.current
       ) {
-        // API response is complete and typewriter animation finished
-        setTimeout(() => {
-          if (isAtBottom) {
-            isAutoScrolling.current = true;
-            bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-            setTimeout(() => (isAutoScrolling.current = false), 800);
-          }
-        }, 100); // Small delay to ensure DOM has updated with any images/charts
+        scrollToBottom('smooth');
       }
-    }
+    }, 300); // Extra delay for chart rendering
 
-    // Update the ref for next comparison
-    wasLoadingRef.current = isLoading;
-  }, [isLoading, messages, isAtBottom]);
+    return () => clearTimeout(timeoutId);
+  }, [isLoading, messages, scrollToBottom]);
 
   return (
     <div
