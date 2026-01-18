@@ -5,8 +5,19 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import { cn } from '@/utils/helpers';
 import { sanitizeMarkdown, stripMarkdown } from '@/utils/helpers';
+
+// Function to preprocess markdown content and fix math delimiters
+const preprocessMarkdown = (content: string): string => {
+  // Fix display math: [ math ] -> \[ math \]
+  content = content.replace(/^\[ (.+) \]$/gm, '\\[ $1 \\]');
+  // Fix inline math: ( math ) -> \( math \) (only if it looks like math)
+  content = content.replace(/\(([^)]*?\\?[a-zA-Z][^)]*?)\)/g, '\\( $1 \\)');
+  return content;
+};
 import {
   AqCopy01,
   AqCheckCircle,
@@ -998,7 +1009,8 @@ export function MessageBubble({
             ) : (
               <>
                 <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
+                  remarkPlugins={[remarkGfm, remarkMath]}
+                  rehypePlugins={[rehypeKatex]}
                   components={{
                     p: ({
                       children,
@@ -1063,7 +1075,7 @@ export function MessageBubble({
                     ),
                   }}
                 >
-                  {sanitizeMarkdown(message.content)}
+                  {preprocessMarkdown(sanitizeMarkdown(message.content))}
                 </ReactMarkdown>
 
                 {/* Streaming cursor indicator */}
