@@ -75,6 +75,10 @@ export function useChat(options: UseChatOptions = {}) {
               timestamp: timestamp || new Date().toISOString(),
               tools_used: tools_used,
               isStreaming: false,
+              requires_continuation: requires_continuation,
+              finish_reason: finish_reason,
+              truncated: truncated,
+              cost_info: cost_info,
             };
           }
           return updated;
@@ -128,6 +132,10 @@ export function useChat(options: UseChatOptions = {}) {
                   timestamp: timestamp || new Date().toISOString(),
                   tools_used: tools_used,
                   isStreaming: false,
+                  requires_continuation: requires_continuation,
+                  finish_reason: finish_reason,
+                  truncated: truncated,
+                  cost_info: cost_info,
                 };
               }
               return updated;

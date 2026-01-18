@@ -1147,13 +1147,13 @@ export function MessageBubble({
                   >
                     <AqDownload01 className="h-4 w-4" />
                   </button>
-                  {message.requires_continuation && (
+                  {message.requires_continuation && onContinue && (
                     <button
                       onClick={onContinue}
-                      className="text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer rounded-lg p-2 transition-colors"
+                      className="text-primary hover:bg-primary/10 cursor-pointer rounded-lg p-2 transition-colors"
                       title="Continue response"
                     >
-                      ▶
+                      <span className="text-sm font-medium">Continue</span>
                     </button>
                   )}
                 </>
