@@ -7,11 +7,12 @@ import { ChatInput } from '@/components/ChatInput';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { FilePreviewDrawer } from '@/components/FilePreviewDrawer';
 import { CostWarning } from '@/components/CostWarning';
+import { ShareChatDialog } from '@/components/ShareChatDialog';
 import { useChat } from '@/hooks/useChat';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { apiService } from '@/services/api.service';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AqLoading02, AqChevronDown } from '@airqo/icons-react';
+import { AqLoading02, AqChevronDown, AqShare07 } from '@airqo/icons-react';
 import { cn } from '@/utils/helpers';
 
 import type { ResponseRole } from '@/types';
@@ -97,6 +98,7 @@ export default function HomePage() {
   }, []);
 
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const [isFilePreviewDrawerOpen, setIsFilePreviewDrawerOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState<
     File | { name: string; size: number; type: string } | null
@@ -534,7 +536,9 @@ export default function HomePage() {
       // Delete the old session if it exists
       if (sessionId) {
         try {
+          console.log('Deleting old session:', sessionId);
           await apiService.deleteSession(sessionId);
+          console.log('Old session deleted successfully');
         } catch (err) {
           console.error('Failed to delete old session:', err);
           // Continue anyway - don't let deletion failure block new session creation
@@ -543,6 +547,13 @@ export default function HomePage() {
 
       // Clear current messages immediately
       clearMessages();
+
+      // Clear stored files
+      setStoredFiles(new Map());
+
+      // Clear uploaded file
+      setUploadedFile(null);
+      setFileErrorMessage(null);
 
       // Create new session from backend
       const newSession = await apiService.createSession();
@@ -579,14 +590,18 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center p-2 bg-black relative overflow-hidden">
+    <div className="relative flex h-screen items-center justify-center overflow-hidden bg-black p-2">
       {/* Subtle animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black opacity-90 animate-pulse-subtle" />
+      <div className="animate-pulse-subtle absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black opacity-90" />
       {/* Radial glow effect */}
-      <div className="absolute inset-0" style={{ 
-        background: 'radial-gradient(ellipse at center, rgba(255,95,31,0.08) 0%, transparent 70%)',
-        pointerEvents: 'none'
-      }} />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse at center, rgba(255,95,31,0.08) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }}
+      />
       <div
         ref={containerRef}
         className={cn(
@@ -718,25 +733,35 @@ export default function HomePage() {
               </motion.h1>
             </div>
             {hasMessages && (
-              <button
-                onClick={handleNewSession}
-                className="border-border bg-background text-foreground hover:bg-muted focus:ring-ring flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors focus:ring-2 focus:outline-none sm:px-4 sm:py-2 md:text-sm"
-              >
-                <svg
-                  className="h-3.5 w-3.5 sm:h-4 sm:w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowShareDialog(true)}
+                  className="border-border bg-background text-foreground hover:bg-muted focus:ring-ring flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors focus:ring-2 focus:outline-none sm:px-4 sm:py-2 md:text-sm"
+                  title="Share chat"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                New Chat
-              </button>
+                  <AqShare07 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Share</span>
+                </button>
+                <button
+                  onClick={handleNewSession}
+                  className="border-border bg-background text-foreground hover:bg-muted focus:ring-ring flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors focus:ring-2 focus:outline-none sm:px-4 sm:py-2 md:text-sm"
+                >
+                  <svg
+                    className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  New Chat
+                </button>
+              </div>
             )}
           </div>
         </header>
@@ -1045,6 +1070,14 @@ export default function HomePage() {
         file={previewFile}
         width={drawerWidth}
         onWidthChange={setDrawerWidth}
+      />
+
+      {/* Share Chat Dialog */}
+      <ShareChatDialog
+        isOpen={showShareDialog}
+        onClose={() => setShowShareDialog(false)}
+        messages={messages}
+        sessionId={sessionId || undefined}
       />
     </div>
   );

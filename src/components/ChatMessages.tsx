@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useImperativeHandle } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { MessageBubble } from './MessageBubble';
 import { Message } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,6 +19,9 @@ interface ChatMessagesProps {
     fileId?: string;
   }) => void;
   onAvatarClick?: () => void;
+  selectionMode?: boolean;
+  selectedMessages?: Set<number>;
+  onToggleSelection?: (index: number) => void;
 }
 
 export const ChatMessages = React.forwardRef(function ChatMessages(
@@ -31,6 +34,9 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
     onFilePreview,
     onViewportChange,
     onAvatarClick,
+    selectionMode = false,
+    selectedMessages,
+    onToggleSelection,
   }: ChatMessagesProps & { onViewportChange?: (isAtBottom: boolean) => void },
   ref
 ) {
@@ -140,12 +146,7 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
     }, 50); // Delay for DOM update
 
     return () => clearTimeout(timeoutId);
-  }, [
-    messages,
-    isLoading,
-    isAtBottom,
-    messages[messages.length - 1]?.content?.length || 0,
-  ]);
+  }, [messages, isLoading, isAtBottom]);
 
   // Auto-scroll when API response completes (loading finishes and streaming stops)
   useEffect(() => {
@@ -192,20 +193,40 @@ export const ChatMessages = React.forwardRef(function ChatMessages(
               (message.role === 'user' && !nextMessage && !isLoading);
 
             return (
-              <MessageBubble
+              <div
                 key={key}
-                message={message}
-                outerRefKey={key}
-                registerRef={(k, el) => (messageRefs.current[k] = el)}
-                onEdit={onEditMessage}
-                messageIndex={index}
-                onRetry={onRetry}
-                onContinue={onContinue}
-                onFilePreview={onFilePreview}
-                hasNextMessage={hasNextMessage}
-                isCanceled={isCanceled}
-                onAvatarClick={onAvatarClick}
-              />
+                className={`relative ${selectionMode ? 'group/select' : ''}`}
+              >
+                {selectionMode && (
+                  <div className="absolute top-1/2 left-2 z-10 -translate-y-1/2 opacity-0 transition-opacity group-hover/select:opacity-100">
+                    <label
+                      className="flex h-6 w-6 cursor-pointer items-center justify-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedMessages?.has(index) || false}
+                        onChange={() => onToggleSelection?.(index)}
+                        className="border-border text-primary focus:ring-primary h-5 w-5 cursor-pointer rounded-md border-2 transition-all checked:scale-110"
+                      />
+                    </label>
+                  </div>
+                )}
+                <MessageBubble
+                  message={message}
+                  outerRefKey={key}
+                  registerRef={(k, el) => (messageRefs.current[k] = el)}
+                  onEdit={onEditMessage}
+                  messageIndex={index}
+                  onRetry={onRetry}
+                  onContinue={onContinue}
+                  onFilePreview={onFilePreview}
+                  hasNextMessage={hasNextMessage}
+                  isCanceled={isCanceled}
+                  onAvatarClick={onAvatarClick}
+                  className={selectionMode ? 'ml-8' : ''}
+                />
+              </div>
             );
           })}
       </AnimatePresence>

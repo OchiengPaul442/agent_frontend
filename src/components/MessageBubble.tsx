@@ -40,6 +40,7 @@ interface MessageBubbleProps {
   hasNextMessage?: boolean;
   isCanceled?: boolean;
   onAvatarClick?: () => void;
+  className?: string;
 }
 
 const CodeBlock = React.memo(function CodeBlock({
@@ -185,6 +186,100 @@ const getFilePreviewSrc = (file?: { type?: string; name?: string } | null) => {
   return '/file-unknown.svg';
 };
 
+// Separate component for image rendering to avoid hooks issues
+const ImageComponent = React.memo(function ImageComponent({
+  src,
+  alt,
+  ...props
+}: React.ImgHTMLAttributes<HTMLImageElement>) {
+  const [imageError, setImageError] = React.useState(false);
+  const [imageLoading, setImageLoading] = React.useState(true);
+  const [showDownloadBtn, setShowDownloadBtn] = React.useState(false);
+
+  // Don't invert images with chart-related alt text
+  const shouldInvert = !alt?.toLowerCase().includes('chart');
+
+  React.useEffect(() => {
+    setImageError(false);
+    setImageLoading(true);
+  }, [src]);
+
+  const handleImageDownload = async () => {
+    if (!src || typeof src !== 'string') return;
+    try {
+      const response = await fetch(src);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `aeris-aq-chart-${Date.now()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to download image:', error);
+    }
+  };
+
+  return (
+    <span className="my-6 block">
+      <span
+        className="border-border chart-image-container relative block overflow-hidden rounded-2xl border bg-[#161616]"
+        onMouseEnter={() => setShowDownloadBtn(true)}
+        onMouseLeave={() => setShowDownloadBtn(false)}
+      >
+        <span className="block bg-[#0f0f0f] p-4">
+          {imageError ? (
+            <div className="text-muted-foreground py-8 text-center">
+              <div className="mb-2 text-sm">Failed to load image</div>
+              <div className="text-xs opacity-60">{alt || 'Chart'}</div>
+            </div>
+          ) : (
+            <>
+              {imageLoading && (
+                <div className="text-muted-foreground py-8 text-center">
+                  <div className="mx-auto mb-2 h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  <div className="text-xs">Loading chart...</div>
+                </div>
+              )}
+              <img
+                src={typeof src === 'string' ? src : undefined}
+                alt={alt}
+                onLoad={() => setImageLoading(false)}
+                onError={() => {
+                  setImageLoading(false);
+                  setImageError(true);
+                }}
+                className={`mx-auto max-w-full ${shouldInvert ? 'dark:invert' : ''} ${imageLoading ? 'hidden' : 'block'}`}
+                {...props}
+              />
+              {!imageLoading && !imageError && showDownloadBtn && (
+                <motion.button
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  onClick={handleImageDownload}
+                  className="absolute top-2 right-2 flex cursor-pointer items-center gap-1.5 rounded-lg bg-black/70 px-3 py-1.5 text-xs text-white backdrop-blur-sm transition-colors hover:bg-black/90"
+                  title="Download chart"
+                >
+                  <AqDownload01 className="h-3.5 w-3.5" />
+                  <span>Download</span>
+                </motion.button>
+              )}
+            </>
+          )}
+        </span>
+        {alt && (
+          <span className="border-border bg-muted/50 text-muted-foreground block border-t px-4 py-2 text-center text-xs">
+            {alt}
+          </span>
+        )}
+      </span>
+    </span>
+  );
+});
+
 export function MessageBubble({
   message,
   outerRefKey,
@@ -197,6 +292,7 @@ export function MessageBubble({
   hasNextMessage = false,
   isCanceled = false,
   onAvatarClick,
+  className,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
@@ -768,7 +864,7 @@ export function MessageBubble({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       ref={setOuterRef}
-      className="group relative w-full py-4 sm:py-8"
+      className={cn('group relative w-full py-4 sm:py-8', className)}
     >
       <div className="mx-auto flex max-w-3xl gap-1 px-2 sm:gap-2 sm:px-4 lg:px-6">
         {/* Avatar for assistant messages */}
@@ -806,7 +902,7 @@ export function MessageBubble({
             >
               <div
                 className={cn(
-                  'border-border hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-2xl border p-3.5 shadow-sm transition-colors',
+                  'border-border hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-xl border p-3.5 shadow-sm transition-colors',
                   'file-preview',
                   isUser ? 'file-preview-user' : 'bg-card'
                 )}
@@ -860,9 +956,9 @@ export function MessageBubble({
               message.isError && 'text-red-600! dark:text-red-400!',
               isUser
                 ? isEditing
-                  ? 'w-full rounded-3xl bg-(--bg-tertiary) px-5 py-3 text-(--text-primary)'
-                  : 'inline-block max-w-[85%] rounded-3xl bg-(--bg-tertiary) px-5 py-3 text-(--text-primary)'
-                : 'w-full rounded-3xl px-5 py-3 text-(--text-primary)'
+                  ? 'w-full rounded-[18px] bg-(--bg-tertiary) px-5 py-3 text-(--text-primary)'
+                  : 'inline-block max-w-[85%] rounded-[18px] rounded-br-sm bg-(--bg-tertiary) px-5 py-3 text-(--text-primary)'
+                : 'w-full rounded-[18px] rounded-bl-sm px-5 py-3 text-(--text-primary)'
             )}
           >
             {isEditing ? (
@@ -881,10 +977,10 @@ export function MessageBubble({
                     target.style.height = `${target.scrollHeight}px`;
                   }}
                 />
-                <div className="flex justify-end gap-2">
+                <div className="mt-3 flex justify-end gap-3">
                   <button
                     onClick={handleCancelEdit}
-                    className="text-muted-foreground hover:text-foreground text-sm underline"
+                    className="text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-pointer rounded-lg px-4 py-2 text-sm font-medium transition-colors"
                   >
                     Cancel
                   </button>
@@ -893,7 +989,7 @@ export function MessageBubble({
                     disabled={
                       !editContent.trim() || editContent === message.content
                     }
-                    className="bg-primary text-primary-foreground disabled:bg-muted disabled:text-muted-foreground rounded px-3 py-1 text-sm font-medium transition-colors"
+                    className="bg-primary text-primary-foreground disabled:bg-muted disabled:text-muted-foreground hover:bg-primary/90 disabled:hover:bg-muted cursor-pointer rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-colors disabled:cursor-not-allowed"
                   >
                     Save
                   </button>
@@ -948,120 +1044,9 @@ export function MessageBubble({
                         {children}
                       </a>
                     ),
-                    img: ({
-                      src,
-                      alt,
-                      ...props
-                    }: React.ImgHTMLAttributes<HTMLImageElement>) => {
-                      const [imageError, setImageError] = React.useState(false);
-                      const [imageLoading, setImageLoading] =
-                        React.useState(true);
-
-                      // Don't invert images with chart-related alt text
-                      const shouldInvert = !alt
-                        ?.toLowerCase()
-                        .includes('chart');
-
-                      const [showDownloadBtn, setShowDownloadBtn] = React.useState(false);
-
-                      React.useEffect(() => {
-                        setImageError(false);
-                        setImageLoading(true);
-                      }, [src]);
-
-                      const handleImageDownload = async () => {
-                        if (!src) return;
-                        try {
-                          const response = await fetch(src);
-                          const blob = await response.blob();
-                          const url = window.URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = `aeris-aq-chart-${Date.now()}.png`;
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
-                          window.URL.revokeObjectURL(url);
-                        } catch (error) {
-                          console.error('Failed to download image:', error);
-                        }
-                      };
-
-                      return (
-                        <span className="my-6 block">
-                          <span 
-                            className="border-border chart-image-container relative block overflow-hidden rounded-2xl border bg-[#161616]"
-                            onMouseEnter={() => setShowDownloadBtn(true)}
-                            onMouseLeave={() => setShowDownloadBtn(false)}
-                          >
-                            <span className="block bg-[#0f0f0f] p-4">
-                              {imageError ? (
-                                <div className="text-muted-foreground py-8 text-center">
-                                  <div className="mb-2 text-sm">
-                                    Failed to load image
-                                  </div>
-                                  <div className="text-xs">
-                                    The image could not be displayed. Please
-                                    check your connection and try again.
-                                  </div>
-                                </div>
-                              ) : (
-                                <>
-                                  {imageLoading && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-[#0f0f0f]">
-                                      <div className="text-muted-foreground text-sm">
-                                        Loading image...
-                                      </div>
-                                    </div>
-                                  )}
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={src}
-                                    alt={alt || 'Visualization'}
-                                    className={cn(
-                                      'chart-image mx-auto w-full max-w-full rounded-lg object-contain transition-opacity duration-300',
-                                      shouldInvert && 'invert filter',
-                                      imageLoading ? 'opacity-0' : 'opacity-100'
-                                    )}
-                                    style={{
-                                      maxHeight: '600px',
-                                      height: 'auto',
-                                    }}
-                                    loading="lazy"
-                                    onLoad={() => setImageLoading(false)}
-                                    onError={() => {
-                                      setImageError(true);
-                                      setImageLoading(false);
-                                    }}
-                                    {...props}
-                                  />
-                                  {/* Download Button Overlay */}
-                                  {!imageLoading && showDownloadBtn && (
-                                    <motion.button
-                                      initial={{ opacity: 0, scale: 0.9 }}
-                                      animate={{ opacity: 1, scale: 1 }}
-                                      exit={{ opacity: 0, scale: 0.9 }}
-                                      transition={{ duration: 0.2 }}
-                                      onClick={handleImageDownload}
-                                      className="absolute top-6 right-6 z-10 flex items-center gap-2 rounded-lg bg-black/80 px-4 py-2 text-sm font-medium text-white shadow-lg backdrop-blur-sm transition-all hover:bg-black/90 hover:scale-105 active:scale-95"
-                                      title="Download chart"
-                                    >
-                                      <AqDownload01 className="h-4 w-4" />
-                                      <span>Download</span>
-                                    </motion.button>
-                                  )}
-                                </>
-                              )}
-                            </span>
-                            {alt && (
-                              <span className="border-border bg-muted/50 text-muted-foreground block border-t px-4 py-2 text-center text-xs">
-                                {alt}
-                              </span>
-                            )}
-                          </span>
-                        </span>
-                      );
-                    },
+                    img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
+                      <ImageComponent {...props} />
+                    ),
                     code: CodeBlock,
                     table: ({
                       children,
