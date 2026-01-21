@@ -102,6 +102,13 @@ export function ChatInput({
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const resetTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -154,6 +161,7 @@ export function ChatInput({
           currentRole
         );
         setInput('');
+        resetTextareaHeight();
         if (onRemoveFile) {
           onRemoveFile();
         } else {
@@ -164,6 +172,7 @@ export function ChatInput({
     } else {
       onSend(input.trim(), undefined, currentRole);
       setInput('');
+      resetTextareaHeight();
     }
   };
 
@@ -394,6 +403,7 @@ export function ChatInput({
         {/* Body Section */}
         <div className="chat-input-body">
           <textarea
+            ref={textareaRef}
             value={input}
             onChange={(e) => {
               const newValue = e.target.value;
